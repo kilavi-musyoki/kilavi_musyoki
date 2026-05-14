@@ -104,7 +104,102 @@ function drawNoise(ctx, w, h, intensity) {
     ctx.putImageData(imageData, 0, 0);
 }
 
+// ── Helper: fire real keyboard events so TetrusGame's window listeners respond ─
+const _kd = (key) => window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+const _ku = (key) => window.dispatchEvent(new KeyboardEvent('keyup',   { key, bubbles: true, cancelable: true }));
+
+// ── Shared button press/release with 3-D visual feedback ──────────────────────
+function btnDown(key, el) {
+    const gs = window.__tetrusGameState || 'menu';
+    if (gs === 'menu' || gs === 'gameover' || gs === 'paused') _kd('Enter');
+    _kd(key);
+    if (el) { el.style.transform = 'translateY(2px) scale(0.93)'; el.style.filter = 'brightness(1.5)'; el.style.boxShadow = el.dataset.ps || 'none'; }
+}
+function btnUp(key, el) {
+    _ku(key);
+    if (el) { el.style.transform = ''; el.style.filter = ''; el.style.boxShadow = el.dataset.ns || ''; }
+}
+
+// Casing occupies SVG x:108-174, y:26-128 within viewBox 200×160
+// As % of device container: left:54%, top:16.25%, width:33%, height:63.75%
+const CASING = { left: '54%', top: '16.25%', width: '33%', height: '63.75%' };
+
+function Btn({ gameKey, children, style: s, ns, ps, elRef }) {
+    const ref = React.useRef(null);
+    const setRef = (el) => { ref.current = el; if (elRef) elRef.current = el; };
+    return (
+        <div
+            ref={setRef}
+            data-ns={ns} data-ps={ps} data-tetrus-btn="true"
+            onPointerDown={(e) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); btnDown(gameKey, ref.current); }}
+            onPointerUp={(e)   => { e.preventDefault(); e.currentTarget.releasePointerCapture(e.pointerId); btnUp(gameKey, ref.current); }}
+            onPointerLeave={()  => btnUp(gameKey, ref.current)}
+            onPointerCancel={()=> btnUp(gameKey, ref.current)}
+            style={{
+                position: 'absolute', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', userSelect: 'none', touchAction: 'none', pointerEvents: 'auto',
+                WebkitTapHighlightColor: 'transparent', transition: 'filter 0.05s',
+                boxShadow: ns, ...s,
+            }}
+        >{children}</div>
+    );
+}
+
+const dpadBase = {
+    background: 'linear-gradient(145deg, #1e2d22, #0d1612)',
+    border: '1.5px solid #2d5a42',
+    color: '#4BD8A0', fontSize: 'clamp(7px,1.8vw,13px)', fontWeight: 'bold',
+};
+const dNS = '0 3px 0 #040d05, 0 0 7px rgba(75,216,160,0.18)';
+const dPS = 'inset 0 2px 5px rgba(0,0,0,0.55), 0 1px 0 #040d05';
+
+function CasingControls() {
+    return (
+        <div style={{
+            position: 'absolute', zIndex: 5, pointerEvents: 'none',
+            left: CASING.left, top: CASING.top,
+            width: CASING.width, height: CASING.height,
+        }}>
+            {/* PAUSE — top center, maps to SVG translate(156,42) ≈ 36%,24% of casing */}
+            <Btn gameKey="Enter" ns="0 2px 0 #3a2800, 0 0 8px rgba(212,168,67,0.25)" ps="inset 0 2px 4px rgba(0,0,0,0.5),0 1px 0 #3a2800"
+                style={{ top:'4%', left:'10%', width:'80%', height:'10%', borderRadius:'999px', background:'linear-gradient(145deg,#2a1e00,#181200)', border:'1.5px solid #D4A843', color:'#D4A843', fontSize:'clamp(4px,1vw,9px)', fontFamily:'"Press Start 2P",monospace', letterSpacing:'0.08em' }}>
+                ⏸ PAUSE
+            </Btn>
+
+            {/* D-pad UP — maps to SVG (126,60) ≈ center-27% of casing */}
+            <Btn gameKey="x" ns={dNS} ps={dPS}
+                style={{ ...dpadBase, top:'24%', left:'28%', width:'24%', height:'13%', borderRadius:'5px 5px 2px 2px' }}>▲</Btn>
+            {/* D-pad LEFT */}
+            <Btn gameKey="ArrowLeft" ns={dNS} ps={dPS}
+                style={{ ...dpadBase, top:'38%', left:'6%', width:'24%', height:'13%', borderRadius:'5px 2px 2px 5px' }}>◀</Btn>
+            {/* D-pad center hub (non-interactive) */}
+            <div style={{ position:'absolute', top:'38%', left:'30%', width:'20%', height:'13%', background:'#0d1612', display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}>
+                <div style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#1a3020', border:'1px solid #2d5a42' }} />
+            </div>
+            {/* D-pad RIGHT */}
+            <Btn gameKey="ArrowRight" ns={dNS} ps={dPS}
+                style={{ ...dpadBase, top:'38%', left:'50%', width:'24%', height:'13%', borderRadius:'2px 5px 5px 2px' }}>▶</Btn>
+            {/* D-pad DOWN */}
+            <Btn gameKey="ArrowDown" ns={dNS} ps={dPS}
+                style={{ ...dpadBase, top:'52%', left:'28%', width:'24%', height:'13%', borderRadius:'2px 2px 5px 5px' }}>▼</Btn>
+
+            {/* ROT-CW — green circle, right side */}
+            <Btn gameKey="x" ns="0 3px 0 #040d05,0 0 9px rgba(75,216,160,0.22)" ps="inset 0 2px 5px rgba(0,0,0,0.55),0 1px 0 #040d05"
+                style={{ top:'26%', right:'2%', width:'22%', height:'12%', borderRadius:'50%', background:'radial-gradient(ellipse at 35% 30%,rgba(75,216,160,0.18),#0a1410)', border:'1.5px solid #4BD8A0', color:'#4BD8A0', fontSize:'clamp(9px,2vw,15px)', fontWeight:'bold' }}>↻</Btn>
+
+            {/* ROT-CCW — cyan circle */}
+            <Btn gameKey="z" ns="0 3px 0 #040d05,0 0 9px rgba(111,212,255,0.22)" ps="inset 0 2px 5px rgba(0,0,0,0.55),0 1px 0 #040d05"
+                style={{ top:'40%', right:'2%', width:'22%', height:'12%', borderRadius:'50%', background:'radial-gradient(ellipse at 35% 30%,rgba(111,212,255,0.18),#0a1410)', border:'1.5px solid #6FD4FF', color:'#6FD4FF', fontSize:'clamp(9px,2vw,15px)', fontWeight:'bold' }}>↺</Btn>
+
+            {/* HARD DROP — large magenta bar at bottom */}
+            <Btn gameKey=" " ns="0 3px 0 #1a0030,0 0 12px rgba(224,64,251,0.22)" ps="inset 0 2px 6px rgba(0,0,0,0.6),0 1px 0 #1a0030"
+                style={{ top:'74%', left:'6%', width:'88%', height:'11%', borderRadius:'7px', background:'linear-gradient(145deg,#2a0840,#150420)', border:'1.5px solid #E040FB', color:'#E040FB', fontSize:'clamp(4px,1vw,9px)', fontFamily:'"Press Start 2P",monospace', letterSpacing:'0.06em' }}>⬇ DROP</Btn>
+        </div>
+    );
+}
+
 export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, glitch = false }) {
+
     const [smoothLever, setSmoothLever] = useState(leverValue);
     const [zoneFlash, setZoneFlash] = useState(0);
     const [scanDistort, setScanDistort] = useState(0);
@@ -175,11 +270,11 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 setScanDistort(distortPhaseRef.current);
             }
 
-            // Mouse tilt
+            // Mouse tilt (disabled tilt per user request)
             if (mousePosRef && mousePosRef.current) {
                 const mp = mousePosRef.current;
-                const tiltX = (mp.y - 0.5) * -18;
-                const tiltY = (mp.x - 0.5) * 18;
+                const tiltX = 0; // (mp.y - 0.5) * -18;
+                const tiltY = 0; // (mp.x - 0.5) * 18;
                 const beamX = (mp.x - 0.5) * 38;
                 const beamY = (mp.y - 0.5) * 18;
 
@@ -358,6 +453,12 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                     <ProductShell leverValue={smoothLever} isDark={isDark} />
                 </div>
             )}
+
+            {/* LAYER 3b: Interactive game controls — z-index 5, above ProductShell */}
+            {shellVisible && (
+                <CasingControls />
+            )}
+
 
             {/* LAYER 4: Particle canvas — sparks & discharge effects */}
             <canvas

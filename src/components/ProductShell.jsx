@@ -126,6 +126,22 @@ export default memo(function ProductShell({ leverValue, isDark }) {
                 <filter id="panel-shadow" x="-5%" y="-5%" width="110%" height="110%">
                     <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.38" />
                 </filter>
+                <radialGradient id="btn-grad-a" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" stopColor="#410f4c" />
+                    <stop offset="100%" stopColor="#1a041f" />
+                </radialGradient>
+                <linearGradient id="btn-grad-b" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#3d3714" />
+                    <stop offset="100%" stopColor="#1a1708" />
+                </linearGradient>
+                <style>{`
+                    .hardware-dpad { transition: fill 0.1s; }
+                    .hardware-dpad:active { fill: #171a21; transform: scale(0.62) translateY(1px); }
+                    .hardware-btn-a { transition: transform 0.1s; }
+                    .hardware-btn-a:active { transform: translateY(1px) scale(0.96); filter: brightness(0.8); }
+                    .hardware-btn-b { transition: transform 0.1s; }
+                    .hardware-btn-b:active { transform: translateY(0.5px) scale(0.96); filter: brightness(0.8); }
+                `}</style>
                 {/* Brushed metal texture */}
                 <pattern id="shell-texture" x="0" y="0" width="200" height="4" patternUnits="userSpaceOnUse">
                     <line x1="0" y1="1" x2="200" y2="1" stroke="rgba(255,255,255,0.008)" strokeWidth="0.5" />
@@ -406,25 +422,39 @@ export default memo(function ProductShell({ leverValue, isDark }) {
             )}
 
             {/* ══════════════════════════════════════════════════════════════
-                SCREEN BEZEL FRAME — layered bevels for depth
+                SCREEN BEZEL FRAME — halved to only cover left side
                ═══════════════════════════════════════════════════════════ */}
-            {/* Outer bezel shadow — widened to match slimmer panels */}
-            <rect x="23.5" y="24.5" width="153" height="105" rx="4"
+            {/* Outer bezel shadow */}
+            <rect x="23.5" y="24.5" width="85" height="105" rx="4"
                 fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="1"
                 opacity={shellOpacity} />
             {/* Main bezel ring */}
-            <rect x="24" y="25" width="152" height="104" rx="3.5"
+            <rect x="24" y="25" width="84" height="104" rx="3.5"
                 fill="none" stroke={bezelC} strokeWidth="1.4"
                 style={{ transition: 'stroke 0.3s' }} />
             {/* Inner bezel shadow (depth illusion) */}
-            <rect x="25" y="26" width="150" height="102" rx="2.5"
+            <rect x="25" y="26" width="82" height="102" rx="2.5"
                 fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth="1.4" opacity={shellOpacity} />
             {/* Top bezel reflection */}
-            <rect x="25.5" y="26.5" width="149" height="13" rx="2.5"
+            <rect x="25.5" y="26.5" width="81" height="13" rx="2.5"
                 fill={shellHighlight} opacity={shellOpacity} />
             {/* Bottom bezel darker edge */}
-            <line x1="26" y1="128.5" x2="174" y2="128.5"
+            <line x1="26" y1="128.5" x2="108" y2="128.5"
                 stroke="rgba(0,0,0,0.2)" strokeWidth="0.5" opacity={shellOpacity} />
+
+            {/* ══════════════════════════════════════════════════════════════
+                RIGHT CASING & PHYSICAL CONTROLS
+               ═══════════════════════════════════════════════════════════ */}
+            <g opacity={shellOpacity} transform={`translate(${rightDx * 0.5},0)`}>
+                {/* Center-Right Panel Body */}
+                <rect x="108" y="26" width="66" height="102" fill={shellBody} />
+                <rect x="108" y="26" width="66" height="102" fill="url(#shell-texture)" />
+                
+                {/* Panel edge bevels */}
+                <line x1="108" y1="26" x2="108" y2="128" stroke={bevelDark} strokeWidth="0.5" />
+                <line x1="109" y1="26" x2="109" y2="128" stroke={bevelLight} strokeWidth="0.2" />
+
+            </g>
 
             {/* Device outer glow ring */}
             <rect x="2" y="2" width="196" height="156" rx="6"

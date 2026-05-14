@@ -159,6 +159,9 @@ function App() {
   // ── Global click sparks ──────────────────────────────────────────────────
   useEffect(() => {
     const handleClick = (e) => {
+      // Don't spawn sparks if clicking inside the game controls
+      if (e.target.closest('[data-tetrus-btn]') || e.target.closest('canvas')) return;
+      
       const tag = e.target.tagName.toLowerCase();
       if (!['input', 'textarea', 'button', 'a', 'select'].includes(tag)) {
         createSparks(e.clientX, e.clientY, isDark);

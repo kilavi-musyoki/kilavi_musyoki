@@ -51,12 +51,10 @@ export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) 
             const mp = mousePosRef.current;
 
             if (mp) {
-                // Tilt toward cursor
-                const tgtX = (mp.x - 0.72) * 13;
-                const tgtY = (mp.y - 0.50) * -9;
-                tiltRef.current.x = lerp(tiltRef.current.x, tgtX, 0.055);
-                tiltRef.current.y = lerp(tiltRef.current.y, tgtY, 0.055);
-                setTilt({ x: tiltRef.current.x, y: tiltRef.current.y });
+                // Tilt toward cursor (disabled per user request)
+                tiltRef.current.x = 0;
+                tiltRef.current.y = 0;
+                setTilt({ x: 0, y: 0 });
             }
 
             rafRef.current = requestAnimationFrame(loop);
