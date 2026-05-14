@@ -19,17 +19,18 @@ const DROP_INTERVALS = [820,700,600,500,400,300,220,150,100,80,60];
 const GLITCH_LIGHT  = 0.20;
 const GLITCH_HEAVY  = 0.40;
 const GLITCH_RESUME = 0.06;
-const CTRL_ZONE_RATIO = 0.38; // bottom 38% = controls
+const CTRL_ZONE_RATIO = 0.34; // bottom 34% = controls
 
 // ── Button definitions ────────────────────────────────────────────────────────
+// Left cluster: D-Pad  |  Right cluster: Action buttons
 const BTN_DEFS = [
-    { id:'rotate', icon:'↺', label:'ROT',  key:'ArrowUp',    color:'#6FD4FF', repeat:false, xFrac:0.10 },
-    { id:'left',   icon:'◄', label:'',     key:'ArrowLeft',  color:'#0D9488', repeat:true,  xFrac:0.24 },
-    { id:'right',  icon:'►', label:'',     key:'ArrowRight', color:'#0D9488', repeat:true,  xFrac:0.38 },
-    { id:'down',   icon:'▼', label:'SOFT', key:'ArrowDown',  color:'#D4A843', repeat:true,  xFrac:0.52 },
-    { id:'drop',   icon:'⬇', label:'DROP', key:' ',          color:'#E040FB', repeat:false, xFrac:0.82, big:true },
+    { id:'left',   icon:'◄', label:'',     key:'ArrowLeft',  color:'#4BD8A0', repeat:true,  xFrac:0.11 },
+    { id:'down',   icon:'▼', label:'',     key:'ArrowDown',  color:'#4BD8A0', repeat:true,  xFrac:0.26 },
+    { id:'right',  icon:'►', label:'',     key:'ArrowRight', color:'#4BD8A0', repeat:true,  xFrac:0.41 },
+    { id:'rotate', icon:'↺', label:'ROT',  key:'ArrowUp',    color:'#6FD4FF', repeat:false, xFrac:0.65, big:true },
+    { id:'drop',   icon:'⬇', label:'DROP', key:' ',          color:'#E040FB', repeat:false, xFrac:0.84, big:true },
 ];
-const DIVIDER_FRAC = 0.665; // divides D-pad from action button
+const DIVIDER_FRAC = 0.54; // visual divider between D-pad and action
 
 // ── Audio ─────────────────────────────────────────────────────────────────────
 let _isMuted = false;
@@ -90,12 +91,28 @@ const clearFullLines = board => {
     return { board:[...Array.from({length:count},()=>Array(COLS).fill(null)),...kept], count };
 };
 
+// ── High-score persistence ───────────────────────────────────────────────────
+const MAX_SCORES = 5;
+const LS_KEY = 'tetrus_scores';
+const loadScores = () => {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
+};
+const saveScore = (score, level, lines) => {
+    const entry = { score, level: level+1, lines, date: new Date().toLocaleDateString() };
+    const list = loadScores();
+    list.push(entry);
+    list.sort((a,b) => b.score - a.score);
+    const trimmed = list.slice(0, MAX_SCORES);
+    try { localStorage.setItem(LS_KEY, JSON.stringify(trimmed)); } catch {}
+    return trimmed.findIndex(e => e === entry); // rank index (0-based), -1 if not found
+};
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default memo(function TetrusGame({ glitchLevel=0 }) {
     const canvasRef = useRef(null);
     const rafRef    = useRef(null);
 
-    const stateRef      = useRef('playing');
+    const stateRef      = useRef('attract');
     const boardRef      = useRef(makeBoard());
     const flashBoardRef = useRef(null);
     const flashRowsRef  = useRef([]);
@@ -118,6 +135,8 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
     const btnIntervalRef= useRef(null);
     const pauseMenuRef  = useRef(0);
     const justUnpausedRef = useRef(false);
+    const scoreBoardRef = useRef(loadScores()); // persisted top-5
+    const lastRankRef   = useRef(-1);           // rank of most recent game-over score
 
     useEffect(()=>{ glitchRef.current = glitchLevel; }, [glitchLevel]);
 
@@ -127,9 +146,9 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
         const dpr = window.devicePixelRatio || 1;
         const ctx  = canvas.getContext('2d');
 
-        let W=0, H=0, gameH=0, ctrlH=0, cellSize=0, boardX=0, boardY=0, infoX=0;
+        let W=0, H=0, gameH=0, ctrlH=0, cellSize=0, boardX=0, boardY=0;
 
-        // ── Layout ────────────────────────────────────────────────────────────
+        // ── Layout ────────────────────────────────────────────────────
         const calcLayout = () => {
             const rect = canvas.getBoundingClientRect();
             W = Math.round(rect.width * dpr);
@@ -139,24 +158,25 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
             ctrlH = Math.floor(H * CTRL_ZONE_RATIO);
             gameH = H - ctrlH;
 
-            const leftPad  = Math.max(3, Math.floor(dpr * 2));
-            const hudMinW  = Math.max(Math.floor(30*dpr), Math.floor(W*0.29));
-            const byHeight = Math.floor(gameH * 0.97 / ROWS);
-            const byWidth  = Math.floor((W - hudMinW - leftPad) / COLS);
+            // Full-width board (no side HUD stealing space)
+            const hPad = Math.max(4, Math.floor(dpr * 3));
+            const byHeight = Math.floor(gameH * 0.96 / ROWS);
+            const byWidth  = Math.floor((W - hPad * 2) / COLS);
             cellSize = Math.min(byHeight, byWidth);
 
-            boardX = leftPad;
+            // Center board horizontally and vertically in game zone
+            boardX = Math.floor((W - COLS * cellSize) / 2);
             boardY = Math.floor((gameH - ROWS * cellSize) / 2);
-            infoX  = leftPad + COLS*cellSize + Math.max(Math.floor(dpr*5), Math.floor(W*0.024));
 
-            // Compute buttons — larger on mobile
-            const cy  = gameH + ctrlH/2;
-            const br  = Math.min(Math.floor(ctrlH*0.38), Math.floor(W*0.082));
-            btnsRef.current = BTN_DEFS.map(def=>({
+            // Compute buttons — D-pad smaller, action buttons big
+            const cy  = gameH + Math.floor(ctrlH * 0.5);
+            const brD = Math.min(Math.floor(ctrlH * 0.30), Math.floor(W * 0.072)); // D-pad radius
+            const brA = Math.min(Math.floor(ctrlH * 0.36), Math.floor(W * 0.088)); // Action radius
+            btnsRef.current = BTN_DEFS.map(def => ({
                 ...def,
                 x: Math.round(W * def.xFrac),
                 y: Math.round(cy),
-                r: def.big ? Math.round(br*1.35) : br,
+                r: def.big ? brA : brD,
             }));
         };
 
@@ -164,12 +184,18 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
         ro.observe(canvas); calcLayout();
 
         // ── Reset / Land ──────────────────────────────────────────────────────
-        const resetGame = () => {
+        const resetGame = (goToAttract=false) => {
             boardRef.current=makeBoard(); flashBoardRef.current=null; flashRowsRef.current=[]; flashEndRef.current=0;
             curRef.current=randPiece(); nextRef.current=randPiece();
             scoreRef.current=0; levelRef.current=0; linesRef.current=0; lastDropRef.current=0;
-            stateRef.current='playing';
+            stateRef.current = goToAttract ? 'attract' : 'playing';
+            lastRankRef.current = -1;
             if(overTimerRef.current){clearTimeout(overTimerRef.current);overTimerRef.current=null;}
+        };
+
+        const startGame = () => {
+            resetGame(false);
+            justUnpausedRef.current = true;
         };
 
         const landPiece = (hardDrop=false) => {
@@ -191,8 +217,12 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
             curRef.current=nextRef.current; nextRef.current=randPiece();
             const chk=count>0?cleared:placed;
             if(!isValid(chk,curRef.current.cells,curRef.current.x,curRef.current.y)){
+                // Save score and record rank
+                const rank = saveScore(scoreRef.current, levelRef.current, linesRef.current);
+                lastRankRef.current = rank;
+                scoreBoardRef.current = loadScores();
                 stateRef.current='gameover'; SFX.over();
-                overTimerRef.current=setTimeout(resetGame,3000);
+                overTimerRef.current=setTimeout(()=>resetGame(true), 4000);
             }
         };
 
@@ -217,40 +247,46 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
             landPiece(true);
         };
 
+        const PAUSE_ITEMS = ['▶  RESUME','🏆 HIGH SCORES','🔁 RESTART',`🔊 SOUND`,'🏠 QUIT'];
+
         const togglePause = () => {
-            if (stateRef.current === 'playing') {
-                stateRef.current = 'paused';
-                pauseMenuRef.current = 0;
-            } else if (stateRef.current === 'paused') {
-                stateRef.current = 'playing';
-                justUnpausedRef.current = true;
-            }
+            const s = stateRef.current;
+            if (s === 'attract') { startGame(); return; }
+            if (s === 'playing') { stateRef.current='paused'; pauseMenuRef.current=0; return; }
+            if (s === 'paused')  { stateRef.current='playing'; justUnpausedRef.current=true; return; }
         };
 
-        const execBtn = key=>{
-            if (key==='p' || key==='P' || key==='Escape') {
-                togglePause();
-                return;
+        const execBtn = key => {
+            const s = stateRef.current;
+
+            // Escape / P always toggles pause or goes to attract
+            if (key==='p'||key==='P'||key==='Escape') { togglePause(); return; }
+
+            // ── Attract screen: any action starts game ────────────────────────
+            if (s === 'attract') { startGame(); return; }
+
+            // ── Scores screen: any action returns to attract ──────────────────
+            if (s === 'scores') { stateRef.current='attract'; SFX.move(); return; }
+
+            // ── Gameover: any action restarts immediately ─────────────────────
+            if (s === 'gameover') {
+                if(overTimerRef.current){clearTimeout(overTimerRef.current);overTimerRef.current=null;}
+                resetGame(true); return;
             }
 
-            if (stateRef.current === 'paused') {
-                if (key === 'ArrowUp') {
-                    pauseMenuRef.current = (pauseMenuRef.current - 1 + 3) % 3;
-                    SFX.move();
-                } else if (key === 'ArrowDown') {
-                    pauseMenuRef.current = (pauseMenuRef.current + 1) % 3;
-                    SFX.move();
-                } else if (key === ' ' || key === 'Enter') {
+            // ── Pause menu ────────────────────────────────────────────────────
+            if (s === 'paused') {
+                const N = PAUSE_ITEMS.length;
+                if (key==='ArrowUp')   { pauseMenuRef.current=(pauseMenuRef.current-1+N)%N; SFX.move(); }
+                else if (key==='ArrowDown') { pauseMenuRef.current=(pauseMenuRef.current+1)%N; SFX.move(); }
+                else if (key===' '||key==='Enter') {
                     SFX.rotate();
-                    if (pauseMenuRef.current === 0) {
-                        togglePause();
-                    } else if (pauseMenuRef.current === 1) {
-                        _isMuted = !_isMuted;
-                    } else if (pauseMenuRef.current === 2) {
-                        resetGame();
-                        stateRef.current = 'playing';
-                        justUnpausedRef.current = true;
-                    }
+                    const sel = pauseMenuRef.current;
+                    if (sel===0) { stateRef.current='playing'; justUnpausedRef.current=true; }       // Resume
+                    else if (sel===1) { stateRef.current='scores'; }                                  // High Scores
+                    else if (sel===2) { startGame(); }                                                 // Restart
+                    else if (sel===3) { _isMuted=!_isMuted; }                                         // Sound
+                    else if (sel===4) { resetGame(true); }                                             // Quit
                 }
                 return;
             }
@@ -262,6 +298,7 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
             else if(key==='ArrowDown')  trySoft();
             else if(key===' ')          tryDrop();
         };
+
 
         // ── Draw: board cells ─────────────────────────────────────────────────
         const drawCell = (gx, gy, color, alpha=1) => {
@@ -283,8 +320,8 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
 
         const drawGhostCell = (gx, gy, color) => {
             const px=boardX+gx*cellSize, py=boardY+gy*cellSize;
-            const pad=Math.max(1,Math.floor(cellSize*0.1));
-            ctx.strokeStyle=color+'35'; ctx.lineWidth=Math.max(1,Math.floor(cellSize*0.09));
+            const pad=Math.max(1,Math.floor(cellSize*0.08));
+            ctx.strokeStyle=color+'55'; ctx.lineWidth=Math.max(1,Math.floor(cellSize*0.12));
             ctx.strokeRect(px+pad, py+pad, cellSize-pad*2, cellSize-pad*2);
         };
 
@@ -300,7 +337,7 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
             ctx.fillRect(boardX, boardY, COLS*cellSize, ROWS*cellSize);
 
             // Grid
-            ctx.strokeStyle='rgba(75,216,160,0.055)'; ctx.lineWidth=0.5;
+            ctx.strokeStyle='rgba(75,216,160,0.10)'; ctx.lineWidth=0.6;
             for(let r=0;r<=ROWS;r++){
                 ctx.beginPath(); ctx.moveTo(boardX,boardY+r*cellSize);
                 ctx.lineTo(boardX+COLS*cellSize,boardY+r*cellSize); ctx.stroke();
@@ -373,73 +410,61 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
         };
 
         // ── Draw: HUD panel ───────────────────────────────────────────────────
+        // ── Draw: compact HUD overlay (top strip on board) ─────────────────
         const drawHUD = () => {
-            if(!infoX||!cellSize) return;
-            const valFont  =Math.max(8,Math.floor(cellSize*0.86));
-            const labelFont=Math.max(6,Math.floor(cellSize*0.56));
-            const hudW     =W-infoX-Math.floor(dpr*2);
+            if (!cellSize) return;
+            const bx = boardX, bw = COLS * cellSize;
+            const fSz  = Math.max(7, Math.floor(cellSize * 0.80));
+            const barH = Math.floor(fSz * 2.0);
+            const by   = boardY;
 
-            // HUD panel background
-            ctx.fillStyle='rgba(0,10,4,0.52)';
-            ctx.strokeStyle='rgba(75,216,160,0.13)'; ctx.lineWidth=0.6;
-            ctx.fillRect(infoX-4, boardY, hudW+4, ROWS*cellSize);
-            ctx.strokeRect(infoX-4, boardY, hudW+4, ROWS*cellSize);
+            // Semi-transparent bar overlaid on top of the board
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,8,3,0.82)';
+            ctx.fillRect(bx, by, bw, barH);
+            ctx.strokeStyle = 'rgba(75,216,160,0.20)';
+            ctx.lineWidth = 0.7;
+            ctx.strokeRect(bx, by, bw, barH);
 
-            let y=boardY+valFont*1.2;
-            ctx.textAlign='left'; ctx.shadowBlur=0;
+            const midY = by + barH * 0.62;
+            ctx.textBaseline = 'middle';
 
-            const lbl = (text,extra=0) => {
-                ctx.font=`${labelFont}px "JetBrains Mono",monospace`;
-                ctx.fillStyle='rgba(75,216,160,0.40)'; ctx.fillText(text,infoX,y);
-                y+=valFont*(1.0+extra);
-            };
-            const val = (text,color) => {
-                ctx.font=`bold ${valFont}px "JetBrains Mono",monospace`;
-                ctx.fillStyle=color; ctx.shadowColor=color; ctx.shadowBlur=valFont*0.55;
-                ctx.fillText(text,infoX,y); ctx.shadowBlur=0;
-                y+=valFont*1.95;
-            };
+            // Score (left)
+            const scoreSz = Math.max(7, Math.floor(cellSize * 0.82));
+            ctx.font = `bold ${scoreSz}px "JetBrains Mono",monospace`;
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#FFD600';
+            ctx.shadowColor = '#FFD600'; ctx.shadowBlur = scoreSz * 0.55;
+            ctx.fillText(String(scoreRef.current).padStart(6,'0'), bx + 4, midY);
+            ctx.shadowBlur = 0;
 
-            lbl('SCORE'); 
-            const scoreSz = Math.max(14, Math.floor(cellSize * 1.35));
-            ctx.font=`bold ${scoreSz}px "JetBrains Mono",monospace`;
-            ctx.fillStyle='#FFD600'; ctx.shadowColor='#FFD600'; ctx.shadowBlur=scoreSz*0.55;
-            ctx.fillText(String(scoreRef.current).padStart(6,'0'), infoX, y);
-            ctx.shadowBlur=0;
-            y += scoreSz * 1.45;
+            // Level (center)
+            const lblSz = Math.max(5, Math.floor(cellSize * 0.56));
+            ctx.font = `${lblSz}px "JetBrains Mono",monospace`;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#6FD4FF';
+            ctx.fillText(`LV ${levelRef.current + 1}`, bx + bw / 2, midY);
 
-            lbl('LEVEL'); val(String(levelRef.current+1),'#6FD4FF');
-            lbl('LINES'); val(String(linesRef.current),'#4BD8A0');
-
-            // Level bar
-            const barW=hudW-8, barH=Math.max(3,Math.floor(valFont*0.28));
-            const prog=(linesRef.current%LEVEL_LINES)/LEVEL_LINES;
-            ctx.fillStyle='rgba(75,216,160,0.12)';
-            ctx.fillRect(infoX,y,barW,barH);
-            ctx.fillStyle='rgba(75,216,160,0.70)';
-            ctx.shadowColor='#4BD8A0'; ctx.shadowBlur=barH*1.5;
-            ctx.fillRect(infoX,y,Math.floor(barW*prog),barH);
-            ctx.shadowBlur=0;
-            y+=barH+valFont*1.2;
-
-            lbl('NEXT',0.35);
-            // NEXT preview box
-            const next=nextRef.current;
-            const preCell=Math.max(4,Math.floor(cellSize*0.62));
-            const preW=next.cells[0].length*preCell, preH=next.cells.length*preCell;
-            const preX=infoX+(hudW-preW)/2-2;
-            ctx.strokeStyle='rgba(75,216,160,0.18)'; ctx.lineWidth=0.5;
-            ctx.strokeRect(preX-3,y-3,preW+6,preH+6);
-            next.cells.forEach((row,r)=>row.forEach((v,c)=>{
-                if(!v) return;
-                const px=preX+c*preCell, py=y+r*preCell;
-                const pad=Math.max(1,Math.floor(preCell*0.1));
-                ctx.save(); ctx.globalAlpha=0.9;
-                ctx.fillStyle=next.color; ctx.shadowColor=next.color; ctx.shadowBlur=preCell*0.7;
-                ctx.fillRect(px+pad,py+pad,preCell-pad*2,preCell-pad*2);
+            // NEXT preview (right)
+            const next = nextRef.current;
+            const pCell = Math.max(3, Math.floor(barH * 0.30));
+            const pW    = next.cells[0].length * pCell;
+            const pH    = next.cells.length    * pCell;
+            const pX    = bx + bw - 4 - pW;
+            const pY    = by + (barH - pH) / 2;
+            next.cells.forEach((row, r) => row.forEach((v, c) => {
+                if (!v) return;
+                ctx.save();
+                ctx.fillStyle = next.color;
+                ctx.shadowColor = next.color; ctx.shadowBlur = pCell * 0.9;
+                ctx.fillRect(pX + c * pCell + 1, pY + r * pCell + 1, pCell - 2, pCell - 2);
                 ctx.restore();
             }));
+
+            ctx.textBaseline = 'alphabetic';
+            ctx.restore();
         };
+
 
         // ── Draw: arcade control zone ─────────────────────────────────────────
         const drawControls = (ts) => {
@@ -447,105 +472,52 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
             const btns=btnsRef.current;
             const pressedId=pressedBtnRef.current;
 
-            // Panel background gradient
+            // ── Panel background ──────────────────────────────────────────────
             const bgGrd=ctx.createLinearGradient(0,gameH,0,H);
-            bgGrd.addColorStop(0,'rgba(3,12,6,0.99)');
-            bgGrd.addColorStop(0.5,'rgba(5,16,8,0.97)');
-            bgGrd.addColorStop(1,'rgba(2,8,4,0.99)');
+            bgGrd.addColorStop(0,'rgba(2,10,5,0.99)');
+            bgGrd.addColorStop(1,'rgba(1,6,3,0.99)');
             ctx.fillStyle=bgGrd;
             ctx.fillRect(0,gameH,W,ctrlH);
 
-            // Glowing separator bar
+            // Glowing separator line
+            ctx.save();
+            ctx.shadowColor='#4BD8A0'; ctx.shadowBlur=8;
             const sepGrd=ctx.createLinearGradient(0,0,W,0);
             sepGrd.addColorStop(0,'transparent');
-            sepGrd.addColorStop(0.12,'rgba(75,216,160,0.42)');
-            sepGrd.addColorStop(0.88,'rgba(75,216,160,0.42)');
+            sepGrd.addColorStop(0.1,'rgba(75,216,160,0.55)');
+            sepGrd.addColorStop(0.9,'rgba(75,216,160,0.55)');
             sepGrd.addColorStop(1,'transparent');
-            ctx.save();
-            ctx.shadowColor='#4BD8A0'; ctx.shadowBlur=6;
             ctx.fillStyle=sepGrd;
-            ctx.fillRect(0,gameH-1,W,1.5);
+            ctx.fillRect(0,gameH-1,W,2);
             ctx.shadowBlur=0; ctx.restore();
 
-            // PCB circuit traces (decorative)
-            ctx.strokeStyle='rgba(75,216,160,0.065)'; ctx.lineWidth=0.6;
-            // Horizontal traces
-            const t1=gameH+ctrlH*0.20, t2=gameH+ctrlH*0.80;
-            ctx.beginPath(); ctx.moveTo(0,t1); ctx.lineTo(W*DIVIDER_FRAC*0.97,t1); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0,t2); ctx.lineTo(W*DIVIDER_FRAC*0.97,t2); ctx.stroke();
-            // Vertical drops from each button
-            btns.forEach(btn=>{
-                if(btn.id==='drop') return;
-                ctx.beginPath(); ctx.moveTo(btn.x,t1); ctx.lineTo(btn.x,gameH+ctrlH*0.28); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(btn.x,t2); ctx.lineTo(btn.x,H-ctrlH*0.10); ctx.stroke();
-                // Solder pad dot
-                ctx.beginPath(); ctx.arc(btn.x,t1,Math.max(1.5,dpr*0.9),0,Math.PI*2);
-                ctx.fillStyle='rgba(75,216,160,0.18)'; ctx.fill();
-                ctx.beginPath(); ctx.arc(btn.x,t2,Math.max(1.5,dpr*0.9),0,Math.PI*2);
-                ctx.fill();
-            });
-
-            // Corner rivets
-            const rv=Math.max(3,Math.min(ctrlH*0.085,8*dpr));
-            [[W*0.022,gameH+ctrlH*0.14],[W*0.978,gameH+ctrlH*0.14],[W*0.022,H-ctrlH*0.14],[W*0.978,H-ctrlH*0.14]].forEach(([cx,cy])=>{
-                // Rivet base
-                ctx.beginPath(); ctx.arc(cx,cy,rv,0,Math.PI*2);
-                const rGrd=ctx.createRadialGradient(cx-rv*0.3,cy-rv*0.3,0,cx,cy,rv);
-                rGrd.addColorStop(0,'rgba(28,40,30,0.97)'); rGrd.addColorStop(1,'rgba(5,10,6,0.99)');
-                ctx.fillStyle=rGrd; ctx.strokeStyle='rgba(75,216,160,0.28)'; ctx.lineWidth=0.7;
-                ctx.fill(); ctx.stroke();
-                // Phillips cross
-                ctx.strokeStyle='rgba(75,216,160,0.14)'; ctx.lineWidth=0.6;
-                ctx.beginPath(); ctx.moveTo(cx-rv*0.55,cy); ctx.lineTo(cx+rv*0.55,cy); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(cx,cy-rv*0.55); ctx.lineTo(cx,cy+rv*0.55); ctx.stroke();
-                // Specular glint
-                ctx.beginPath(); ctx.arc(cx-rv*0.28,cy-rv*0.28,rv*0.25,0,Math.PI*2);
-                ctx.fillStyle='rgba(255,255,255,0.08)'; ctx.fill();
-            });
-
-            // Vertical divider between D-pad and action
+            // ── Vertical divider (D-PAD | ACTION) ────────────────────────────
             const divX=W*DIVIDER_FRAC;
-            ctx.strokeStyle='rgba(75,216,160,0.14)'; ctx.lineWidth=0.8;
-            ctx.beginPath(); ctx.moveTo(divX,gameH+ctrlH*0.06); ctx.lineTo(divX,H-ctrlH*0.06); ctx.stroke();
+            ctx.save();
+            ctx.strokeStyle='rgba(75,216,160,0.18)'; ctx.lineWidth=1;
+            ctx.shadowColor='#4BD8A0'; ctx.shadowBlur=4;
+            ctx.beginPath();
+            ctx.moveTo(divX,gameH+ctrlH*0.08);
+            ctx.lineTo(divX,H-ctrlH*0.08);
+            ctx.stroke();
+            ctx.restore();
 
-            // ── Marquee / TETRUS display ──────────────────────────────────────
-            const marqX0=divX+W*0.012;
-            const marqW=W-marqX0-W*0.018;
-            const marqH=ctrlH*0.60;
-            const marqY0=gameH+(ctrlH-marqH)/2;
-            const marqCX=marqX0+marqW/2;
-            const marqCY=marqY0+marqH/2;
+            // ── Group labels ──────────────────────────────────────────────────
+            const lblSz=Math.max(5,Math.floor(ctrlH*0.075));
+            ctx.font=`${lblSz}px "JetBrains Mono",monospace`;
+            ctx.textAlign='center'; ctx.textBaseline='top';
+            ctx.fillStyle='rgba(75,216,160,0.28)';
+            ctx.fillText('D-PAD', W*0.26, gameH+ctrlH*0.05);
 
-            // Marquee box
-            const mGrd=ctx.createLinearGradient(marqX0,marqY0,marqX0,marqY0+marqH);
-            mGrd.addColorStop(0,'rgba(0,16,8,0.90)'); mGrd.addColorStop(1,'rgba(0,10,4,0.94)');
-            ctx.fillStyle=mGrd; ctx.strokeStyle='rgba(75,216,160,0.22)'; ctx.lineWidth=0.8;
-            ctx.fillRect(marqX0,marqY0,marqW,marqH);
-            ctx.strokeRect(marqX0,marqY0,marqW,marqH);
-            // Inner inset line
-            ctx.strokeStyle='rgba(75,216,160,0.06)'; ctx.lineWidth=0.5;
-            ctx.strokeRect(marqX0+2,marqY0+2,marqW-4,marqH-4);
-
-            // TETRUS title pulse
-            const pulseT=0.68+0.32*Math.sin(ts*0.0028);
-            const fSz=Math.max(6,Math.floor(ctrlH*0.175));
-            ctx.font=`bold ${fSz}px "JetBrains Mono",monospace`;
-            ctx.textAlign='center'; ctx.textBaseline='middle';
-            ctx.fillStyle=`rgba(75,216,160,${pulseT*0.95})`;
-            ctx.shadowColor='#4BD8A0'; ctx.shadowBlur=fSz*0.7*pulseT;
-            ctx.fillText('TETRUS',marqCX,marqCY);
+            // TETRUS label right of divider (pulsing)
+            const pulseT=0.60+0.40*Math.sin((btns[0]&&btns[0]._ts)||0);
+            const ttSz=Math.max(6,Math.floor(ctrlH*0.11));
+            ctx.font=`bold ${ttSz}px "JetBrains Mono",monospace`;
+            ctx.fillStyle=`rgba(75,216,160,${0.55+0.30*Math.sin(Date.now()*0.0025)})`;
+            ctx.shadowColor='#4BD8A0'; ctx.shadowBlur=ttSz*0.6;
+            ctx.fillText('TETRUS', W*0.785, gameH+ctrlH*0.05);
             ctx.shadowBlur=0;
 
-            // Sub-labels
-            const subSz=Math.max(4,Math.floor(ctrlH*0.082));
-            ctx.font=`${subSz}px "JetBrains Mono",monospace`;
-            ctx.fillStyle='rgba(75,216,160,0.30)';
-            ctx.fillText('◆ PLAYER 1',marqCX,marqCY-fSz*0.95);
-            const blink=Math.floor(ts/560)%2===0;
-            ctx.fillStyle=`rgba(255,210,0,${blink?0.62:0.18})`;
-            ctx.shadowColor='#FFD600'; ctx.shadowBlur=blink?subSz*0.8:0;
-            ctx.fillText('INSERT COIN',marqCX,marqCY+fSz*0.95);
-            ctx.shadowBlur=0;
             ctx.textAlign='left';
 
             // ── Buttons ───────────────────────────────────────────────────────
@@ -554,85 +526,75 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
                 const {x,y:by,r,color,icon,label}=btn;
                 ctx.save();
 
-                // Drop shadow (unlit depth)
-                if(!pressed && r>10){
-                    ctx.beginPath(); ctx.arc(x+r*0.07,by+r*0.22,r*0.95,0,Math.PI*2);
-                    ctx.fillStyle='rgba(0,0,0,0.72)';
-                    ctx.filter=`blur(${Math.max(2,r*0.20)}px)`;
+                // Drop shadow
+                if(!pressed && r>8){
+                    ctx.beginPath(); ctx.arc(x+r*0.07,by+r*0.20,r*0.94,0,Math.PI*2);
+                    ctx.fillStyle='rgba(0,0,0,0.68)';
+                    ctx.filter=`blur(${Math.max(2,r*0.18)}px)`;
                     ctx.fill(); ctx.filter='none';
                 }
 
-                // Outer base ring (depth rim)
+                // Outer base ring
                 if(!pressed){
-                    ctx.beginPath(); ctx.arc(x,by+r*0.09,r*1.03,0,Math.PI*2);
-                    ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fill();
+                    ctx.beginPath(); ctx.arc(x,by+r*0.09,r*1.04,0,Math.PI*2);
+                    ctx.fillStyle='rgba(0,0,0,0.72)'; ctx.fill();
                 }
 
-                // Main button face
+                // Main face
                 const faceY=by+(pressed?r*0.07:0);
                 ctx.beginPath(); ctx.arc(x,faceY,r,0,Math.PI*2);
-                const grd=ctx.createRadialGradient(x-r*0.30,faceY-r*0.32,r*0.04,x,faceY,r);
+                const grd=ctx.createRadialGradient(x-r*0.28,faceY-r*0.30,r*0.04,x,faceY,r);
                 if(pressed){
-                    grd.addColorStop(0,'rgba(0,8,3,0.99)'); grd.addColorStop(1,'rgba(0,4,2,0.99)');
+                    grd.addColorStop(0,'rgba(0,8,3,0.99)');
+                    grd.addColorStop(1,'rgba(0,3,1,0.99)');
                 } else {
-                    grd.addColorStop(0,color+'22');
-                    grd.addColorStop(0.42,'rgba(14,24,16,0.97)');
-                    grd.addColorStop(1,'rgba(2,6,3,0.99)');
+                    grd.addColorStop(0,color+'28');
+                    grd.addColorStop(0.40,'rgba(12,22,14,0.97)');
+                    grd.addColorStop(1,'rgba(1,5,2,0.99)');
                 }
                 ctx.fillStyle=grd;
                 ctx.shadowColor=color;
-                ctx.shadowBlur=pressed?r*0.55:r*1.8;
+                ctx.shadowBlur=pressed?r*0.6:r*2.0;
                 ctx.fill();
 
-                // Colored rim
-                ctx.strokeStyle=pressed?color:color+'bb';
-                ctx.lineWidth=Math.max(1.5,r*0.12);
+                // Rim
+                ctx.strokeStyle=pressed?color:color+'cc';
+                ctx.lineWidth=Math.max(1.5,r*0.13);
                 ctx.stroke();
                 ctx.shadowBlur=0;
 
-                // Inner accent ring
-                ctx.beginPath(); ctx.arc(x,faceY,r*0.78,0,Math.PI*2);
-                ctx.strokeStyle=color+(pressed?'30':'18');
-                ctx.lineWidth=Math.max(0.5,r*0.055); ctx.stroke();
+                // Inner ring
+                ctx.beginPath(); ctx.arc(x,faceY,r*0.76,0,Math.PI*2);
+                ctx.strokeStyle=color+(pressed?'35':'1c');
+                ctx.lineWidth=Math.max(0.5,r*0.05); ctx.stroke();
 
-                // Dome specular arc (convex surface illusion)
+                // Specular dome
                 if(!pressed){
                     ctx.beginPath();
-                    ctx.arc(x-r*0.06,faceY-r*0.07,r*0.66,Math.PI*1.07,Math.PI*1.93);
-                    ctx.strokeStyle='rgba(255,255,255,0.17)';
-                    ctx.lineWidth=Math.max(1,r*0.17); ctx.stroke();
-                    // Small bright glint top-left
-                    ctx.beginPath(); ctx.arc(x-r*0.32,faceY-r*0.32,r*0.14,0,Math.PI*2);
-                    ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fill();
+                    ctx.arc(x-r*0.06,faceY-r*0.06,r*0.64,Math.PI*1.08,Math.PI*1.92);
+                    ctx.strokeStyle='rgba(255,255,255,0.20)';
+                    ctx.lineWidth=Math.max(1,r*0.16); ctx.stroke();
+                    ctx.beginPath(); ctx.arc(x-r*0.30,faceY-r*0.30,r*0.13,0,Math.PI*2);
+                    ctx.fillStyle='rgba(255,255,255,0.14)'; ctx.fill();
                 }
 
                 // Icon
-                const iSz=Math.max(8,Math.floor(r*0.82));
+                const iSz=Math.max(9,Math.floor(r*0.85));
                 ctx.fillStyle=pressed?color+'cc':color;
-                ctx.shadowColor=color; ctx.shadowBlur=pressed?iSz*0.5:iSz*1.0;
+                ctx.shadowColor=color; ctx.shadowBlur=pressed?iSz*0.5:iSz*1.1;
                 ctx.font=`bold ${iSz}px sans-serif`;
                 ctx.textAlign='center'; ctx.textBaseline='middle';
                 ctx.fillText(icon,x,faceY+(pressed?1.5:0));
                 ctx.shadowBlur=0;
 
-                // Label chip
-                if(label && r>=11){
-                    const lSz=Math.max(5,Math.floor(r*0.32));
-                    const lY=by+r*(pressed?1.08:1.01)+lSz*1.5;
-                    const lW=Math.max(lSz*label.length*0.72,lSz*3.2);
-                    const lH=lSz*1.85;
-                    // Chip bg
-                    ctx.fillStyle=color+'1c'; ctx.strokeStyle=color+'40'; ctx.lineWidth=0.5;
-                    if(ctx.roundRect){
-                        ctx.beginPath(); ctx.roundRect(x-lW/2,lY-lH*0.65,lW,lH,lSz*0.45);
-                        ctx.fill(); ctx.stroke();
-                    } else {
-                        ctx.fillRect(x-lW/2,lY-lH*0.65,lW,lH);
-                        ctx.strokeRect(x-lW/2,lY-lH*0.65,lW,lH);
-                    }
+                // Label chip below big buttons
+                if(label && r>=12){
+                    const lSz=Math.max(5,Math.floor(r*0.30));
+                    const lY=by+r*(pressed?1.10:1.02)+lSz*1.4;
                     ctx.font=`bold ${lSz}px "JetBrains Mono",monospace`;
-                    ctx.fillStyle=color+'a0';
-                    ctx.shadowBlur=0; ctx.fillText(label,x,lY);
+                    ctx.fillStyle=color+'a8';
+                    ctx.shadowBlur=0;
+                    ctx.fillText(label,x,lY);
                 }
                 ctx.restore();
             });
@@ -665,62 +627,250 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
             ctx.stroke();
         };
 
-        // ── Draw: game over / signal lost overlays ────────────────────────────
+        // ── Draw: game over results card ──────────────────────────────────────
         const drawGameOver = (ts) => {
-            const cx=boardX+(COLS*cellSize)/2, cy=boardY+(ROWS*cellSize)/2;
-            const fS=Math.max(8,Math.floor(cellSize*1.05));
-            ctx.fillStyle='rgba(0,0,0,0.82)'; ctx.fillRect(boardX,boardY,COLS*cellSize,ROWS*cellSize);
-            ctx.textAlign='center';
+            const bx=boardX, bw=COLS*cellSize, bh=ROWS*cellSize;
+            const cx=bx+bw/2, cy=boardY+bh/2;
+            const fS=Math.max(9,Math.floor(cellSize*1.1));
+            const subS=Math.max(6,Math.floor(cellSize*0.72));
+            const tinyS=Math.max(5,Math.floor(cellSize*0.52));
+
+            ctx.fillStyle='rgba(0,2,1,0.90)'; ctx.fillRect(bx,boardY,bw,bh);
+            ctx.save();
+            ctx.strokeStyle='rgba(255,23,68,0.45)'; ctx.lineWidth=Math.max(1.5,dpr);
+            ctx.strokeRect(bx+6,boardY+6,bw-12,bh-12);
+            ctx.restore();
+
+            ctx.textAlign='center'; ctx.textBaseline='middle';
+
+            // GAME OVER title
             ctx.font=`bold ${fS}px "JetBrains Mono",monospace`;
-            ctx.fillStyle='#FF1744'; ctx.shadowColor='#FF1744'; ctx.shadowBlur=fS*1.0;
-            ctx.fillText('GAME OVER',cx,cy-fS*0.6); ctx.shadowBlur=0;
-            if(Math.floor(ts/520)%2===0){
-                const sf=Math.floor(fS*0.62);
-                ctx.font=`bold ${sf}px "JetBrains Mono",monospace`;
-                ctx.fillStyle='#FFD600'; ctx.shadowColor='#FFD600'; ctx.shadowBlur=fS*0.55;
-                ctx.fillText('INSERT COIN',cx,cy+fS*0.9); ctx.shadowBlur=0;
+            ctx.fillStyle='#FF1744'; ctx.shadowColor='#FF1744'; ctx.shadowBlur=fS*1.1;
+            ctx.fillText('GAME OVER', cx, boardY + bh*0.18);
+            ctx.shadowBlur=0;
+
+            // New high score badge
+            const rank = lastRankRef.current;
+            if (rank >= 0 && rank < 3) {
+                const medals=['🥇','🥈','🥉'];
+                const badgeSz=Math.max(7,Math.floor(cellSize*0.80));
+                ctx.font=`bold ${badgeSz}px "JetBrains Mono",monospace`;
+                const pulse=0.7+0.3*Math.sin(ts*0.006);
+                ctx.fillStyle=`rgba(255,214,0,${pulse})`;
+                ctx.shadowColor='#FFD600'; ctx.shadowBlur=badgeSz*0.8*pulse;
+                ctx.fillText(`${medals[rank]} NEW HIGH SCORE!`, cx, boardY+bh*0.30);
+                ctx.shadowBlur=0;
             }
-            ctx.textAlign='left';
+
+            // Stats table
+            const statY = boardY + bh * 0.44;
+            const rowH = subS * 2.2;
+            const stats = [
+                ['SCORE', String(scoreRef.current).padStart(6,'0'), '#FFD600'],
+                ['LEVEL', String(levelRef.current+1),              '#6FD4FF'],
+                ['LINES', String(linesRef.current),                '#4BD8A0'],
+            ];
+            stats.forEach(([lbl, val, col], i) => {
+                const y = statY + i * rowH;
+                ctx.font=`${tinyS}px "JetBrains Mono",monospace`;
+                ctx.fillStyle='rgba(75,216,160,0.45)'; ctx.fillText(lbl, cx-bw*0.18, y);
+                ctx.font=`bold ${subS}px "JetBrains Mono",monospace`;
+                ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=subS*0.4;
+                ctx.fillText(val, cx+bw*0.10, y);
+                ctx.shadowBlur=0;
+            });
+
+            // Tap to continue
+            const blink=Math.floor(ts/480)%2===0;
+            ctx.font=`${tinyS}px "JetBrains Mono",monospace`;
+            ctx.fillStyle=`rgba(255,210,0,${blink?0.75:0.22})`;
+            ctx.shadowColor='#FFD600'; ctx.shadowBlur=blink?tinyS*0.7:0;
+            ctx.fillText('TAP TO CONTINUE', cx, boardY+bh*0.87);
+            ctx.shadowBlur=0;
+            ctx.textBaseline='alphabetic'; ctx.textAlign='left';
         };
 
+        // ── Draw: pause / operator menu ───────────────────────────────────────
         const drawPaused = (ts) => {
-            const cx=boardX+(COLS*cellSize)/2, cy=boardY+(ROWS*cellSize)/2;
-            const fS=Math.max(8,Math.floor(cellSize*1.05));
-            const subS=Math.max(6,Math.floor(cellSize*0.7));
-            
-            ctx.fillStyle='rgba(0,10,4,0.85)'; ctx.fillRect(boardX,boardY,COLS*cellSize,ROWS*cellSize);
-            ctx.strokeStyle='rgba(75,216,160,0.4)'; ctx.lineWidth=2;
-            ctx.strokeRect(boardX+8,boardY+8,COLS*cellSize-16,ROWS*cellSize-16);
+            const bx=boardX, bw=COLS*cellSize, bh=ROWS*cellSize;
+            const cx=bx+bw/2;
+            const fS=Math.max(8,Math.floor(cellSize*0.95));
+            const subS=Math.max(7,Math.floor(cellSize*0.78));
+            const tinyS=Math.max(5,Math.floor(cellSize*0.50));
 
-            ctx.textAlign='center';
+            ctx.fillStyle='rgba(0,10,4,0.88)'; ctx.fillRect(bx,boardY,bw,bh);
+            ctx.strokeStyle='rgba(75,216,160,0.35)'; ctx.lineWidth=Math.max(1.5,dpr);
+            ctx.strokeRect(bx+6,boardY+6,bw-12,bh-12);
+
+            ctx.textAlign='center'; ctx.textBaseline='middle';
+
+            // Title
             ctx.font=`bold ${fS}px "JetBrains Mono",monospace`;
             ctx.fillStyle='#00E5FF'; ctx.shadowColor='#00E5FF'; ctx.shadowBlur=fS*0.8;
-            ctx.fillText('OPERATOR MENU',cx,boardY + ROWS*cellSize*0.25);
+            ctx.fillText('── PAUSED ──', cx, boardY+bh*0.14);
             ctx.shadowBlur=0;
-            
-            // Menu items
-            const items = ['RESUME', `SOUND: ${_isMuted ? 'OFF' : 'ON'}`, 'RESTART'];
+
+            // 5-item menu
+            const items=[
+                '▶  RESUME',
+                '🏆 HIGH SCORES',
+                '🔁 RESTART',
+                `🔊 SOUND: ${_isMuted?'OFF':'ON'}`,
+                '🏠 QUIT TO MENU',
+            ];
+            const menuTop = boardY + bh * 0.26;
+            const rowH = subS * 2.4;
             ctx.font=`bold ${subS}px "JetBrains Mono",monospace`;
-            
             items.forEach((item, i) => {
-                const y = cy + (i - 0.5) * subS * 2.5;
-                if (pauseMenuRef.current === i) {
-                    ctx.fillStyle='#FFD600'; ctx.shadowColor='#FFD600'; ctx.shadowBlur=subS*0.5;
-                    ctx.fillText(`> ${item} <`, cx, y);
+                const y = menuTop + i * rowH;
+                const sel = pauseMenuRef.current === i;
+                if (sel) {
+                    // Selection highlight pill
+                    const pillH = subS * 1.8;
+                    ctx.save();
+                    ctx.fillStyle='rgba(75,216,160,0.10)';
+                    if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(bx+10,y-pillH/2,bw-20,pillH,4); ctx.fill(); }
+                    else { ctx.fillRect(bx+10,y-pillH/2,bw-20,pillH); }
+                    ctx.restore();
+                    ctx.fillStyle='#FFD600'; ctx.shadowColor='#FFD600'; ctx.shadowBlur=subS*0.55;
+                    ctx.fillText(item, cx, y);
                     ctx.shadowBlur=0;
                 } else {
-                    ctx.fillStyle='rgba(75,216,160,0.6)';
+                    ctx.fillStyle=i===4?'rgba(255,100,100,0.55)':'rgba(75,216,160,0.58)';
                     ctx.fillText(item, cx, y);
                 }
             });
-            
-            // Instructions
-            ctx.font=`${Math.max(4,Math.floor(cellSize*0.45))}px "JetBrains Mono",monospace`;
-            ctx.fillStyle='rgba(75,216,160,0.3)';
-            ctx.fillText('D-PAD: SELECT   DROP: CONFIRM',cx,boardY + ROWS*cellSize*0.9);
 
-            ctx.textAlign='left';
+            // Footer hint
+            ctx.font=`${tinyS}px "JetBrains Mono",monospace`;
+            ctx.fillStyle='rgba(75,216,160,0.28)';
+            ctx.fillText('▲▼ NAVIGATE  •  DROP CONFIRM', cx, boardY+bh*0.92);
+            ctx.textBaseline='alphabetic'; ctx.textAlign='left';
         };
+
+        // ── Draw: attract / start screen ──────────────────────────────────────
+        const drawAttract = (ts) => {
+            const bx=boardX, bw=COLS*cellSize, bh=ROWS*cellSize;
+            const cx=bx+bw/2;
+            const fS=Math.max(10,Math.floor(cellSize*1.18));
+            const subS=Math.max(6,Math.floor(cellSize*0.72));
+            const tinyS=Math.max(5,Math.floor(cellSize*0.50));
+
+            ctx.fillStyle='rgba(0,6,3,0.97)'; ctx.fillRect(bx,boardY,bw,bh);
+
+            ctx.textAlign='center'; ctx.textBaseline='middle';
+
+            // TETRUS logo
+            const pulse=0.65+0.35*Math.sin(ts*0.0025);
+            ctx.font=`bold ${fS}px "JetBrains Mono",monospace`;
+            ctx.fillStyle=`rgba(75,216,160,${pulse})`;
+            ctx.shadowColor='#4BD8A0'; ctx.shadowBlur=fS*0.85*pulse;
+            ctx.fillText('TETRUS', cx, boardY+bh*0.14);
+            ctx.shadowBlur=0;
+
+            // Subtitle
+            ctx.font=`${tinyS}px "JetBrains Mono",monospace`;
+            ctx.fillStyle='rgba(75,216,160,0.38)';
+            ctx.fillText('◆ SILICON SOUL ARCADE ◆', cx, boardY+bh*0.23);
+
+            // High scores section
+            const scores = scoreBoardRef.current;
+            const tableTop = boardY + bh * 0.31;
+            const rowH = subS * 1.95;
+
+            ctx.font=`bold ${tinyS}px "JetBrains Mono",monospace`;
+            ctx.fillStyle='rgba(255,214,0,0.72)';
+            ctx.fillText('── HIGH SCORES ──', cx, tableTop);
+
+            if (scores.length === 0) {
+                ctx.font=`${tinyS}px "JetBrains Mono",monospace`;
+                ctx.fillStyle='rgba(75,216,160,0.35)';
+                ctx.fillText('NO RECORDS YET', cx, tableTop + rowH);
+            } else {
+                const medals=['🥇','🥈','🥉','  4','  5'];
+                scores.forEach((s, i) => {
+                    const y = tableTop + rowH * (i + 1);
+                    const isNew = lastRankRef.current === i;
+                    ctx.font=`${Math.max(5,Math.floor(subS*0.85))}px "JetBrains Mono",monospace`;
+                    ctx.fillStyle = isNew ? '#FFD600' : (i===0?'rgba(255,214,0,0.80)':'rgba(75,216,160,0.62)');
+                    if (isNew) { ctx.shadowColor='#FFD600'; ctx.shadowBlur=tinyS*0.6; }
+                    ctx.fillText(
+                        `${medals[i]}  ${String(s.score).padStart(6,'0')}  LV${String(s.level).padStart(2,' ')}  ${String(s.lines).padStart(3,' ')}L`,
+                        cx, y
+                    );
+                    ctx.shadowBlur=0;
+                });
+            }
+
+            // Press any button prompt
+            const blink=Math.floor(ts/540)%2===0;
+            ctx.font=`bold ${subS}px "JetBrains Mono",monospace`;
+            ctx.fillStyle=`rgba(224,64,251,${blink?0.90:0.22})`;
+            ctx.shadowColor='#E040FB'; ctx.shadowBlur=blink?subS*0.7:0;
+            ctx.fillText('PRESS ANY BUTTON', cx, boardY+bh*0.90);
+            ctx.shadowBlur=0;
+            ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+        };
+
+        // ── Draw: high scores full screen ─────────────────────────────────────
+        const drawScores = (ts) => {
+            const bx=boardX, bw=COLS*cellSize, bh=ROWS*cellSize;
+            const cx=bx+bw/2;
+            const fS=Math.max(8,Math.floor(cellSize*0.92));
+            const subS=Math.max(6,Math.floor(cellSize*0.72));
+            const tinyS=Math.max(5,Math.floor(cellSize*0.50));
+
+            ctx.fillStyle='rgba(0,6,3,0.97)'; ctx.fillRect(bx,boardY,bw,bh);
+            ctx.strokeStyle='rgba(255,214,0,0.3)'; ctx.lineWidth=Math.max(1.5,dpr);
+            ctx.strokeRect(bx+6,boardY+6,bw-12,bh-12);
+
+            ctx.textAlign='center'; ctx.textBaseline='middle';
+
+            ctx.font=`bold ${fS}px "JetBrains Mono",monospace`;
+            ctx.fillStyle='#FFD600'; ctx.shadowColor='#FFD600'; ctx.shadowBlur=fS*0.7;
+            ctx.fillText('🏆 HIGH SCORES', cx, boardY+bh*0.12);
+            ctx.shadowBlur=0;
+
+            const scores = scoreBoardRef.current;
+            const tableTop = boardY + bh * 0.22;
+            const rowH = bh * 0.13;
+
+            // Column headers
+            ctx.font=`${tinyS}px "JetBrains Mono",monospace`;
+            ctx.fillStyle='rgba(75,216,160,0.40)';
+            ctx.fillText('RANK      SCORE   LV  LINES   DATE', cx, tableTop);
+
+            if (scores.length === 0) {
+                ctx.fillStyle='rgba(75,216,160,0.35)';
+                ctx.fillText('NO RECORDS YET — PLAY A GAME!', cx, tableTop+rowH*1.5);
+            } else {
+                const medals=['🥇','🥈','🥉',' 4',' 5'];
+                scores.forEach((s, i) => {
+                    const y = tableTop + rowH * (i + 1.4);
+                    const isNew = lastRankRef.current === i;
+                    ctx.font=`bold ${Math.max(6,Math.floor(subS*0.88))}px "JetBrains Mono",monospace`;
+                    ctx.fillStyle = isNew ? '#FFD600' : (i===0?'rgba(255,214,0,0.82)':'rgba(75,216,160,0.68)');
+                    if (isNew) { ctx.shadowColor='#FFD600'; ctx.shadowBlur=tinyS*0.5; }
+                    const row = `${medals[i]}  ${String(s.score).padStart(6,'0')}  ${String(s.level).padStart(2,' ')}   ${String(s.lines).padStart(4,' ')}   ${s.date}`;
+                    ctx.fillText(row, cx, y);
+                    ctx.shadowBlur=0;
+                    if (isNew) {
+                        ctx.font=`${tinyS}px "JetBrains Mono",monospace`;
+                        ctx.fillStyle='rgba(255,214,0,0.55)';
+                        ctx.fillText('◀ YOU', cx + bw*0.32, y);
+                    }
+                });
+            }
+
+            // Back hint
+            const blink=Math.floor(ts/560)%2===0;
+            ctx.font=`${tinyS}px "JetBrains Mono",monospace`;
+            ctx.fillStyle=`rgba(75,216,160,${blink?0.70:0.28})`;
+            ctx.fillText('ANY BUTTON — BACK', cx, boardY+bh*0.93);
+            ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+        };
+
+
 
         const drawSignalLost = (norm, ts) => {
             const cx=boardX+(COLS*cellSize)/2, cy=boardY+(ROWS*cellSize)/2;
@@ -882,13 +1032,21 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
         };
 
         const handleKey = e => {
+            // Don't intercept keys when user is typing in a form field
+            const tag = document.activeElement?.tagName?.toLowerCase();
+            const isEditable = document.activeElement?.isContentEditable;
+            if (tag === 'input' || tag === 'textarea' || tag === 'select' || isEditable) return;
+
             if (e.key === 'p' || e.key === 'P' || e.key === 'Escape' || e.key === 'Enter') {
                 execBtn(e.key);
                 e.preventDefault();
                 return;
             }
+            const s = stateRef.current;
+            // Overlay states: any game key dismisses/starts
+            if (s==='attract'||s==='scores'||s==='gameover') { execBtn(e.key||' '); return; }
 
-            if (stateRef.current === 'paused') {
+            if (s === 'paused') {
                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === ' ') {
                     execBtn(e.key);
                     e.preventDefault();
@@ -910,15 +1068,17 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
             const t=e.touches[0];
             const rect=canvas.getBoundingClientRect();
             const relY=t.clientY-rect.top;
-            if(relY*dpr<gameH){
+            const s = stateRef.current;
+            // Tapping board area on overlay screens: route through execBtn
+            if(relY*dpr < gameH) {
                 e.preventDefault();
-                togglePause();
+                if(s==='attract'||s==='scores'||s==='gameover'||s==='playing'||s==='paused') {
+                    execBtn(' ');
+                }
                 return;
             }
             const btn=hitBtn(t.clientX-rect.left,relY);
             if(btn){
-                // Button tap: handle immediately & nullify touchRef so
-                // handleTouchEnd won't fire a second gesture action.
                 e.preventDefault();
                 pressBtn(btn);
                 touchRef.current=null;
@@ -941,10 +1101,12 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
             touchRef.current=null;
         };
         const handleTouchCancel=()=>{releaseBtn();touchRef.current=null;};
-        const handleMouseDown=e=>{
+        const handleMouseDown = e => {
             const rect=canvas.getBoundingClientRect();
             const relX=e.clientX-rect.left,relY=e.clientY-rect.top;
-            if(relY*dpr<gameH) {
+            const s = stateRef.current;
+            if(relY*dpr < gameH) {
+                if(s==='attract'||s==='scores'||s==='gameover') { execBtn(' '); return; }
                 togglePause();
                 return;
             }
@@ -967,6 +1129,7 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
 
             const gl=glitchRef.current, state=stateRef.current;
 
+            // Glitch state: recovery goes to attract
             if(gl>GLITCH_HEAVY){
                 heavyGlRef.current=true;
                 if(state==='playing'){
@@ -975,7 +1138,7 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
                 }
                 if(ts-glitchSndRef.current>620){SFX.glitch();glitchSndRef.current=ts;}
             } else if(gl<GLITCH_HEAVY&&heavyGlRef.current){
-                heavyGlRef.current=false; resetGame();
+                heavyGlRef.current=false; resetGame(true);
             }
 
             // Background
@@ -990,6 +1153,10 @@ export default memo(function TetrusGame({ glitchLevel=0 }) {
             ctx.save(); ctx.shadowColor='#4BD8A0'; ctx.shadowBlur=5;
             ctx.fillStyle=barGrd; ctx.fillRect(0,0,W,barH);
             ctx.shadowBlur=0; ctx.restore();
+
+            // Attract and scores screens skip game rendering
+            if(state==='attract') { drawAttract(ts); drawScanlines(); drawVignette(); drawControls(ts); return; }
+            if(state==='scores')  { drawScores(ts);  drawScanlines(); drawVignette(); drawControls(ts); return; }
 
             drawBoard(ts, gl);
 

@@ -308,122 +308,88 @@ export default memo(function ProductShell({ leverValue, isDark }) {
                     LEFT PANEL — ventilation, grip texture, port cutouts
                    ═══════════════════════════════════════════════════════════ */}
                 <g transform={`translate(${leftDx},0)`} opacity={shellOpacity * 0.9}>
-                    {/* Panel body */}
-                    <rect x="2" y="26" width="37" height="102" fill={shellBody} stroke={bevelLight} strokeWidth="0.5" />
-                    {/* Brushed texture */}
-                    <rect x="2" y="26" width="37" height="102" fill="url(#shell-texture)" />
-                    {/* Left edge highlight */}
+                    {/* Panel body — slimmed to 24px */}
+                    <rect x="2" y="26" width="24" height="102" fill={shellBody} stroke={bevelLight} strokeWidth="0.5" />
+                    <rect x="2" y="26" width="24" height="102" fill="url(#shell-texture)" />
                     <line x1="2" y1="26" x2="2" y2="128" stroke={bevelLight} strokeWidth="0.9" />
-                    {/* Inner edge shadow */}
-                    <line x1="39" y1="26" x2="39" y2="128" stroke={bevelDark} strokeWidth="0.4" />
-                    {/* Chamfer lines */}
+                    <line x1="26" y1="26" x2="26" y2="128" stroke={bevelDark} strokeWidth="0.4" />
                     <line x1="4" y1="26" x2="4" y2="128" stroke={bevelMid} strokeWidth="0.2" />
 
-                    {/* ── Large ventilation grille (center) ── */}
-                    {ventGrille(8, 44, 22, 8, 4.5, 'left-vent')}
-                    {/* Vent surround recess */}
-                    <rect x="6" y="42" width="26" height="40" rx="1.5"
+                    {/* ── Ventilation grille ── */}
+                    {ventGrille(6, 48, 14, 6, 4.2, 'left-vent')}
+                    <rect x="4" y="46" width="18" height="28" rx="1"
                         fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="0.4" />
 
-                    {/* ── Grip texture zone (top area) ── */}
-                    <rect x="5" y="28" width="30" height="12" rx="1" fill="url(#grip-dots)" />
-                    {/* Grip lines */}
-                    {[0, 1, 2, 3, 4].map(i => (
-                        <line key={`gl-${i}`} x1="7" y1={29.5 + i * 2.2} x2="33" y2={29.5 + i * 2.2}
+                    {/* ── Grip texture ── */}
+                    <rect x="4" y="28" width="18" height="10" rx="1" fill="url(#grip-dots)" />
+                    {[0, 1, 2, 3].map(i => (
+                        <line key={`gl-${i}`} x1="5" y1={29.5 + i * 2.2} x2="21" y2={29.5 + i * 2.2}
                             stroke="rgba(255,255,255,0.012)" strokeWidth="0.6" />
                     ))}
 
-                    {/* ── SD card slot ── */}
+                    {/* ── Reset button ── */}
                     <g>
-                        <rect x="10" y="92" width="16" height="3.5" rx="1"
-                            fill={shellBodyDark} stroke={shellEdge} strokeWidth="0.35" />
-                        <rect x="11" y="92.5" width="14" height="2.5" rx="0.5"
-                            fill="rgba(0,0,0,0.5)" />
-                        <text x="18" y="99" textAnchor="middle"
-                            fontFamily="JetBrains Mono,monospace" fontSize="1.5" fill={portLabel}>μSD</text>
-                    </g>
-
-                    {/* ── Reset button (recessed) ── */}
-                    <g>
-                        <circle cx="18" cy="110" r="2" fill={shellBodyDark} stroke={shellEdge} strokeWidth="0.35" />
-                        <circle cx="18" cy="110" r="1" fill="rgba(0,0,0,0.6)" />
-                        <circle cx="18" cy="110" r="0.6" fill="rgba(60,60,60,0.8)" />
-                        <text x="18" y="115" textAnchor="middle"
+                        <circle cx="13" cy="108" r="2" fill={shellBodyDark} stroke={shellEdge} strokeWidth="0.35" />
+                        <circle cx="13" cy="108" r="1" fill="rgba(0,0,0,0.6)" />
+                        <circle cx="13" cy="108" r="0.6" fill="rgba(60,60,60,0.8)" />
+                        <text x="13" y="113" textAnchor="middle"
                             fontFamily="JetBrains Mono,monospace" fontSize="1.4" fill={portLabel}>RST</text>
                     </g>
 
-                    {/* Section divider lines */}
                     {[0, 1].map(i => (
-                        <line key={`ldiv-${i}`} x1="5" y1={41 + i * 50} x2="36" y2={41 + i * 50}
+                        <line key={`ldiv-${i}`} x1="4" y1={42 + i * 46} x2="23" y2={42 + i * 46}
                             stroke={shellEdge} strokeWidth="0.35" />
                     ))}
 
-                    {/* Screws */}
-                    {[[14, 35], [14, 119]].map(([cx, cy], i) => screwGroup(cx, cy, i))}
+                    {[[12, 33], [12, 121]].map(([cx, cy], i) => screwGroup(cx, cy, i))}
                 </g>
 
                 {/* ══════════════════════════════════════════════════════════════
                     RIGHT PANEL — fader slot, vents, I/O labels
                    ═══════════════════════════════════════════════════════════ */}
                 <g transform={`translate(${rightDx},0)`} opacity={shellOpacity * 0.9}>
-                    {/* Panel body */}
-                    <rect x="161" y="26" width="37" height="102" fill={shellBody} stroke={bevelLight} strokeWidth="0.5" />
-                    {/* Brushed texture */}
-                    <rect x="161" y="26" width="37" height="102" fill="url(#shell-texture)" />
-                    {/* Right edge shadow */}
+                    {/* Panel body — slimmed to 24px, starts at x:174 */}
+                    <rect x="174" y="26" width="24" height="102" fill={shellBody} stroke={bevelLight} strokeWidth="0.5" />
+                    <rect x="174" y="26" width="24" height="102" fill="url(#shell-texture)" />
                     <line x1="197" y1="26" x2="197" y2="128" stroke={bevelDark} strokeWidth="0.9" />
-                    {/* Inner edge highlight */}
-                    <line x1="161" y1="26" x2="161" y2="128" stroke={bevelLight} strokeWidth="0.3" />
+                    <line x1="174" y1="26" x2="174" y2="128" stroke={bevelLight} strokeWidth="0.3" />
 
                     {/* ── Fader slot channel ── */}
                     <g>
-                        {/* Slot recess shadow */}
-                        <rect x="180" y="30" width="14" height="92" rx="7"
+                        <rect x="186" y="30" width="9" height="92" rx="4.5"
                             fill="rgba(0,0,0,0.15)" />
-                        {/* Slot body */}
-                        <rect x="181" y="32" width="12" height="88" rx="6"
+                        <rect x="187" y="32" width="8" height="88" rx="4"
                             fill={faderSlot} stroke={faderBorder} strokeWidth="0.65" />
-                        {/* Inner bevel */}
-                        <rect x="181.5" y="32.5" width="11" height="87" rx="5.5"
+                        <rect x="187.5" y="32.5" width="7" height="87" rx="3.5"
                             fill="none" stroke="rgba(0,0,0,.75)" strokeWidth="0.75" />
-                        {/* Center track groove */}
-                        <rect x="183.5" y="35" width="4" height="82" rx="2" fill={faderInner} />
-                        {/* Track notches (detent marks) */}
+                        <rect x="189" y="35" width="3" height="82" rx="1.5" fill={faderInner} />
                         {[0, 1, 2, 3, 4].map(i => (
                             <g key={`notch-${i}`}>
-                                <line x1="179" y1={42 + i * 16} x2="181" y2={42 + i * 16}
+                                <line x1="184" y1={42 + i * 16} x2="186" y2={42 + i * 16}
                                     stroke="rgba(206,208,206,0.08)" strokeWidth="0.4" />
-                                <line x1="193" y1={42 + i * 16} x2="195" y2={42 + i * 16}
+                                <line x1="195" y1={42 + i * 16} x2="197" y2={42 + i * 16}
                                     stroke="rgba(206,208,206,0.08)" strokeWidth="0.4" />
                             </g>
                         ))}
-                        {/* Fader label */}
-                        <text x="176" y="79" textAnchor="middle"
-                            fontFamily="JetBrains Mono,monospace" fontSize="2"
+                        <text x="183" y="79" textAnchor="middle"
+                            fontFamily="JetBrains Mono,monospace" fontSize="1.6"
                             fill="rgba(206,208,206,0.16)"
-                            transform="rotate(-90,176,79)">
+                            transform="rotate(-90,183,79)">
                             LAYER CTRL
                         </text>
-                        {/* Min/Max labels */}
-                        <text x="185.5" y="30" textAnchor="middle"
+                        <text x="191" y="30" textAnchor="middle"
                             fontFamily="JetBrains Mono,monospace" fontSize="1.4"
                             fill={portLabel}>SYS</text>
-                        <text x="185.5" y="126" textAnchor="middle"
+                        <text x="191" y="126" textAnchor="middle"
                             fontFamily="JetBrains Mono,monospace" fontSize="1.4"
                             fill={portLabel}>SIG</text>
                     </g>
 
-                    {/* ── Right side vent grille (below fader) ── */}
-                    {ventGrille(163, 38, 10, 3, 3.8, 'right-vent-top')}
-                    {ventGrille(163, 100, 10, 4, 3.8, 'right-vent-bot')}
+                    {/* ── Vent grilles ── */}
+                    {ventGrille(176, 40, 8, 3, 3.6, 'right-vent-top')}
+                    {ventGrille(176, 102, 8, 4, 3.6, 'right-vent-bot')}
 
-                    {/* ── GPIO/expansion header label ── */}
-                    <text x="170" y="59" textAnchor="middle"
-                        fontFamily="JetBrains Mono,monospace" fontSize="1.3"
-                        fill={portLabel} transform="rotate(-90,170,59)">I/O EXP</text>
-
-                    {/* Screws */}
-                    {[[186, 35], [186, 119]].map(([cx, cy], i) => screwGroup(cx, cy, i))}
+                    {[[185, 33], [185, 121]].map(([cx, cy], i) => screwGroup(cx, cy, i))}
                 </g>
             </g>
 
@@ -434,30 +400,30 @@ export default memo(function ProductShell({ leverValue, isDark }) {
                 <g filter="url(#seam-glow-filter)">
                     <line x1="5" y1="27" x2="195" y2="27" stroke={seamC} strokeWidth="0.85" />
                     <line x1="5" y1="127" x2="195" y2="127" stroke={seamC} strokeWidth="0.85" />
-                    <line x1="38" y1="27" x2="38" y2="127" stroke={seamC} strokeWidth="0.55" opacity="0.62" />
-                    <line x1="162" y1="27" x2="162" y2="127" stroke={seamC} strokeWidth="0.55" opacity="0.62" />
+                    <line x1="26" y1="27" x2="26" y2="127" stroke={seamC} strokeWidth="0.55" opacity="0.62" />
+                    <line x1="174" y1="27" x2="174" y2="127" stroke={seamC} strokeWidth="0.55" opacity="0.62" />
                 </g>
             )}
 
             {/* ══════════════════════════════════════════════════════════════
                 SCREEN BEZEL FRAME — layered bevels for depth
                ═══════════════════════════════════════════════════════════ */}
-            {/* Outer bezel shadow */}
-            <rect x="36.5" y="24.5" width="127" height="105" rx="4"
+            {/* Outer bezel shadow — widened to match slimmer panels */}
+            <rect x="23.5" y="24.5" width="153" height="105" rx="4"
                 fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="1"
                 opacity={shellOpacity} />
             {/* Main bezel ring */}
-            <rect x="37" y="25" width="126" height="104" rx="3.5"
+            <rect x="24" y="25" width="152" height="104" rx="3.5"
                 fill="none" stroke={bezelC} strokeWidth="1.4"
                 style={{ transition: 'stroke 0.3s' }} />
             {/* Inner bezel shadow (depth illusion) */}
-            <rect x="38" y="26" width="124" height="102" rx="2.5"
+            <rect x="25" y="26" width="150" height="102" rx="2.5"
                 fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth="1.4" opacity={shellOpacity} />
             {/* Top bezel reflection */}
-            <rect x="38.5" y="26.5" width="123" height="13" rx="2.5"
+            <rect x="25.5" y="26.5" width="149" height="13" rx="2.5"
                 fill={shellHighlight} opacity={shellOpacity} />
             {/* Bottom bezel darker edge */}
-            <line x1="40" y1="128.5" x2="160" y2="128.5"
+            <line x1="26" y1="128.5" x2="174" y2="128.5"
                 stroke="rgba(0,0,0,0.2)" strokeWidth="0.5" opacity={shellOpacity} />
 
             {/* Device outer glow ring */}

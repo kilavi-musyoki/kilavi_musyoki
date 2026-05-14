@@ -303,13 +303,13 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 <PCBBoard layer={boardLayer} isDark={isDark} />
             </div>
 
-            {/* LAYER 2: Avatar Display */}
+            {/* LAYER 2: Avatar Display — expanded screen area */}
             <div style={{
                 position: 'absolute',
-                left: '19.5%',
-                top: '16.875%',
-                width: '61%',
-                height: '61.25%',
+                left: '12%',
+                top: '10%',
+                width: '76%',
+                height: '80%',
                 zIndex: 3,
                 borderRadius: shadowAlpha > 0.05 ? '3px' : '0px',
                 overflow: shadowAlpha > 0.05 ? 'hidden' : 'visible',
