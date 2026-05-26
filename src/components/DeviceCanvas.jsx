@@ -63,12 +63,16 @@ function drawParticles(ctx, particles, w, h) {
     ctx.clearRect(0, 0, w, h);
     for (const p of particles) {
         const alpha = p.life * 0.85;
-        ctx.globalAlpha = alpha;
 
-        // Glow
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = p.size * 3;
+        // Faux Glow - outer soft circle (extremely fast, zero shadowBlur CPU overhead)
         ctx.fillStyle = p.color;
+        ctx.globalAlpha = alpha * 0.28;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * p.life * 2.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Core - inner solid circle
+        ctx.globalAlpha = alpha;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
         ctx.fill();
@@ -85,13 +89,12 @@ function drawParticles(ctx, particles, w, h) {
         }
     }
     ctx.globalAlpha = 1;
-    ctx.shadowBlur = 0;
 }
 
 // ── Noise/static texture generator ───────────────────────────────────────────
-function drawNoise(ctx, w, h, intensity) {
+function drawNoise(ctx, w, h, intensity, buffer) {
     if (intensity < 0.01) return;
-    const imageData = ctx.createImageData(w, h);
+    const imageData = buffer || ctx.createImageData(w, h);
     const data = imageData.data;
     const step = Math.max(1, Math.floor(4 / intensity)); // skip pixels for perf
     for (let i = 0; i < data.length; i += 4 * step) {
@@ -216,6 +219,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
     const velocityRef = useRef(0);
     const flashDecayRef = useRef(0);
     const distortPhaseRef = useRef(0);
+    const noiseDataRef = useRef(null);
 
     useEffect(() => { tvRef.current = leverValue; }, [leverValue]);
 
@@ -312,13 +316,18 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 drawParticles(ctx, particlesRef.current, canvas.width, canvas.height);
             }
 
-            // Draw noise/static during movement
+            // Draw noise/static during movement (highly optimized offscreen imageData buffer)
             const noiseCanvas = noiseRef.current;
             if (noiseCanvas) {
                 const nctx = noiseCanvas.getContext('2d');
                 const noiseIntensity = clamp(velocityRef.current * 18 + distortPhaseRef.current * 0.3, 0, 1);
                 if (noiseIntensity > 0.01) {
-                    drawNoise(nctx, noiseCanvas.width, noiseCanvas.height, noiseIntensity);
+                    const nw = noiseCanvas.width;
+                    const nh = noiseCanvas.height;
+                    if (!noiseDataRef.current || noiseDataRef.current.width !== nw || noiseDataRef.current.height !== nh) {
+                        noiseDataRef.current = nctx.createImageData(nw, nh);
+                    }
+                    drawNoise(nctx, nw, nh, noiseIntensity, noiseDataRef.current);
                 } else {
                     nctx.clearRect(0, 0, noiseCanvas.width, noiseCanvas.height);
                 }
@@ -374,7 +383,6 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 transform: `perspective(900px) rotateX(0deg) rotateY(0deg)`,
                 transition: 'transform 0.06s linear',
                 willChange: 'transform',
-                filter: chromFilter,
             }}
         >
             {/* Tractor beam glow */}
@@ -398,7 +406,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 <PCBBoard layer={boardLayer} isDark={isDark} />
             </div>
 
-            {/* LAYER 2: Avatar Display — expanded screen area */}
+            {/* LAYER 2: Avatar Display — expanded screen area (with optimized chromatic aberration filter) */}
             <div style={{
                 position: 'absolute',
                 left: '12%',
@@ -409,6 +417,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 borderRadius: shadowAlpha > 0.05 ? '3px' : '0px',
                 overflow: shadowAlpha > 0.05 ? 'hidden' : 'visible',
                 boxShadow: shadowAlpha > 0.02 ? screenShadow : 'none',
+                filter: chromFilter,
             }}>
 
                 {/* Glass reflection — fades with shadow */}

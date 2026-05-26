@@ -84,6 +84,11 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
     const canvasRef = useRef(null);
     const rafRef = useRef(null);
 
+    const isDarkRef = useRef(isDark);
+    useEffect(() => {
+        isDarkRef.current = isDark;
+    }, [isDark]);
+
     useEffect(() => {
         if (!document.getElementById('gb-fonts')) {
             const link = document.createElement('link');
@@ -98,6 +103,9 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
+        const setCtxFont = (fontStr) => {
+            if (ctx.font !== fontStr) ctx.font = fontStr;
+        };
         let W = 0, H = 0;
         let screenW = 0, caseW = 0, caseX = 0;
         let gameW = 0, gameH = 0, cellSize = 0, boardX = 0, boardY = 0;
@@ -351,12 +359,6 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.fillRect(x, y, size - 2, 2); 
                 ctx.fillRect(x, y, 2, size - 2); 
-            } else {
-                ctx.fillStyle = PALETTE.empty;
-                ctx.fillRect(x, y, size, size);
-                ctx.strokeStyle = PALETTE.grid;
-                ctx.lineWidth = 1;
-                ctx.strokeRect(x, y, size, size);
             }
         };
 
@@ -369,19 +371,19 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
             
             ctx.fillStyle = PALETTE.textDim;
             let titleSize = Math.max(6, Math.floor(w * 0.12));
-            ctx.font = `${titleSize}px "Press Start 2P", monospace`;
+            setCtxFont(`${titleSize}px "Press Start 2P", monospace`);
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             ctx.fillText(txt, x + w/2, y + h * 0.15);
             
             ctx.fillStyle = PALETTE.text;
             let valSize = Math.max(8, Math.floor(w * 0.18));
-            ctx.font = `${valSize}px "Press Start 2P", monospace`;
+            setCtxFont(`${valSize}px "Press Start 2P", monospace`);
             ctx.fillText(val, x + w/2, y + h * 0.55);
         };
 
         const draw = () => {
-            ctx.fillStyle = isDark ? '#0b120f' : '#D1D5DB'; 
+            ctx.fillStyle = isDarkRef.current ? '#0b120f' : '#D1D5DB';
             ctx.fillRect(caseX, 0, caseW, H);
 
             ctx.fillStyle = PALETTE.bg;
@@ -395,9 +397,35 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
 
             if (!cellSize) return;
 
+            // 1. Draw solid background grid area once (optimized batched draw)
+            ctx.fillStyle = PALETTE.empty;
+            ctx.fillRect(boardX, boardY, COLS * cellSize, VISIBLE_ROWS * cellSize);
+
+            // 2. Stroke all grid lines in a single batched path (1 draw call vs. 200)
+            ctx.beginPath();
+            ctx.strokeStyle = PALETTE.grid;
+            ctx.lineWidth = 1;
+            // Vertical lines
+            for (let c = 0; c <= COLS; c++) {
+                const x = boardX + c * cellSize;
+                ctx.moveTo(x, boardY);
+                ctx.lineTo(x, boardY + VISIBLE_ROWS * cellSize);
+            }
+            // Horizontal lines
+            for (let r = 0; r <= VISIBLE_ROWS; r++) {
+                const y = boardY + r * cellSize;
+                ctx.moveTo(boardX, y);
+                ctx.lineTo(boardX + COLS * cellSize, y);
+            }
+            ctx.stroke();
+
+            // 3. Draw filled board cells on top of the pre-rendered grid
             for (let r = 2; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
-                    drawCell(ctx, boardX + c * cellSize, boardY + (r - 2) * cellSize, cellSize, board[r][c]);
+                    const cellVal = board[r][c];
+                    if (cellVal !== 0) {
+                        drawCell(ctx, boardX + c * cellSize, boardY + (r - 2) * cellSize, cellSize, cellVal);
+                    }
                 }
             }
 
@@ -450,7 +478,7 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
             
             ctx.fillStyle = PALETTE.textDim;
             let titleSize = Math.max(6, Math.floor(boxW * 0.12));
-            ctx.font = `${titleSize}px "Press Start 2P", monospace`;
+            setCtxFont(`${titleSize}px "Press Start 2P", monospace`);
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
             ctx.fillText('NEXT', boxX + boxW/2, curY + boxH * 0.15);
@@ -476,9 +504,9 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
                 ctx.fillRect(boardX, boardY, COLS * cellSize, VISIBLE_ROWS * cellSize);
                 ctx.fillStyle = PALETTE.highlight;
                 ctx.textAlign = 'center';
-                ctx.font = `${Math.floor(cellSize * 0.9)}px "Press Start 2P", monospace`;
+                setCtxFont(`${Math.floor(cellSize * 0.9)}px "Press Start 2P", monospace`);
                 ctx.fillText('BLOCKDROP', boardX + (COLS * cellSize)/2, boardY + VISIBLE_ROWS * cellSize * 0.3);
-                ctx.font = `${Math.floor(cellSize * 0.45)}px "Press Start 2P", monospace`;
+                setCtxFont(`${Math.floor(cellSize * 0.45)}px "Press Start 2P", monospace`);
                 
                 if (Math.floor(performance.now() / 500) % 2 === 0) {
                     ctx.fillText('CLICK START', boardX + (COLS * cellSize)/2, boardY + VISIBLE_ROWS * cellSize * 0.7);
@@ -488,14 +516,14 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
                 ctx.fillRect(boardX, boardY, COLS * cellSize, VISIBLE_ROWS * cellSize);
                 ctx.fillStyle = PALETTE.highlight;
                 ctx.textAlign = 'center';
-                ctx.font = `${Math.floor(cellSize * 0.8)}px "Press Start 2P", monospace`;
+                setCtxFont(`${Math.floor(cellSize * 0.8)}px "Press Start 2P", monospace`);
                 ctx.fillText('PAUSED', boardX + (COLS * cellSize)/2, boardY + VISIBLE_ROWS * cellSize * 0.5);
             } else if (state === 'gameover') {
                 ctx.fillStyle = 'rgba(5, 8, 8, 0.85)';
                 ctx.fillRect(boardX, boardY, COLS * cellSize, VISIBLE_ROWS * cellSize);
                 ctx.fillStyle = '#FF1744';
                 ctx.textAlign = 'center';
-                ctx.font = `${Math.floor(cellSize * 0.8)}px "Press Start 2P", monospace`;
+                setCtxFont(`${Math.floor(cellSize * 0.8)}px "Press Start 2P", monospace`);
                 ctx.fillText('GAME OVER', boardX + (COLS * cellSize)/2, boardY + VISIBLE_ROWS * cellSize * 0.5);
             }
 
@@ -518,7 +546,8 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
             window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('keyup', onKeyUp);
         };
-    }, [isDark]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <canvas

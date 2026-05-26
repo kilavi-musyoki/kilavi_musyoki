@@ -1,8 +1,27 @@
 import React, { useRef, useState, useEffect, memo } from 'react';
 
+const calculateSignalDot = (dist) => {
+    const segs = [
+        { x1: 12, y1: 80, x2: 22, y2: 80 }, { x1: 22, y1: 80, x2: 22, y2: 68 }, { x1: 22, y1: 68, x2: 90, y2: 68 },
+        { x1: 90, y1: 68, x2: 90, y2: 103 }, { x1: 90, y1: 103, x2: 100, y2: 103 }, { x1: 100, y1: 103, x2: 100, y2: 120 },
+        { x1: 100, y1: 120, x2: 114, y2: 120 }, { x1: 114, y1: 120, x2: 114, y2: 135 }, { x1: 114, y1: 135, x2: 85, y2: 135 },
+        { x1: 85, y1: 135, x2: 85, y2: 148 },
+    ];
+    let rem = dist;
+    for (const seg of segs) {
+        const len = Math.hypot(seg.x2 - seg.x1, seg.y2 - seg.y1);
+        if (rem <= len) {
+            const t = rem / len;
+            return { x: seg.x1 + (seg.x2 - seg.x1) * t, y: seg.y1 + (seg.y2 - seg.y1) * t };
+        }
+        rem -= len;
+    }
+    return { x: 85, y: 148 };
+};
+
 const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true }) => {
     const [tooltip, setTooltip] = useState(null);
-    const [signalPos, setSignalPos] = useState(0);
+    const signalDotRef = useRef(null);
     const [ledOn, setLedOn] = useState(true);
     const tooltipTimer = useRef(null);
     const rafRef = useRef(null);
@@ -52,9 +71,20 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true }) => {
             return;
         }
         let t = 0;
+        const totalLen = 340;
         const animate = () => {
             t = (t + 0.003) % 1;
-            setSignalPos(t);
+            const dist = t * totalLen;
+            const dot = calculateSignalDot(dist);
+            if (signalDotRef.current) {
+                const circles = signalDotRef.current.getElementsByTagName('circle');
+                if (circles.length >= 2) {
+                    circles[0].setAttribute('cx', dot.x);
+                    circles[0].setAttribute('cy', dot.y);
+                    circles[1].setAttribute('cx', dot.x);
+                    circles[1].setAttribute('cy', dot.y);
+                }
+            }
             rafRef.current = requestAnimationFrame(animate);
         };
         rafRef.current = requestAnimationFrame(animate);
@@ -109,27 +139,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true }) => {
     };
     const vis = layerVis[layer] || layerVis.casing;
 
-    // Signal dot position
-    const totalLen = 340;
-    const dist = signalPos * totalLen;
-    const signalDot = (() => {
-        const segs = [
-            { x1: 12, y1: 80, x2: 22, y2: 80 }, { x1: 22, y1: 80, x2: 22, y2: 68 }, { x1: 22, y1: 68, x2: 90, y2: 68 },
-            { x1: 90, y1: 68, x2: 90, y2: 103 }, { x1: 90, y1: 103, x2: 100, y2: 103 }, { x1: 100, y1: 103, x2: 100, y2: 120 },
-            { x1: 100, y1: 120, x2: 114, y2: 120 }, { x1: 114, y1: 120, x2: 114, y2: 135 }, { x1: 114, y1: 135, x2: 85, y2: 135 },
-            { x1: 85, y1: 135, x2: 85, y2: 148 },
-        ];
-        let rem = dist;
-        for (const seg of segs) {
-            const len = Math.hypot(seg.x2 - seg.x1, seg.y2 - seg.y1);
-            if (rem <= len) {
-                const t = rem / len;
-                return { x: seg.x1 + (seg.x2 - seg.x1) * t, y: seg.y1 + (seg.y2 - seg.y1) * t };
-            }
-            rem -= len;
-        }
-        return { x: 85, y: 148 };
-    })();
+
 
     // ── Helpers ────────────────────────────────────────────────────────────────
     const screwGroup = (cx, cy, i) => (
@@ -690,9 +700,9 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true }) => {
 
                     {/* Signal dot */}
                     {['traces', 'components', 'routes'].includes(layer) && (
-                        <g filter="url(#signal-glow)">
-                            <circle cx={signalDot.x} cy={signalDot.y} r="2.4" fill="#00FFAA" opacity="0.9" />
-                            <circle cx={signalDot.x} cy={signalDot.y} r="1.1" fill="#ffffff" opacity="0.95" />
+                        <g filter="url(#signal-glow)" ref={signalDotRef}>
+                            <circle cx="12" cy="80" r="2.4" fill="#00FFAA" opacity="0.9" />
+                            <circle cx="12" cy="80" r="1.1" fill="#ffffff" opacity="0.95" />
                         </g>
                     )}
                 </g>

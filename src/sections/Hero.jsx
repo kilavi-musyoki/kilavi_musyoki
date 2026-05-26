@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import DeviceCanvas from '../components/DeviceCanvas.jsx';
-import LeverControl from '../components/LeverControl.jsx';
+import DeviceSandbox from '../components/DeviceSandbox.jsx';
 import { getTheme } from '../theme.js';
 
 // ── Boot sequence ─────────────────────────────────────────────────────────────
@@ -28,7 +27,6 @@ const Hero = ({ isDark, glitch = false }) => {
     const [progress,    setProgress]    = useState(0);
     const [uptime,      setUptime]      = useState('00:00:00');
     const mousePosRef                   = useRef({ x: 0.5, y: 0.5 });
-    const [leverValue,  setLeverValue]  = useState(0);
     const [isMobile,    setIsMobile]    = useState(() => window.innerWidth < 640);
 
     // ── Responsive detection ──────────────────────────────────────────────────
@@ -317,73 +315,9 @@ const Hero = ({ isDark, glitch = false }) => {
                             initial={{ x: 60, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ duration: 0.8, delay: 0.3 }}
-                            style={{
-                                flex: '1 1 300px',
-                                maxWidth: '580px',
-                                position: 'relative',
-                                // Extra right padding so the lever doesn't clip
-                                paddingRight: isMobile ? '0' : '70px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '1rem',
-                            }}
+                            style={{ flex: '1 1 300px', maxWidth: '580px', display: 'flex' }}
                         >
-                            {/* Device canvas */}
-                            <DeviceCanvas
-                                leverValue={leverValue}
-                                isDark={isDark}
-                                mousePosRef={mousePosRef}
-                                glitch={glitch}
-                            />
-
-                            {/* ── Lever: SURPRISE POSITION ──────────────────────
-                                Mounted on the RIGHT EDGE of the device chassis.
-                                It aligns with & overlaps the fader-slot channel
-                                drawn in ProductShell's right panel SVG, making
-                                it look physically bolted onto the device.      */}
-                            {!isMobile && (
-                                <div style={{
-                                    position: 'absolute',
-                                    right: '0',
-                                    top:   '5%',
-                                    bottom:'5%',
-                                    width: '62px',
-                                    zIndex: 20,
-                                    display: 'flex',
-                                    alignItems: 'stretch',
-                                }}>
-                                    <LeverControl
-                                        leverValue={leverValue}
-                                        onChange={setLeverValue}
-                                        isDark={isDark}
-                                    />
-                                </div>
-                            )}
-
-                            {/* Mobile lever below the device */}
-                            {isMobile && (
-                                <div style={{ width: '100%', padding: '0 0.25rem' }}>
-                                    <LeverControl
-                                        leverValue={leverValue}
-                                        onChange={setLeverValue}
-                                        isDark={isDark}
-                                        isMobile
-                                    />
-                                </div>
-                            )}
-
-                            {/* Hint text */}
-                            <div style={{
-                                fontFamily: 'JetBrains Mono, monospace',
-                                fontSize: '0.52rem',
-                                color: isDark ? 'rgba(206,208,206,0.28)' : 'rgba(28,34,38,0.28)',
-                                textAlign: 'center',
-                                letterSpacing: '0.08em',
-                                marginTop: isMobile ? '0.25rem' : '-0.5rem',
-                            }}>
-                                {isMobile ? '← DRAG SLIDER TO DECONSTRUCT →' : '↑ DRAG LEVER TO DECONSTRUCT ↓'}
-                            </div>
-
+                            <DeviceSandbox isDark={isDark} mousePosRef={mousePosRef} glitch={glitch} />
                         </motion.div>
 
                     </motion.div>

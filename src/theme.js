@@ -13,28 +13,28 @@
 export const getTheme = (isDark) => ({
   // ── Text ──────────────────────────────────────────────────────────────────
   /** Standard body / nav / card text */
-  textColor:    isDark ? '#ced0ce'                : '#0F172A',
+  textColor:    isDark ? '#CED4DE'                : '#0F172A',
   /** High-emphasis text — hero H1, contrast headings */
   textBright:   isDark ? '#ffffff'                : '#020617',
   /** Muted secondary text */
-  dimColor:     isDark ? 'rgba(206,208,206,0.55)' : 'rgba(15,23,42,0.55)',
+  dimColor:     isDark ? 'rgba(206,212,222,0.55)' : 'rgba(15,23,42,0.55)',
   /** Very subtle tertiary text (hints, footer sub-lines) */
-  subtleColor:  isDark ? 'rgba(206,208,206,0.45)' : 'rgba(15,23,42,0.35)',
+  subtleColor:  isDark ? 'rgba(206,212,222,0.40)' : 'rgba(15,23,42,0.35)',
 
   // ── Accent ────────────────────────────────────────────────────────────────
-  accentColor:  isDark ? '#ced0ce'                : '#0D9488',
-  accentHover:  isDark ? '#ffffff'                : '#0F766E',
-  accentGlow:   isDark ? 'rgba(206,208,206,0.4)'  : 'rgba(13,148,136,0.35)',
+  accentColor:  isDark ? '#4BD8A0'                : '#0D9488',
+  accentHover:  isDark ? '#6FE8B8'                : '#0F766E',
+  accentGlow:   isDark ? 'rgba(75,216,160,0.35)'  : 'rgba(13,148,136,0.35)',
 
   // ── Borders ───────────────────────────────────────────────────────────────
-  borderColor:  isDark ? 'rgba(107,113,107,0.5)'  : 'rgba(148,163,184,0.4)',
-  borderStrong: isDark ? 'rgba(107,113,107,0.65)' : 'rgba(148,163,184,0.6)',
-  borderSubtle: isDark ? 'rgba(107,113,107,0.35)' : 'rgba(148,163,184,0.2)',
-  borderHover:  isDark ? 'rgba(206,208,206,0.55)' : 'rgba(13,148,136,0.5)',
+  borderColor:  isDark ? 'rgba(75,216,160,0.18)'  : 'rgba(148,163,184,0.4)',
+  borderStrong: isDark ? 'rgba(75,216,160,0.32)'  : 'rgba(148,163,184,0.6)',
+  borderSubtle: isDark ? 'rgba(75,216,160,0.10)'  : 'rgba(148,163,184,0.2)',
+  borderHover:  isDark ? 'rgba(75,216,160,0.55)'  : 'rgba(13,148,136,0.5)',
 
   // ── Surfaces ──────────────────────────────────────────────────────────────
-  cardBg:       isDark ? 'rgba(156,160,156,0.04)' : 'rgba(255,255,255,0.6)',
-  cardBgHover:  isDark ? 'rgba(206,208,206,0.07)' : 'rgba(255,255,255,0.9)',
+  cardBg:       isDark ? 'rgba(16,20,28,0.45)'    : 'rgba(255,255,255,0.6)',
+  cardBgHover:  isDark ? 'rgba(16,20,28,0.72)'    : 'rgba(255,255,255,0.9)',
 
   // ── Status indicators ─────────────────────────────────────────────────────
   statusGreen:  isDark ? '#4BD8A0'                : '#059669',
@@ -45,10 +45,11 @@ export const getTheme = (isDark) => ({
   debugBar:     isDark ? '#4BD8A0'                : '#0D9488',
 
   // ── Interactive elements ──────────────────────────────────────────────────
-  btnTextColor: isDark ? '#394139'                : '#FFFFFF',
+  btnTextColor: isDark ? '#0A0C10'                : '#FFFFFF',
 
   // ── Footer ────────────────────────────────────────────────────────────────
-  footerBg:     isDark ? 'rgba(41,47,41,0.9)'     : 'rgba(241,245,249,0.9)',
-  footerBorder: isDark ? 'rgba(107,113,107,0.4)'  : 'rgba(148,163,184,0.3)',
-  footerSub:    isDark ? 'rgba(206,208,206,0.45)' : 'rgba(15,23,42,0.45)',
+  footerBg:     isDark ? 'rgba(10,12,16,0.95)'    : 'rgba(241,245,249,0.9)',
+  footerBorder: isDark ? 'rgba(75,216,160,0.12)'  : 'rgba(148,163,184,0.3)',
+  footerSub:    isDark ? 'rgba(206,212,222,0.40)' : 'rgba(15,23,42,0.45)',
 });
+

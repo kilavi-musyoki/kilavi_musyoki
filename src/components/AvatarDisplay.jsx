@@ -36,32 +36,7 @@ const NODE_FILL = {
 };
 
 export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) {
-    const [phase, setPhase] = useState(0);
-    const [tilt, setTilt] = useState({ x: 0, y: 0 });
 
-    const rafRef = useRef(null);
-    const tiltRef = useRef({ x: 0, y: 0 });
-
-    // ── Master rAF loop ──────────────────────────────────────────────────────
-    useEffect(() => {
-        let t = 0;
-        const loop = () => {
-            t += 0.016;
-            setPhase(t);
-            const mp = mousePosRef.current;
-
-            if (mp) {
-                // Tilt toward cursor (disabled per user request)
-                tiltRef.current.x = 0;
-                tiltRef.current.y = 0;
-                setTilt({ x: 0, y: 0 });
-            }
-
-            rafRef.current = requestAnimationFrame(loop);
-        };
-        rafRef.current = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(rafRef.current);
-    }, []);
 
     // ── Layer opacities — tuned for seamless cross-dissolve ────────────────────
     //  Game (0→0.40 full, 0.40→0.60 fade-out)  overlaps  PCB (0.22→0.55 fade-in)
@@ -73,7 +48,6 @@ export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) 
     const bgOpacity     = 1 - norm(leverValue, 0.38, 0.55);
     const bg = `rgba(3, 11, 5, ${bgOpacity})`;
 
-    const scanY = ((phase * 14) % (H + 2));
     const faceC = '#4BD8A0';
     const gridC = 'rgba(75,216,160,0.07)';
 
@@ -90,7 +64,7 @@ export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) 
             {/* 3D tilt container */}
             <div style={{
                 position: 'absolute', inset: 0,
-                transform: `perspective(260px) rotateX(${tilt.y}deg) rotateY(${tilt.x}deg)`,
+                transform: 'perspective(260px) rotateX(0deg) rotateY(0deg)',
                 transformOrigin: 'center center',
                 willChange: 'transform',
                 pointerEvents: 'auto',
@@ -119,6 +93,15 @@ export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) 
                             <feGaussianBlur stdDeviation="1.0" result="b" />
                             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
                         </filter>
+                        <style>{`
+                            @keyframes av-scanline-move {
+                                0% { transform: translateY(-2px); }
+                                100% { transform: translateY(98px); }
+                            }
+                            .av-scanline {
+                                animation: av-scanline-move 6s linear infinite;
+                            }
+                        `}</style>
                     </defs>
 
                     {/* Background grid */}
@@ -147,7 +130,7 @@ export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) 
 
                     {/* ── LAYER 3: SYSTEM STATE ── */}
                     <g opacity={systemOpacity}>
-                        <rect x="0" y={scanY} width={W} height="0.8" fill="#4BD8A0" opacity="0.36" />
+                        <rect x="0" y="0" width={W} height="0.8" fill="#4BD8A0" opacity="0.36" className="av-scanline" style={{ willChange: 'transform' }} />
                         <g stroke="rgba(75,216,160,0.38)" strokeWidth="0.5" fill="none">
                             <circle cx={CX} cy={CY} r="26" />
                             <circle cx={CX} cy={CY} r="13" />

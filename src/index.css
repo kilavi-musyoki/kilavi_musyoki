@@ -3,24 +3,24 @@
 
 /* ===== CSS Variables ===== */
 :root {
-  /* Dark mode palette */
-  --base: #394139;          /* main background */
-  --pcb-green: #6b716b;     /* primary accent / borders */
-  --cap-cyan: #9ca09c;      /* secondary accent */
+  /* Dark mode palette — Obsidian Slate & Cyber Mint */
+  --base: #0A0C10;          /* obsidian charcoal background */
+  --pcb-green: #4BD8A0;     /* cyber mint — primary brand accent */
+  --cap-cyan: #6FD4FF;      /* neon tech-blue — secondary accent */
   --alert-red: #FF5A3C;
-  --solder-gold: #ced0ce;   /* soft highlight */
+  --solder-gold: #D4A843;   /* warm copper-gold for pads & highlights */
   --pcb-beige: #f6f7fb;    /* light-mode background */
-  --deep-navy: #1A1A2E;
+  --deep-navy: #0A0C10;
   --backlit-white: #ffffff; /* brightest text / highlights */
   --font-mono: 'JetBrains Mono', monospace;
   --font-display: 'Syne', sans-serif;
 
   /* Resolved tokens — dark-mode defaults, overridden by body.light-mode below */
-  --color-text:    #ced0ce;
-  --color-accent:  #ced0ce;
-  --color-dim:     rgba(206,208,206,0.55);
-  --color-border:  rgba(107,113,107,0.5);
-  --color-card-bg: rgba(156,160,156,0.04);
+  --color-text:    #CED4DE;
+  --color-accent:  #4BD8A0;
+  --color-dim:     rgba(206,212,222,0.55);
+  --color-border:  rgba(75,216,160,0.18);
+  --color-card-bg: rgba(16,20,28,0.45);
 
   /* Z-index stacking layers */
   --z-scanlines: 9998;   /* body::after scanline overlay   */
@@ -60,7 +60,7 @@ body {
   color: var(--backlit-white);
   overflow-x: hidden;
   min-height: 100vh;
-  transition: background 0.6s ease, color 0.6s ease;
+  transition: background 0.7s ease, color 0.7s ease;
 }
 
 /* Light mode body — Clean Silicon palette */
@@ -146,11 +146,14 @@ body.light-mode .skip-link {
   width: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #0A0A0F;
+  background: #06080C;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--pcb-green);
+  background: rgba(75,216,160,0.45);
   border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(75,216,160,0.75);
 }
 
 body.light-mode ::-webkit-scrollbar-track {
@@ -237,15 +240,18 @@ body.light-mode ::-webkit-scrollbar-thumb {
 
 /* ===== PCB Module Card ===== */
 .pcb-card {
-  background: rgba(156, 160, 156, 0.05);
-  border: 1px solid rgba(107, 113, 107, 0.7);
+  background: rgba(16, 20, 28, 0.45);
+  border: 1px solid rgba(75, 216, 160, 0.12);
   border-radius: 4px;
   position: relative;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 .pcb-card:hover {
-  border-color: rgba(0, 255, 136, 0.5);
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+  background: rgba(16, 20, 28, 0.72);
+  border-color: rgba(75, 216, 160, 0.38);
+  box-shadow: 0 0 24px rgba(75, 216, 160, 0.1), 0 4px 24px rgba(0,0,0,0.35);
 }
 
 body.light-mode .pcb-card {
@@ -459,10 +465,10 @@ body.light-mode .changelog-entry {
 
 /* ===== Nav Glass ===== */
 .nav-glass {
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  background: rgba(40, 46, 40, 0.94);
-  border-bottom: 1px solid rgba(107, 113, 107, 0.6);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  background: rgba(10, 12, 16, 0.88);
+  border-bottom: 1px solid rgba(75, 216, 160, 0.12);
 }
 body.light-mode .nav-glass {
   background: rgba(232,234,231,0.88);
