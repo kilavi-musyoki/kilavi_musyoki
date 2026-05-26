@@ -3,68 +3,88 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DeviceSandbox from '../components/DeviceSandbox.jsx';
 import { getTheme } from '../theme.js';
 
-// â”€â”€ Boot sequence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Boot sequence ────────────────────────────────────────────────────────────
 const BOOT_LINES = [
-    { text: 'SILICON SOUL v2.0 â€” INITIALIZING...',         delay: 0    },
-    { text: 'POST CHECK: RAM .................. OK',         delay: 300  },
-    { text: 'POST CHECK: GPU .................. OK',         delay: 600  },
-    { text: 'POST CHECK: PORTFOLIO.EXE ........ LOADED',    delay: 900  },
-    { text: 'POST CHECK: ESP32_CORE ........... ONLINE',    delay: 1200 },
+    { text: 'SILICON SOUL v2.0 — INITIALIZING...',         delay: 0    },
+    { text: 'POST CHECK: RAM .................. OK',        delay: 300  },
+    { text: 'POST CHECK: GPU .................. OK',        delay: 600  },
+    { text: 'POST CHECK: PORTFOLIO.EXE ........ LOADED',   delay: 900  },
+    { text: 'POST CHECK: ESP32_CORE ........... ONLINE',   delay: 1200 },
     { text: 'POST CHECK: RF_MODULE ............ CALIBRATED',delay: 1500 },
     { text: 'POST CHECK: EGO_MODULE ........... WARN (within limits)', delay: 1800 },
-    { text: 'MOUNTING INTERFACE ...............',             delay: 2100 },
-    { text: 'SIGNAL ACQUIRED. WELCOME, OPERATOR.',          delay: 2400 },
+    { text: 'MOUNTING INTERFACE ...............',            delay: 2100 },
+    { text: 'SIGNAL ACQUIRED. WELCOME, OPERATOR.',         delay: 2400 },
 ];
 
 const LINE_COLOR_INDEX = [0, 1, 1, 1, 1, 1, 2, 3, 4];
 const UPTIME_START = Date.now();
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const Hero = ({ isDark, glitch = false }) => {
-    // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const [bootDone,    setBootDone]    = useState(false);
-    const [visibleLines,setVisibleLines]= useState(0);
-    const [progress,    setProgress]    = useState(0);
-    const [uptime,      setUptime]      = useState('00:00:00');
-    const mousePosRef                   = useRef({ x: 0.5, y: 0.5 });
-    const [isMobile,    setIsMobile]    = useState(() => window.innerWidth < 640);
+// ── Premium easing curve ─────────────────────────────────────────────────────
+const EXPO_OUT = [0.16, 1, 0.3, 1];
 
-    // â”€â”€ Responsive detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
+const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
+    // ── State ─────────────────────────────────────────────────────────────────
+    const [visibleLines, setVisibleLines] = useState(0);
+    const [progress,     setProgress]     = useState(0);
+    const [uptime,       setUptime]       = useState('00:00:00');
+    const mousePosRef                     = useRef({ x: 0.5, y: 0.5 });
+    const [isMobile,     setIsMobile]     = useState(() => window.innerWidth < 640);
+
+    // ── Responsive detection ──────────────────────────────────────────────────
     useEffect(() => {
         const handler = () => setIsMobile(window.innerWidth < 640);
         window.addEventListener('resize', handler, { passive: true });
         return () => window.removeEventListener('resize', handler);
     }, []);
 
-    // â”€â”€ Palette â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Mouse tracking for canvas tilt ───────────────────────────────────────
+    const handleMouseMove = useCallback((e) => {
+        mousePosRef.current = {
+            x: e.clientX / window.innerWidth,
+            y: e.clientY / window.innerHeight,
+        };
+    }, []);
+
+    // ── Palette ───────────────────────────────────────────────────────────────
     const t = getTheme(isDark);
     const { dimColor, accentColor, accentGlow, accentHover, btnTextColor } = t;
-    const textColor    = t.textBright;   // #fff dark / #1C2226 light â€” hero h1
+    const textColor    = t.textBright;
     const statusOnline = t.statusGreen;
     const statusTemp   = t.statusRed;
 
-    // Component-specific tokens (boot terminal + hero progress bar)
-    const tagBorder      = isDark ? 'rgba(75,216,160,0.35)'      : 'rgba(104,112,120,0.4)';
-    const tagBg          = isDark ? 'rgba(75,216,160,0.07)'      : 'rgba(255,255,255,0.35)';
-    const statusBg       = isDark ? 'rgba(10,12,16,0.55)'        : 'rgba(255,255,255,0.25)';
-    const statusBorder   = isDark ? 'rgba(75,216,160,0.18)'      : 'rgba(104,112,120,0.25)';
-    const progressTrack  = isDark ? 'rgba(75,216,160,0.15)'      : 'rgba(13,148,136,0.15)';
+    // Component-specific tokens
+    const tagBorder      = isDark ? 'rgba(75,216,160,0.35)'   : 'rgba(104,112,120,0.4)';
+    const tagBg          = isDark ? 'rgba(75,216,160,0.07)'   : 'rgba(255,255,255,0.35)';
+    const statusBg       = isDark ? 'rgba(10,12,16,0.55)'     : 'rgba(255,255,255,0.25)';
+    const statusBorder   = isDark ? 'rgba(75,216,160,0.18)'   : 'rgba(104,112,120,0.25)';
+    const progressTrack  = isDark ? 'rgba(75,216,160,0.15)'   : 'rgba(13,148,136,0.15)';
     const progressFill   = isDark
         ? 'linear-gradient(90deg,#4BD8A0,#6FD4FF)'
         : 'linear-gradient(90deg,#0D9488,#D4A843)';
-    const terminalBg     = isDark ? '#04060A'                    : '#E8EAE7';
-    const terminalBorder = isDark ? 'rgba(75,216,160,0.3)'       : 'rgba(13,148,136,0.35)';
-    const terminalLabel  = isDark ? 'rgba(75,216,160,0.5)'       : 'rgba(13,148,136,0.6)';
+    const terminalBg     = isDark ? '#04060A'                 : '#E8EAE7';
+    const terminalBorder = isDark ? 'rgba(75,216,160,0.3)'    : 'rgba(13,148,136,0.35)';
+    const terminalLabel  = isDark ? 'rgba(75,216,160,0.5)'    : 'rgba(13,148,136,0.6)';
 
     const lineColors = {
         0: dimColor,
         1: isDark ? '#b0ffcc' : accentColor,
         2: isDark ? '#D4A843' : accentColor,
-        3: isDark ? 'rgba(163,184,204,0.75)' : 'rgba(104,112,120,0.6)',  // cool slate secondary
+        3: isDark ? 'rgba(163,184,204,0.75)' : 'rgba(104,112,120,0.6)',
         4: textColor,
     };
 
-    // â”€â”€ Boot sequence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Scroll lock during boot ───────────────────────────────────────────────
+    useEffect(() => {
+        if (!bootDone) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [bootDone]);
+
+    // ── Boot sequence timers ──────────────────────────────────────────────────
     useEffect(() => {
         const ids = BOOT_LINES.map((line, i) =>
             setTimeout(() => {
@@ -77,9 +97,22 @@ const Hero = ({ isDark, glitch = false }) => {
             ids.forEach(clearTimeout);
             clearTimeout(doneId);
         };
+    }, [setBootDone]);
+
+    // ── Real-time uptime counter ──────────────────────────────────────────────
+    useEffect(() => {
+        const tick = () => {
+            const elapsed = Math.floor((Date.now() - UPTIME_START) / 1000);
+            const hh = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+            const mm = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+            const ss = String(elapsed % 60).padStart(2, '0');
+            setUptime(`${hh}:${mm}:${ss}`);
+        };
+        tick();
+        const id = setInterval(tick, 1000);
+        return () => clearInterval(id);
     }, []);
 
-    // ── Uptime counter ──────────────────────────────────────────────────────
     return (
         <section
             id="hero"
@@ -87,14 +120,14 @@ const Hero = ({ isDark, glitch = false }) => {
             onMouseMove={handleMouseMove}
             data-debug="hero-section"
         >
-            <AnimatePresence mode="wait">
-                {!bootDone ? (
+            {/* ── Boot terminal overlay — fades out while hero fades in ── */}
+            <AnimatePresence>
+                {!bootDone && (
                     <motion.div
                         key="boot"
-                        initial={{ opacity: 1 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.45, ease: 'easeInOut' }}
-                        className="boot-terminal"
+                        initial={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.04 }}
+                        transition={{ duration: 0.85, ease: EXPO_OUT }}
                         style={{
                             position: 'fixed', inset: 0, zIndex: 9990,
                             display: 'flex', flexDirection: 'column',
@@ -102,20 +135,26 @@ const Hero = ({ isDark, glitch = false }) => {
                             background: terminalBg,
                         }}
                     >
-                        <div style={{ width: '90%', maxWidth: '600px' }}>
+                        <div style={{
+                            width: '100%',
+                            maxWidth: '620px',
+                            padding: '0 1.5rem',
+                        }}>
                             {/* Terminal chrome */}
                             <div style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                padding: '8px 14px',
                                 borderBottom: `1px solid ${terminalBorder}`,
-                                paddingBottom: '8px', marginBottom: '16px',
-                                display: 'flex', gap: '8px', alignItems: 'center',
+                                marginBottom: '20px',
                             }}>
-                                <div style={{ width: 10, height: 10, borderRadius: '50%', background: isDark ? '#FF5A3C' : '#e05c3a' }} />
-                                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#D4A843' }} />
-                                <div style={{ width: 10, height: 10, borderRadius: '50%', background: isDark ? '#4BD8A0' : '#50b1ce' }} />
+                                {['#FF5F57','#FFBD2E','#28CA41'].map((c) => (
+                                    <div key={c} style={{ width: 10, height: 10, borderRadius: '50%', background: c, opacity: 0.8 }} />
+                                ))}
                                 <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem', color: terminalLabel, marginLeft: '8px' }}>
                                     SILICON_SOUL_BIOS v2.0
                                 </span>
                             </div>
+
                             {/* Boot lines */}
                             <div style={{ minHeight: '200px' }}>
                                 {BOOT_LINES.slice(0, visibleLines).map((line, i) => (
@@ -126,11 +165,12 @@ const Hero = ({ isDark, glitch = false }) => {
                                     }}>
                                         {line.text}
                                         {i === visibleLines - 1 && (
-                                            <span style={{ opacity: Math.sin(Date.now() / 300) > 0 ? 1 : 0, transition: 'opacity 0.1s' }}>â–‹</span>
+                                            <span style={{ animation: 'blink-slow 0.6s step-end infinite' }}>▋</span>
                                         )}
                                     </div>
                                 ))}
                             </div>
+
                             {/* Progress bar */}
                             <div style={{ marginTop: '24px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -148,12 +188,17 @@ const Hero = ({ isDark, glitch = false }) => {
                             </div>
                         </div>
                     </motion.div>
-                ) : (
+                )}
+            </AnimatePresence>
+
+            {/* ── Hero content — mounts concurrently, fades & slides in ── */}
+            <AnimatePresence>
+                {bootDone && (
                     <motion.div
                         key="hero-content"
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.65, ease: 'easeOut' }}
+                        initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 1.0, ease: EXPO_OUT }}
                         style={{
                             width: '100%',
                             padding: isMobile ? '0 1.25rem' : '0 2rem',
@@ -165,16 +210,16 @@ const Hero = ({ isDark, glitch = false }) => {
                             flexWrap: 'wrap',
                         }}
                     >
-                        {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ LEFT: text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                        {/* ────────────── LEFT: text ────────────── */}
                         <motion.div
-                            initial={{ x: -20, opacity: 0 }}
+                            initial={{ x: -25, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
-                            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.15 }}
+                            transition={{ duration: 0.75, ease: EXPO_OUT, delay: 0.15 }}
                             style={{ flex: '0 0 45%', minWidth: '280px' }}
                         >
                             {/* Greeting */}
                             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '1rem', color: accentColor, marginBottom: '0.5rem' }}>
-                                herro ðŸ˜…ðŸ‘‹
+                                herro dΨ`.dΨ`&lt;
                             </div>
 
                             {/* Name */}
@@ -222,7 +267,7 @@ const Hero = ({ isDark, glitch = false }) => {
                                 {' | '}
                                 <span>UPTIME: {uptime}</span>
                                 {' | '}
-                                <span style={{ color: statusTemp }}>TEMP: 42Â°C</span>
+                                <span style={{ color: statusTemp }}>TEMP: 42°C</span>
                                 {' | '}
                                 <span>LOC: Machakos, KE</span>
                             </div>
@@ -234,7 +279,7 @@ const Hero = ({ isDark, glitch = false }) => {
                                     { val: '10+',   label: 'Projects'         },
                                     { val: '4+',    label: 'Systems Designed' },
                                     { val: 'Daily', label: 'Learning Rate'    },
-                                    { val: 'âˆž',     label: 'Problems Left'    },
+                                    { val: '∞',     label: 'Problems Left'    },
                                 ].map((stat) => (
                                     <div key={stat.label} style={{ textAlign: 'center', padding: '0.4rem 0' }}>
                                         <div style={{
@@ -280,15 +325,15 @@ const Hero = ({ isDark, glitch = false }) => {
                                     e.currentTarget.style.background = accentColor;
                                 }}
                             >
-                                Explore my work <span>â†’</span>
+                                Explore my work <span>→</span>
                             </a>
                         </motion.div>
 
-                        {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ RIGHT: device + lever â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                        {/* ────────────── RIGHT: device + lever ────────────── */}
                         <motion.div
-                            initial={{ x: 20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ duration: 0.7, ease: 'easeOut', delay: 0.25 }}
+                            initial={{ x: 25, opacity: 0, scale: 0.97 }}
+                            animate={{ x: 0, opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.85, ease: EXPO_OUT, delay: 0.25 }}
                             style={{ flex: '1 1 300px', maxWidth: '580px', display: 'flex' }}
                         >
                             <DeviceSandbox isDark={isDark} mousePosRef={mousePosRef} glitch={glitch} />

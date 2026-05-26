@@ -60,6 +60,7 @@ function App() {
   const [boardGlitch,  setBoardGlitch]  = useState(false);
   const [status,       setStatus]       = useState({ available: true });
   const [navOpen,      setNavOpen]      = useState(false);
+  const [bootDone,     setBootDone]     = useState(false);
   const drawerRef = useRef(null);
   useFocusTrap(drawerRef, navOpen);
   const lastScrollY = useRef(0);
@@ -196,8 +197,13 @@ function App() {
           position: 'fixed',
           top: 0, left: 0, right: 0,
           zIndex: 1000,
-          transform: navVisible ? 'translateY(0)' : 'translateY(-100%)',
-          transition: 'transform 0.3s ease',
+          transform: !bootDone
+            ? 'translateY(-100%)'
+            : navVisible ? 'translateY(0)' : 'translateY(-100%)',
+          opacity: bootDone ? 1 : 0,
+          transition: bootDone
+            ? 'transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.6s cubic-bezier(0.16,1,0.3,1)'
+            : 'none',
           padding: '0 2rem',
           height: '56px',
           display: 'flex',
@@ -364,7 +370,7 @@ function App() {
 
       {/* ── Main sections ── */}
       <main id="main" style={{ paddingTop: '56px' }}>
-        <Hero       isDark={isDark} layer={boardLayer} glitch={boardGlitch} />
+        <Hero       isDark={isDark} layer={boardLayer} glitch={boardGlitch} bootDone={bootDone} setBootDone={setBootDone} />
         <About      isDark={isDark} />
         <Projects   isDark={isDark} />
         <Milestones isDark={isDark} />

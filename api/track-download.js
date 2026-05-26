@@ -31,13 +31,19 @@ function sanitizeForSheets(value) {
 }
 
 export default async function handler(req, res) {
-    // ── CORS — localhost only outside production ───────────────────────────
+    // ── CORS — Allow GitHub Pages, Localhost, same-origin, and Vercel domains ──
     const origin = req.headers.origin;
     const allowedOrigins = ['https://kilavi-musyoki.github.io'];
     if (process.env.VERCEL_ENV !== 'production') allowedOrigins.push('http://localhost:5173');
     if (process.env.ALLOWED_ORIGIN) allowedOrigins.push(process.env.ALLOWED_ORIGIN);
 
-    if (origin && !allowedOrigins.includes(origin)) {
+    const isAllowed = 
+        !origin || 
+        allowedOrigins.includes(origin) || 
+        (req.headers.host && origin.replace(/^https?:\/\//, '') === req.headers.host) ||
+        /\.vercel\.app$/.test(origin);
+
+    if (!isAllowed) {
         return res.status(403).json({ error: 'CORS policy violation' });
     }
 
@@ -59,7 +65,7 @@ export default async function handler(req, res) {
     // ── Origin validation — only allow requests that came from our own site ──
     // This blocks direct curl/Postman abuse since they won't have a matching Origin.
     // Combined with CORS, this provides defense-in-depth.
-    if (!origin || !allowedOrigins.includes(origin)) {
+    if (!origin || !isAllowed) {
         return res.status(403).json({ error: 'Forbidden' });
     }
 
