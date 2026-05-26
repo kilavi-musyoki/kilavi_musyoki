@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DeviceSandbox from '../components/DeviceSandbox.jsx';
 import { getTheme } from '../theme.js';
 
-// ── Boot sequence ─────────────────────────────────────────────────────────────
+// â”€â”€ Boot sequence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const BOOT_LINES = [
-    { text: 'SILICON SOUL v2.0 — INITIALIZING...',         delay: 0    },
+    { text: 'SILICON SOUL v2.0 â€” INITIALIZING...',         delay: 0    },
     { text: 'POST CHECK: RAM .................. OK',         delay: 300  },
     { text: 'POST CHECK: GPU .................. OK',         delay: 600  },
     { text: 'POST CHECK: PORTFOLIO.EXE ........ LOADED',    delay: 900  },
@@ -19,9 +19,9 @@ const BOOT_LINES = [
 const LINE_COLOR_INDEX = [0, 1, 1, 1, 1, 1, 2, 3, 4];
 const UPTIME_START = Date.now();
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const Hero = ({ isDark, glitch = false }) => {
-    // ── State ─────────────────────────────────────────────────────────────────
+    // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const [bootDone,    setBootDone]    = useState(false);
     const [visibleLines,setVisibleLines]= useState(0);
     const [progress,    setProgress]    = useState(0);
@@ -29,17 +29,17 @@ const Hero = ({ isDark, glitch = false }) => {
     const mousePosRef                   = useRef({ x: 0.5, y: 0.5 });
     const [isMobile,    setIsMobile]    = useState(() => window.innerWidth < 640);
 
-    // ── Responsive detection ──────────────────────────────────────────────────
+    // â”€â”€ Responsive detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     useEffect(() => {
         const handler = () => setIsMobile(window.innerWidth < 640);
         window.addEventListener('resize', handler, { passive: true });
         return () => window.removeEventListener('resize', handler);
     }, []);
 
-    // ── Palette ───────────────────────────────────────────────────────────────
+    // â”€â”€ Palette â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const t = getTheme(isDark);
     const { dimColor, accentColor, accentGlow, accentHover, btnTextColor } = t;
-    const textColor    = t.textBright;   // #fff dark / #1C2226 light — hero h1
+    const textColor    = t.textBright;   // #fff dark / #1C2226 light â€” hero h1
     const statusOnline = t.statusGreen;
     const statusTemp   = t.statusRed;
 
@@ -64,7 +64,7 @@ const Hero = ({ isDark, glitch = false }) => {
         4: textColor,
     };
 
-    // ── Boot sequence ─────────────────────────────────────────────────────────
+    // â”€â”€ Boot sequence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     useEffect(() => {
         const ids = BOOT_LINES.map((line, i) =>
             setTimeout(() => {
@@ -79,28 +79,7 @@ const Hero = ({ isDark, glitch = false }) => {
         };
     }, []);
 
-    // ── Uptime counter ────────────────────────────────────────────────────────
-    useEffect(() => {
-        const tick = () => {
-            const e = Math.floor((Date.now() - UPTIME_START) / 1000);
-            const h = String(Math.floor(e / 3600)).padStart(2, '0');
-            const m = String(Math.floor((e % 3600) / 60)).padStart(2, '0');
-            const s = String(e % 60).padStart(2, '0');
-            setUptime(`${h}:${m}:${s}`);
-        };
-        const id = setInterval(tick, 1000);
-        tick();
-        return () => clearInterval(id);
-    }, []);
-
-    // ── Mouse tracking ────────────────────────────────────────────────────────
-    const handleMouseMove = useCallback((e) => {
-        mousePosRef.current = {
-            x: e.clientX / window.innerWidth,
-            y: e.clientY / window.innerHeight,
-        };
-    }, []);
-
+    // ── Uptime counter ──────────────────────────────────────────────────────
     return (
         <section
             id="hero"
@@ -108,14 +87,13 @@ const Hero = ({ isDark, glitch = false }) => {
             onMouseMove={handleMouseMove}
             data-debug="hero-section"
         >
-            {/* ── Bootloader terminal ── */}
-            <AnimatePresence>
-                {!bootDone && (
+            <AnimatePresence mode="wait">
+                {!bootDone ? (
                     <motion.div
                         key="boot"
                         initial={{ opacity: 1 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{ duration: 0.5 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.45, ease: 'easeInOut' }}
                         className="boot-terminal"
                         style={{
                             position: 'fixed', inset: 0, zIndex: 9990,
@@ -148,7 +126,7 @@ const Hero = ({ isDark, glitch = false }) => {
                                     }}>
                                         {line.text}
                                         {i === visibleLines - 1 && (
-                                            <span style={{ opacity: Math.sin(Date.now() / 300) > 0 ? 1 : 0, transition: 'opacity 0.1s' }}>▋</span>
+                                            <span style={{ opacity: Math.sin(Date.now() / 300) > 0 ? 1 : 0, transition: 'opacity 0.1s' }}>â–‹</span>
                                         )}
                                     </div>
                                 ))}
@@ -170,16 +148,12 @@ const Hero = ({ isDark, glitch = false }) => {
                             </div>
                         </div>
                     </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* ── Main hero content ── */}
-            <AnimatePresence>
-                {bootDone && (
+                ) : (
                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.8 }}
+                        key="hero-content"
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.65, ease: 'easeOut' }}
                         style={{
                             width: '100%',
                             padding: isMobile ? '0 1.25rem' : '0 2rem',
@@ -191,16 +165,16 @@ const Hero = ({ isDark, glitch = false }) => {
                             flexWrap: 'wrap',
                         }}
                     >
-                        {/* ───────────────── LEFT: text ───────────────── */}
+                        {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ LEFT: text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
                         <motion.div
-                            initial={{ x: -40, opacity: 0 }}
+                            initial={{ x: -20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
-                            transition={{ duration: 0.7, delay: 0.2 }}
+                            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.15 }}
                             style={{ flex: '0 0 45%', minWidth: '280px' }}
                         >
                             {/* Greeting */}
                             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '1rem', color: accentColor, marginBottom: '0.5rem' }}>
-                                herro 😅👋
+                                herro ðŸ˜…ðŸ‘‹
                             </div>
 
                             {/* Name */}
@@ -248,7 +222,7 @@ const Hero = ({ isDark, glitch = false }) => {
                                 {' | '}
                                 <span>UPTIME: {uptime}</span>
                                 {' | '}
-                                <span style={{ color: statusTemp }}>TEMP: 42°C</span>
+                                <span style={{ color: statusTemp }}>TEMP: 42Â°C</span>
                                 {' | '}
                                 <span>LOC: Machakos, KE</span>
                             </div>
@@ -260,7 +234,7 @@ const Hero = ({ isDark, glitch = false }) => {
                                     { val: '10+',   label: 'Projects'         },
                                     { val: '4+',    label: 'Systems Designed' },
                                     { val: 'Daily', label: 'Learning Rate'    },
-                                    { val: '∞',     label: 'Problems Left'    },
+                                    { val: 'âˆž',     label: 'Problems Left'    },
                                 ].map((stat) => (
                                     <div key={stat.label} style={{ textAlign: 'center', padding: '0.4rem 0' }}>
                                         <div style={{
@@ -306,15 +280,15 @@ const Hero = ({ isDark, glitch = false }) => {
                                     e.currentTarget.style.background = accentColor;
                                 }}
                             >
-                                Explore my work <span>→</span>
+                                Explore my work <span>â†’</span>
                             </a>
                         </motion.div>
 
-                        {/* ───────────────── RIGHT: device + lever ───────────────── */}
+                        {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ RIGHT: device + lever â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
                         <motion.div
-                            initial={{ x: 60, opacity: 0 }}
+                            initial={{ x: 20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
-                            transition={{ duration: 0.8, delay: 0.3 }}
+                            transition={{ duration: 0.7, ease: 'easeOut', delay: 0.25 }}
                             style={{ flex: '1 1 300px', maxWidth: '580px', display: 'flex' }}
                         >
                             <DeviceSandbox isDark={isDark} mousePosRef={mousePosRef} glitch={glitch} />
@@ -323,8 +297,6 @@ const Hero = ({ isDark, glitch = false }) => {
                     </motion.div>
                 )}
             </AnimatePresence>
-
-
         </section>
     );
 };
