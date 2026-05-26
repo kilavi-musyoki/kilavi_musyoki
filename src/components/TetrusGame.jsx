@@ -38,7 +38,7 @@ const GRAVITY = [60, 48, 40, 36, 33, 30, 26, 23, 20, 17, 15, 13, 11, 10, 9, 8, 7
 const getGravityFrames = (level) => GRAVITY[Math.min(level, 20)] || 3;
 
 let actx = null;
-let isMuted = false;
+let isMuted = true; // default muted — consent-first audio
 
 const playTone = (freq, type, dur, vol = 0.05) => {
     if (isMuted) return;
@@ -300,6 +300,29 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
 
+        // Mute toggle hit region (populated by draw, tested on pointerdown)
+        let muteBtn = null; // { x, y, w, h }
+
+        const onPointerDown = (e) => {
+            if (!muteBtn) return;
+            const rect = canvas.getBoundingClientRect();
+            const px = (e.clientX - rect.left) * dpr;
+            const py = (e.clientY - rect.top)  * dpr;
+            if (px >= muteBtn.x && px <= muteBtn.x + muteBtn.w &&
+                py >= muteBtn.y && py <= muteBtn.y + muteBtn.h) {
+                isMuted = !isMuted;
+                if (!isMuted) {
+                    // Unlock AudioContext on first user gesture
+                    if (!actx) {
+                        try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+                    }
+                    if (actx && actx.state === 'suspended') actx.resume();
+                    playTone(660, 'square', 0.06, 0.04); // confirmation chirp
+                }
+            }
+        };
+        canvas.addEventListener('pointerdown', onPointerDown);
+
         const activeTouches = {};
 
         const update = (dt) => {
@@ -350,6 +373,28 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
                     lockPiece();
                 }
             }
+        };
+
+        const drawMuteBtn = (x, y, w, h) => {
+            // Store hit rect for pointer testing (in canvas pixel space)
+            muteBtn = { x, y, w, h };
+            const isM = isMuted;
+            ctx.fillStyle = isM ? 'rgba(255,90,60,0.18)' : 'rgba(75,216,160,0.14)';
+            ctx.fillRect(x, y, w, h);
+            ctx.strokeStyle = isM ? 'rgba(255,90,60,0.55)' : 'rgba(75,216,160,0.55)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, w, h);
+            const icon = isM ? '\u{1F507}' : '\u{1F50A}';
+            const fontSize = Math.max(8, Math.floor(h * 0.52));
+            setCtxFont(`${fontSize}px monospace`);
+            ctx.fillStyle = isM ? 'rgba(255,90,60,0.9)' : 'rgba(75,216,160,0.9)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(icon, x + w / 2, y + h * 0.42);
+            const labelSize = Math.max(4, Math.floor(h * 0.20));
+            setCtxFont(`${labelSize}px "Press Start 2P", monospace`);
+            ctx.fillStyle = isM ? 'rgba(255,90,60,0.6)' : 'rgba(75,216,160,0.6)';
+            ctx.fillText(isM ? 'MUTED' : 'SFX ON', x + w / 2, y + h * 0.80);
         };
 
         const drawCell = (ctx, x, y, size, color) => {
@@ -499,6 +544,12 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
                 }
             }
 
+            // Mute toggle button below NEXT box
+            const nextBoxBottom = curY + boxH * 1.5;
+            const muteH = Math.floor(boxH * 0.9);
+            const muteY = nextBoxBottom + gap;
+            drawMuteBtn(boxX, muteY, boxW, muteH);
+
             if (state === 'menu') {
                 ctx.fillStyle = 'rgba(5, 8, 8, 0.85)';
                 ctx.fillRect(boardX, boardY, COLS * cellSize, VISIBLE_ROWS * cellSize);
@@ -545,6 +596,7 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
             ro.disconnect();
             window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('keyup', onKeyUp);
+            canvas.removeEventListener('pointerdown', onPointerDown);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
