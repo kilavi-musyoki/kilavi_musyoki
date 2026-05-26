@@ -379,13 +379,12 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 position: 'relative',
                 width: '100%',
                 aspectRatio: '200 / 160',
-                animation: 'levitate 4s ease-in-out infinite',
                 transform: `perspective(900px) rotateX(0deg) rotateY(0deg)`,
                 transition: 'transform 0.06s linear',
                 willChange: 'transform',
             }}
         >
-            {/* Tractor beam glow */}
+            {/* Tractor beam glow — atmospheric float scoped to beam only */}
             <div
                 ref={beamRef}
                 style={{
@@ -396,6 +395,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 width: '150px', height: '52px',
                 background: `radial-gradient(ellipse at top, ${beamColor} 0%, transparent 70%)`,
                 pointerEvents: 'none', zIndex: 0,
+                animation: 'beam-float 4s ease-in-out infinite',
             }} />
 
             {/* LAYER 1: PCB Board */}

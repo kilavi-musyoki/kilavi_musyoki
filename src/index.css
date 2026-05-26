@@ -90,22 +90,10 @@ body::before {
 }
 
 /* ===== Scanline Overlay ===== */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 255, 136, 0.015) 2px,
-    rgba(0, 255, 136, 0.015) 4px
-  );
-  pointer-events: none;
-  z-index: var(--z-scanlines);
-}
+/* Scanlines are scoped to the screen bezel inside AvatarDisplay.jsx */
+/* body::after removed — global scanlines polluted non-screen surfaces */
 
-/* Light mode — no scanlines */
+/* Light mode — no scanlines (kept for insurance if any component re-adds) */
 body.light-mode::after {
   opacity: 0;
 }
@@ -653,6 +641,13 @@ body.light-mode .oscilloscope-grid {
 @keyframes levitate {
   0%, 100% { transform: translateY(0px);  }
   50%       { transform: translateY(-9px); }
+}
+
+/* ===== Beam Float — atmospheric bob for tractor beam glow only ===== */
+/* Smaller amplitude (4px) so it reads as ambient energy, not bouncing UI */
+@keyframes beam-float {
+  0%, 100% { transform: translateX(-50%) translateY(0px);   }
+  50%       { transform: translateX(-50%) translateY(-4px);  }
 }
 
 /* ===== Light mode — additional polish ===== */

@@ -209,9 +209,9 @@ export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) 
                         </text>
                     </g>
 
-                    {/* Persistent scanlines */}
+                    {/* Persistent scanlines — scoped to screen bezel only (global body::after removed) */}
                     <rect x="0" y="0" width={W} height={H}
-                        fill="url(#av-scan)" opacity={bgOpacity * 0.32} pointerEvents="none"
+                        fill="url(#av-scan)" opacity={Math.min(1, bgOpacity * 0.72)} pointerEvents="none"
                         style={{ transition: 'opacity 0.4s' }} />
                     {/* Screen border */}
                     <rect x="0" y="0" width={W} height={H}
