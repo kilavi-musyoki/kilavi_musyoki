@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { getTheme } from '../theme.js';
 
 const CHANGELOG = [
     {
@@ -7,36 +8,37 @@ const CHANGELOG = [
         status: 'Degree',
         title: 'Telecommunications & Information Engineering, DeKUT',
         body: 'BSc programme focused on communications systems, networking, and electronics. 2023–2027.',
-        color: '#ffffff',
+        color: '#4BD8A0',   // cyber mint — current / flagship
     },
     {
         version: 'v3.0',
         status: 'Leadership',
         title: 'Class Representative',
         body: 'Elected liaison between students and faculty, coordinating academic communication and schedules.',
-        color: '#ced0ce',
+        color: '#6FD4FF',   // neon tech-blue
     },
     {
         version: 'v2.0',
         status: 'Community',
         title: 'IEEE Student Branch, DeKUT',
         body: 'Active member — talks, workshops, and standards-focused events around real engineering practice.',
-        color: '#9ca09c',
+        color: '#D4A843',   // warm copper-gold
     },
     {
         version: 'v1.0',
         status: 'Highlight',
         title: 'Cloud-Connected IoT Pipeline',
         body: 'ESP32 sensors, MQTT, and web dashboard for live monitoring — my first end‑to‑end engineering pipeline.',
-        color: '#6b716b',
+        color: '#a3b8cc',   // steel-blue muted
     },
 ];
 
 const Milestones = ({ isDark }) => {
     const [hoveredIdx, setHoveredIdx] = useState(null);
-    const textColor = isDark ? '#ced0ce' : '#1C2226';
-    const dimColor = isDark ? 'rgba(156,160,156,0.9)' : 'rgba(28,34,38,0.52)';
-    const bodyColor = isDark ? 'rgba(176,255,204,0.7)' : 'rgba(28,34,38,0.65)';
+    const t         = getTheme(isDark);
+    const textColor = t.textColor;
+    const dimColor  = t.dimColor;
+    const bodyColor = isDark ? 'rgba(206,212,222,0.72)' : 'rgba(28,34,38,0.65)';
 
     return (
         <section id="milestones" className="section-base" data-debug="milestones-section">

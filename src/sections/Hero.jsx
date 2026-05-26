@@ -44,23 +44,23 @@ const Hero = ({ isDark, glitch = false }) => {
     const statusTemp   = t.statusRed;
 
     // Component-specific tokens (boot terminal + hero progress bar)
-    const tagBorder      = isDark ? 'rgba(206,208,206,0.6)'     : 'rgba(104,112,120,0.4)';
-    const tagBg          = isDark ? 'rgba(206,208,206,0.06)'    : 'rgba(255,255,255,0.35)';
-    const statusBg       = isDark ? 'rgba(206,208,206,0.03)'    : 'rgba(255,255,255,0.25)';
-    const statusBorder   = isDark ? 'rgba(206,208,206,0.15)'    : 'rgba(104,112,120,0.25)';
-    const progressTrack  = isDark ? 'rgba(75,216,160,0.15)'     : 'rgba(13,148,136,0.15)';
+    const tagBorder      = isDark ? 'rgba(75,216,160,0.35)'      : 'rgba(104,112,120,0.4)';
+    const tagBg          = isDark ? 'rgba(75,216,160,0.07)'      : 'rgba(255,255,255,0.35)';
+    const statusBg       = isDark ? 'rgba(10,12,16,0.55)'        : 'rgba(255,255,255,0.25)';
+    const statusBorder   = isDark ? 'rgba(75,216,160,0.18)'      : 'rgba(104,112,120,0.25)';
+    const progressTrack  = isDark ? 'rgba(75,216,160,0.15)'      : 'rgba(13,148,136,0.15)';
     const progressFill   = isDark
         ? 'linear-gradient(90deg,#4BD8A0,#6FD4FF)'
         : 'linear-gradient(90deg,#0D9488,#D4A843)';
-    const terminalBg     = isDark ? '#050808'                   : '#E8EAE7';
-    const terminalBorder = isDark ? 'rgba(75,216,160,0.3)'      : 'rgba(13,148,136,0.35)';
-    const terminalLabel  = isDark ? 'rgba(75,216,160,0.5)'      : 'rgba(13,148,136,0.6)';
+    const terminalBg     = isDark ? '#04060A'                    : '#E8EAE7';
+    const terminalBorder = isDark ? 'rgba(75,216,160,0.3)'       : 'rgba(13,148,136,0.35)';
+    const terminalLabel  = isDark ? 'rgba(75,216,160,0.5)'       : 'rgba(13,148,136,0.6)';
 
     const lineColors = {
         0: dimColor,
         1: isDark ? '#b0ffcc' : accentColor,
         2: isDark ? '#D4A843' : accentColor,
-        3: isDark ? '#9ca09c' : 'rgba(104,112,120,0.6)',
+        3: isDark ? 'rgba(163,184,204,0.75)' : 'rgba(104,112,120,0.6)',  // cool slate secondary
         4: textColor,
     };
 

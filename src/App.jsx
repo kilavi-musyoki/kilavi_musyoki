@@ -323,8 +323,8 @@ function App() {
               position: 'fixed',
               top: '56px', left: 0, right: 0,
               zIndex: 999,
-              background: isDark ? 'rgba(40,46,40,0.98)' : 'rgba(232,234,231,0.97)',
-              borderBottom: `1px solid ${isDark ? 'rgba(107,113,107,0.6)' : 'rgba(104,112,120,0.3)'}`,
+              background: isDark ? 'rgba(10,12,16,0.97)' : 'rgba(232,234,231,0.97)',
+              borderBottom: `1px solid ${isDark ? 'rgba(75,216,160,0.18)' : 'rgba(104,112,120,0.3)'}`,
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
               padding: '0.5rem 1.5rem 1.25rem',
@@ -346,7 +346,7 @@ function App() {
             <div style={{
               marginTop: '0.75rem',
               paddingTop: '0.75rem',
-              borderTop: `1px solid ${isDark ? 'rgba(107,113,107,0.35)' : 'rgba(104,112,120,0.2)'}`,
+            borderTop: `1px solid ${isDark ? 'rgba(75,216,160,0.14)' : 'rgba(104,112,120,0.2)'}`,
               display: 'flex', alignItems: 'center', gap: '6px',
             }}>
               <div style={{

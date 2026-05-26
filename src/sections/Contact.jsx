@@ -99,13 +99,13 @@ const Contact = ({ isDark }) => {
     const errorColor  = t.statusRed;
 
     // Component-specific tokens (oscilloscope display)
-    const sectionBg        = isDark ? 'rgba(57,65,57,1)'             : 'transparent';
-    const scopeBg          = isDark ? '#000810'                       : '#2E3A42';
-    const scopeBorderColor = isDark ? 'rgba(107,113,107,0.6)'        : 'rgba(13,148,136,0.55)';
-    const scopeGridColor   = isDark ? 'rgba(107,113,107,0.07)'       : 'rgba(13,148,136,0.09)';
-    const scopeLabelColor  = isDark ? 'rgba(107,113,107,0.7)'        : 'rgba(13,148,136,0.7)';
-    const waveColor        = isDark ? '#9ca09c'                      : '#0D9488';
-    const ecgColor         = isDark ? '#4ade80'                      : '#0D9488';
+    const sectionBg        = 'transparent';  // inherits obsidian base
+    const scopeBg          = isDark ? '#00070F'                        : '#2E3A42';
+    const scopeBorderColor = isDark ? 'rgba(75,216,160,0.28)'         : 'rgba(13,148,136,0.55)';
+    const scopeGridColor   = isDark ? 'rgba(75,216,160,0.06)'         : 'rgba(13,148,136,0.09)';
+    const scopeLabelColor  = isDark ? 'rgba(75,216,160,0.55)'         : 'rgba(13,148,136,0.7)';
+    const waveColor        = isDark ? '#4BD8A0'                       : '#0D9488';
+    const ecgColor         = isDark ? '#4BD8A0'                       : '#0D9488';
 
     // ── Idle/typing oscilloscope animation ────────────────────────────────────
     useEffect(() => {

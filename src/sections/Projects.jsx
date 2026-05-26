@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getTheme } from '../theme.js';
 
 const PROJECTS = [
     {
@@ -16,7 +17,7 @@ const PROJECTS = [
         lessons:
             'Separating voter identity from vote data was essential for anonymity while still preventing double voting. Implementing a cryptographic hash chain provided an auditable vote sequence but required careful transaction handling to maintain consistency. Strict TypeScript typing across frontend and backend significantly reduced runtime errors during development.',
         stack: ['React', 'TypeScript', 'Node.js / Express', 'PostgreSQL', 'Prisma ORM', 'JWT Authentication', 'Tailwind CSS', 'Docker'],
-        color: '#c4c8c4',
+        color: '#4BD8A0',  // cyber mint
         icon: '🗳️',
         repo: 'https://github.com/kilavi-musyoki/voting-website.git',
     },
@@ -30,7 +31,7 @@ const PROJECTS = [
         outcome: 'Average alert latency under 1.5 seconds from sensor threshold breach to admin notification. Validated across 4 independent zones with 100% detection rate during controlled smoke tests.',
         lessons: 'Wi-Fi reconnection on ESP32 requires a carefully tuned watchdog — naive reconnect loops stall the sensor-read task entirely. FreeRTOS separate tasks eliminated all lockups. MQ-2 sensor warm-up delays are critical for accuracy.',
         stack: ['ESP32 (C++)', 'FreeRTOS', 'MQ-2 / DHT22', 'MQTT / Mosquitto', 'Node-RED', 'Telegram Bot API'],
-        color: '#ced0ce',
+        color: '#FF5A3C',  // alert red — fire theme
         icon: '🔥',
         repo: null,
     },
@@ -44,7 +45,7 @@ const PROJECTS = [
         outcome: 'Verified functional correctness across all 1,440 daily minute-states. All edge cases handled without glitching or invalid BCD output.',
         lessons: "Midnight/noon conversions require separate comparator branches — one threshold comparator can't differentiate both. BCD addition overflow must be corrected explicitly; binary adders produce values above 9 without a correction stage.",
         stack: ['Logisim Evolution', 'BCD Logic', 'Combinational Circuits', 'Flip-Flops', 'Comparators', 'MUX/DEMUX'],
-        color: '#9ca09c',
+        color: '#D4A843',  // copper-gold
         icon: '🕐',
         repo: 'https://github.com/kilavi-musyoki/digital-clock-with-logism.git',
     },
@@ -58,7 +59,7 @@ const PROJECTS = [
         outcome: 'Full hardware-software integration across 5 sensor types and 3 actuator subsystems. Sub-200ms response to motion and light changes. Presented as final hardware project to engineering faculty.',
         lessons: 'Polling all sensors in a tight loop introduced 400ms lag. Restructuring into interrupt-driven reads with cooperative scheduler reduced latency to under 200ms and eliminated missed sensor events.',
         stack: ['AVR Microcontroller (C)', 'PIR Sensor', 'LDR', 'DHT22', 'DS3231 RTC', '16×2 LCD', 'Servo', 'Relay'],
-        color: '#6b716b',
+        color: '#6FD4FF',  // neon tech-blue
         icon: '🏠',
         repo: null,
     },
@@ -72,7 +73,7 @@ const PROJECTS = [
         outcome: 'Fully functional offline notes app with hardware-backed encryption, per-note locking, multi-select bulk actions, auto-save, crash recovery, and a 30-day soft-delete trash system. All security layers operate without any network dependency.',
         lessons: 'Note-level locking required careful separation between the biometric prompt lifecycle and Compose recomposition — tightly coupling them caused the auth dialog to dismiss unexpectedly on rotation. Android Keystore key invalidation on biometric enrollment changes also needed explicit handling to avoid silent decryption failures.',
         stack: ['Kotlin', 'Jetpack Compose', 'Material 3', 'Room / SQLite', 'AES-256-GCM', 'Android Keystore', 'AndroidX Biometric', 'Kotlin Coroutines'],
-        color: '#525752',
+        color: '#a78bfa',  // soft violet / security theme
         icon: '🔐',
         repo: 'https://github.com/kilavi-musyoki/notes-app.git',
     },
@@ -86,7 +87,7 @@ const PROJECTS = [
         outcome: '<0.3 dB insertion loss deviation between simulation and theoretical model at 5 GHz. Substrate loss tangent identified as dominant error contributor above 6 GHz; RO4003C outperforms FR-4 by 0.9 dB at 10 GHz.',
         lessons: 'Mesh density in Momentum has non-linear accuracy impact. Too coarse at high frequencies introduces ~1.2 dB error; too fine makes solve time impractical. Frequency-adaptive mesh at 20 cells/wavelength struck the right balance.',
         stack: ['Keysight ADS', 'Momentum EM Solver', 'LineCalc', 'MATLAB', 'S-parameter Analysis'],
-        color: '#394139',
+        color: '#a3b8cc',  // steel blue-gray
         icon: '📡',
         repo: null,
     },
@@ -135,8 +136,9 @@ const RepoLink = ({ url, color }) => {
 };
 
 const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
-    const textColor = isDark ? '#ced0ce' : '#1C2226';
-    const dimColor = isDark ? 'rgba(156,160,156,0.9)' : 'rgba(28,34,38,0.52)';
+    const t         = getTheme(isDark);
+    const textColor = t.textColor;
+    const dimColor  = t.dimColor;
 
     // In light mode, project.color values are dark (e.g. #394139) — use a
     // consistent warm card style instead of deriving from those dark colors.
@@ -288,8 +290,9 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
 
 const Projects = ({ isDark }) => {
     const [expandedId, setExpandedId] = useState(null);
-    const textColor = isDark ? '#ced0ce' : '#1C2226';
-    const dimColor = isDark ? 'rgba(156,160,156,0.9)' : 'rgba(28,34,38,0.52)';
+    const t         = getTheme(isDark);
+    const textColor = t.textColor;
+    const dimColor  = t.dimColor;
 
     return (
         <section id="projects" className="section-base" data-debug="projects-section">
