@@ -47,7 +47,7 @@ export function initScroll(setLayer, setGlitch) {
     setGlitch(true);
     glitchTimeout = setTimeout(() => {
       setGlitch(false);
-    }, 300);
+    }, 100); // 100ms — crisp frame-skip feel, not a prolonged visual jank
   };
 
   const st = ScrollTrigger.create({

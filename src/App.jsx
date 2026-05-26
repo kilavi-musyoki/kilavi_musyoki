@@ -12,33 +12,34 @@ import { initScroll } from './scrollSetup.js';
 import { useFocusTrap } from './hooks/useFocusTrap';
 import { getTheme } from './theme.js';
 
-// Spark particle effect on click
+// Spark particle effect — fires ONLY on interactive elements (buttons, links, inputs)
+// Keeps sparks as tactile feedback for deliberate actions, not ambient noise.
 const createSparks = (x, y, isDark) => {
-  const color = isDark ? '#9ca09c' : '#50b1ce';
-  const glow  = isDark ? '#9ca09c' : '#79bfc9';
-  for (let i = 0; i < 10; i++) {
+  const color = isDark ? '#4BD8A0' : '#0D9488';
+  const glow  = isDark ? 'rgba(75,216,160,0.8)' : 'rgba(13,148,136,0.7)';
+  for (let i = 0; i < 8; i++) {
     const spark = document.createElement('div');
     spark.className = 'spark';
-    const angle    = (i / 10) * Math.PI * 2;
-    const distance = 30 + Math.random() * 40;
+    const angle    = (i / 8) * Math.PI * 2;
+    const distance = 20 + Math.random() * 30;
     const dx = Math.cos(angle) * distance;
     const dy = Math.sin(angle) * distance;
     spark.style.cssText = `
       left: ${x}px; top: ${y}px;
       background: ${color};
-      box-shadow: 0 0 4px ${glow};
-      position: fixed; width: 4px; height: 4px;
+      box-shadow: 0 0 6px ${glow};
+      position: fixed; width: 3px; height: 3px;
       border-radius: 50%; pointer-events: none; z-index: 99997;
-      animation: none; transition: all 0.5s ease-out;
+      animation: none; transition: all 0.4s ease-out;
     `;
     document.body.appendChild(spark);
     requestAnimationFrame(() => {
       spark.style.transform = `translate(${dx}px, ${dy}px)`;
       spark.style.opacity   = '0';
-      spark.style.width     = '2px';
-      spark.style.height    = '2px';
+      spark.style.width     = '1px';
+      spark.style.height    = '1px';
     });
-    setTimeout(() => spark.remove(), 500);
+    setTimeout(() => spark.remove(), 420);
   }
 };
 
@@ -156,14 +157,15 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // ── Global click sparks ──────────────────────────────────────────────────
+  // ── Global click sparks — restricted to interactive elements only ────────
   useEffect(() => {
+    const INTERACTIVE = ['button', 'a', 'input', 'textarea', 'select', 'label'];
     const handleClick = (e) => {
-      // Don't spawn sparks if clicking inside the game controls
+      // Skip game controls and canvas
       if (e.target.closest('[data-tetrus-btn]') || e.target.closest('canvas')) return;
-      
       const tag = e.target.tagName.toLowerCase();
-      if (!['input', 'textarea', 'button', 'a', 'select'].includes(tag)) {
+      // Only fire on semantically interactive elements — not empty space
+      if (INTERACTIVE.includes(tag) || e.target.closest('button, a, [role="button"]')) {
         createSparks(e.clientX, e.clientY, isDark);
       }
     };
