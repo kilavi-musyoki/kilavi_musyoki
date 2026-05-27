@@ -19,8 +19,10 @@ const BOOT_LINES = [
 const LINE_COLOR_INDEX = [0, 1, 1, 1, 1, 1, 2, 3, 4];
 const UPTIME_START = Date.now();
 
-// ── Premium easing curve ─────────────────────────────────────────────────────
+// ── Premium easing curves ─────────────────────────────────────────────────────
 const EXPO_OUT = [0.16, 1, 0.3, 1];
+const SMOOTH_OUT = [0.25, 1, 0.5, 1];
+const FADE_EASE = [0.4, 0, 0.2, 1];
 
 // ─────────────────────────────────────────────────────────────────────────────
 const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
@@ -126,8 +128,8 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                     <motion.div
                         key="boot"
                         initial={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.04 }}
-                        transition={{ duration: 0.85, ease: EXPO_OUT }}
+                        exit={{ opacity: 0, scale: 1.01 }}
+                        transition={{ duration: 1.0, ease: FADE_EASE }}
                         style={{
                             position: 'fixed', inset: 0, zIndex: 9990,
                             display: 'flex', flexDirection: 'column',
@@ -196,9 +198,9 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                 {bootDone && (
                     <motion.div
                         key="hero-content"
-                        initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                        initial={{ opacity: 0, y: 20, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ duration: 1.0, ease: EXPO_OUT }}
+                        transition={{ duration: 1.2, ease: SMOOTH_OUT, delay: 0.15 }}
                         style={{
                             width: '100%',
                             padding: isMobile ? '0 1.25rem' : '0 2rem',
@@ -212,9 +214,9 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                     >
                         {/* ────────────── LEFT: text ────────────── */}
                         <motion.div
-                            initial={{ x: -25, opacity: 0 }}
+                            initial={{ x: -20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
-                            transition={{ duration: 0.75, ease: EXPO_OUT, delay: 0.15 }}
+                            transition={{ duration: 0.9, ease: SMOOTH_OUT, delay: 0.3 }}
                             style={{ flex: '0 0 45%', minWidth: '280px' }}
                         >
                             {/* Greeting */}
@@ -331,9 +333,9 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
 
                         {/* ────────────── RIGHT: device + lever ────────────── */}
                         <motion.div
-                            initial={{ x: 25, opacity: 0, scale: 0.97 }}
+                            initial={{ x: 20, opacity: 0, scale: 0.98 }}
                             animate={{ x: 0, opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.85, ease: EXPO_OUT, delay: 0.25 }}
+                            transition={{ duration: 1.0, ease: SMOOTH_OUT, delay: 0.4 }}
                             style={{ flex: '1 1 300px', maxWidth: '580px', display: 'flex' }}
                         >
                             <DeviceSandbox isDark={isDark} mousePosRef={mousePosRef} glitch={glitch} />
