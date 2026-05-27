@@ -3,32 +3,15 @@
 // If using Vercel, this auto-deploys as an API route: POST /api/contact
 
 import nodemailer from 'nodemailer';
-
-// ── In-memory rate limiter ─────────────────────────────────────────────────
-// Limits each IP to 5 requests per minute. Resets on cold starts (acceptable
-// for a low-traffic portfolio). No external dependencies needed.
-const _rlStore = new Map();
-const RL_WINDOW_MS   = 60 * 1000; // 1-minute window
-const RL_MAX_REQ     = 5;         // max submissions per IP per window
-
-function checkRateLimit(ip) {
-    const now   = Date.now();
-    const entry = _rlStore.get(ip) || { count: 0, resetAt: now + RL_WINDOW_MS };
-    if (now > entry.resetAt) {
-        entry.count   = 0;
-        entry.resetAt = now + RL_WINDOW_MS;
-    }
-    entry.count++;
-    _rlStore.set(ip, entry);
-    return { allowed: entry.count <= RL_MAX_REQ };
-}
+import { checkRateLimit } from './rate-limit.js';
 
 export default async function handler(req, res) {
     // ── IP-based rate limiting ───────────────────────────────────────────────
     const clientIp = ((req.headers['x-forwarded-for'] || '') + '').split(',')[0].trim()
                      || req.socket?.remoteAddress
                      || 'unknown';
-    if (!checkRateLimit(clientIp).allowed) {
+    const rateLimit = await checkRateLimit(clientIp, 5, 60);
+    if (!rateLimit.allowed) {
         return res.status(429).json({ error: 'Too many requests. Please wait a minute before trying again.' });
     }
 

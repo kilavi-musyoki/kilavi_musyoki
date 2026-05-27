@@ -1,23 +1,12 @@
-// ── In-memory rate limiter ─────────────────────────────────────────────────
-const _rlStore    = new Map();
-const RL_WINDOW_MS = 60 * 1000;
-const RL_MAX_REQ   = 5;
-
-function checkRateLimit(ip) {
-    const now   = Date.now();
-    const entry = _rlStore.get(ip) || { count: 0, resetAt: now + RL_WINDOW_MS };
-    if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + RL_WINDOW_MS; }
-    entry.count++;
-    _rlStore.set(ip, entry);
-    return { allowed: entry.count <= RL_MAX_REQ };
-}
+import { checkRateLimit } from './rate-limit.js';
 
 export default async function handler(req, res) {
     // ── IP-based rate limiting ───────────────────────────────────────────────
     const clientIp = ((req.headers['x-forwarded-for'] || '') + '').split(',')[0].trim()
                      || req.socket?.remoteAddress
                      || 'unknown';
-    if (!checkRateLimit(clientIp).allowed) {
+    const rateLimit = await checkRateLimit(clientIp, 5, 60);
+    if (!rateLimit.allowed) {
         return res.status(429).json({ error: 'Too many requests. Please wait a minute before trying again.' });
     }
 

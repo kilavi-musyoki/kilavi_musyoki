@@ -4,19 +4,7 @@
 // Logs a CV download event to Google Sheets via the sheet-proxy webhook.
 // Called by the frontend when a user downloads the CV.
 
-// ── In-memory rate limiter (10 downloads / IP / min) ─────────────────────
-const _rlStore    = new Map();
-const RL_WINDOW_MS = 60 * 1000;
-const RL_MAX_REQ   = 10;
-
-function checkRateLimit(ip) {
-    const now   = Date.now();
-    const entry = _rlStore.get(ip) || { count: 0, resetAt: now + RL_WINDOW_MS };
-    if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + RL_WINDOW_MS; }
-    entry.count++;
-    _rlStore.set(ip, entry);
-    return { allowed: entry.count <= RL_MAX_REQ };
-}
+import { checkRateLimit } from './rate-limit.js';
 
 // ── Shared sanitizer — prevents Google Sheets formula injection ──────────
 function sanitizeForSheets(value) {
@@ -58,7 +46,8 @@ export default async function handler(req, res) {
     const clientIp = ((req.headers['x-forwarded-for'] || '') + '').split(',')[0].trim()
                      || req.socket?.remoteAddress
                      || 'unknown';
-    if (!checkRateLimit(clientIp).allowed) {
+    const rateLimit = await checkRateLimit(clientIp, 10, 60);
+    if (!rateLimit.allowed) {
         return res.status(429).json({ error: 'Too many requests.' });
     }
 

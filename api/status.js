@@ -3,19 +3,7 @@
 // GET /api/status → { available, seeking, until }
 // Controlled via Vercel env vars: STATUS_AVAILABLE, STATUS_SEEKING, STATUS_UNTIL
 
-// ── In-memory rate limiter (30 req / IP / min for a public GET) ───────────
-const _rlStore    = new Map();
-const RL_WINDOW_MS = 60 * 1000;
-const RL_MAX_REQ   = 30;
-
-function checkRateLimit(ip) {
-  const now   = Date.now();
-  const entry = _rlStore.get(ip) || { count: 0, resetAt: now + RL_WINDOW_MS };
-  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + RL_WINDOW_MS; }
-  entry.count++;
-  _rlStore.set(ip, entry);
-  return { allowed: entry.count <= RL_MAX_REQ };
-}
+import { checkRateLimit } from './rate-limit.js';
 
 export default async function handler(req, res) {
   // ── CORS — Allow GitHub Pages, Localhost, same-origin, and Vercel domains ──
@@ -48,7 +36,8 @@ export default async function handler(req, res) {
   const clientIp = ((req.headers['x-forwarded-for'] || '') + '').split(',')[0].trim()
                    || req.socket?.remoteAddress
                    || 'unknown';
-  if (!checkRateLimit(clientIp).allowed) {
+  const rateLimit = await checkRateLimit(clientIp, 30, 60);
+  if (!rateLimit.allowed) {
     res.status(429).json({ error: 'Too many requests.' });
     return;
   }
