@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, memo } from 'react';
 import TetrusGame from './TetrusGame.jsx';
+import logoImg from '../assets/logo.png';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const norm = (v, a, b) => clamp((v - a) / (b - a), 0, 1);
@@ -36,7 +37,38 @@ const NODE_FILL = {
 };
 
 export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) {
+    const [jitterStyle, setJitterStyle] = useState({});
 
+    useEffect(() => {
+        if (leverValue < 0.20 || leverValue > 0.40) {
+            setJitterStyle({});
+            return;
+        }
+
+        let frame = 0;
+        let rafId;
+        const progress = norm(leverValue, 0.20, 0.35) * (1 - norm(leverValue, 0.35, 0.40));
+
+        const tick = () => {
+            frame++;
+            if (frame % 4 === 0) {
+                const maxTranslateX = progress * 3.5;
+                const maxTranslateY = progress * 2.5;
+                const maxSkew = progress * 1.2;
+
+                const tx = (Math.random() - 0.5) * maxTranslateX;
+                const ty = (Math.random() - 0.5) * maxTranslateY;
+                const sk = (Math.random() - 0.5) * maxSkew;
+
+                setJitterStyle({
+                    transform: `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) skewX(${sk.toFixed(1)}deg)`,
+                });
+            }
+            rafId = requestAnimationFrame(tick);
+        };
+        rafId = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(rafId);
+    }, [leverValue]);
 
     // ── Layer opacities — tuned for seamless cross-dissolve ────────────────────
     //  Game (0→0.40 full, 0.40→0.60 fade-out)  overlaps  PCB (0.22→0.55 fade-in)
@@ -76,6 +108,7 @@ export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) 
                     opacity: gameOpacity,
                     zIndex: 1,
                     pointerEvents: gameOpacity > 0.05 ? 'auto' : 'none',
+                    ...jitterStyle,
                 }}>
                     <TetrusGame glitchLevel={leverValue} isDark={isDark} />
                 </div>
@@ -97,6 +130,10 @@ export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) 
                             @keyframes av-scanline-move {
                                 0% { transform: translateY(-2px); }
                                 100% { transform: translateY(98px); }
+                            }
+                            @keyframes logo-float {
+                                0%, 100% { transform: translateY(0px) scale(1); }
+                                50% { transform: translateY(-4px) scale(1.03); }
                             }
                             .av-scanline {
                                 animation: av-scanline-move 6s linear infinite;
@@ -149,65 +186,7 @@ export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) 
                     </g>
 
 
-                    {/* ── LAYER 4: FLOATING KM LOGO ── */}
-                    <g opacity={logoOpacity}>
-                        {/* Deep radial ambient glow */}
-                        <ellipse cx={CX} cy="45" rx="52" ry="46" fill="rgba(75,216,160,0.07)" />
-                        <ellipse cx={CX} cy="45" rx="28" ry="24" fill="rgba(75,216,160,0.05)" />
 
-                        {/* Outer hex frame */}
-                        <path d="M 60,8 L 93,27 L 93,65 L 60,84 L 27,65 L 27,27 Z"
-                            fill="none" stroke="#4BD8A0" strokeWidth="1.0" opacity="0.38"
-                            filter="url(#av-soft-glow)" />
-                        {/* Inner subtle hex */}
-                        <path d="M 60,20 L 80,31 L 80,63 L 60,74 L 40,63 L 40,31 Z"
-                            fill="none" stroke="#4BD8A0" strokeWidth="0.4" opacity="0.14" />
-
-                        {/* ── K letterform ── */}
-                        <g stroke="#4BD8A0" strokeWidth="2.2" strokeLinecap="round" fill="none"
-                            filter="url(#av-soft-glow)" opacity="0.95">
-                            <line x1="22" y1="14" x2="22" y2="76" />
-                            <line x1="22" y1="45" x2="46" y2="14" />
-                            <line x1="22" y1="45" x2="46" y2="76" />
-                        </g>
-                        {/* K junction pads */}
-                        {[[22,14],[22,76],[22,45],[46,14],[46,76]].map(([px,py],i) => (
-                            <circle key={`kp${i}`} cx={px} cy={py} r="3.0"
-                                fill="#4BD8A0" opacity="0.92" filter="url(#av-soft-glow)" />
-                        ))}
-                        <line x1="14" y1="45" x2="22" y2="45"
-                            stroke="#4BD8A0" strokeWidth="0.8" strokeDasharray="1.5 1" opacity="0.30" />
-
-                        {/* ── M letterform ── */}
-                        <g stroke="#4BD8A0" strokeWidth="2.2" strokeLinecap="round" fill="none"
-                            filter="url(#av-soft-glow)" opacity="0.95">
-                            <line x1="64" y1="14" x2="64" y2="76" />
-                            <line x1="64" y1="14" x2="86" y2="50" />
-                            <line x1="86" y1="50" x2="108" y2="14" />
-                            <line x1="108" y1="14" x2="108" y2="76" />
-                        </g>
-                        {/* M junction pads */}
-                        {[[64,14],[64,76],[86,50],[108,14],[108,76]].map(([px,py],i) => (
-                            <circle key={`mp${i}`} cx={px} cy={py} r="3.0"
-                                fill="#4BD8A0" opacity="0.92" filter="url(#av-soft-glow)" />
-                        ))}
-                        <line x1="108" y1="45" x2="116" y2="45"
-                            stroke="#4BD8A0" strokeWidth="0.8" strokeDasharray="1.5 1" opacity="0.30" />
-
-                        {/* Separator rule */}
-                        <line x1="32" y1="80" x2="88" y2="80"
-                            stroke="#4BD8A0" strokeWidth="0.5" opacity="0.22" />
-
-                        {/* Brand text */}
-                        <text x={CX} y="88" textAnchor="middle" fontFamily="Syne,sans-serif"
-                            fontSize="5" fontWeight="700" fill="#4BD8A0" opacity="0.84" letterSpacing="0.18">
-                            SILICON SOUL
-                        </text>
-                        <text x={CX} y="94" textAnchor="middle" fontFamily="JetBrains Mono,monospace"
-                            fontSize="2.8" fill="rgba(75,216,160,0.45)" letterSpacing="0.12">
-                            KILAVI MUSYOKI
-                        </text>
-                    </g>
 
                     {/* Persistent scanlines — scoped to screen bezel only (global body::after removed) */}
                     <rect x="0" y="0" width={W} height={H}
@@ -217,6 +196,33 @@ export default memo(function AvatarDisplay({ leverValue, mousePosRef, isDark }) 
                     <rect x="0" y="0" width={W} height={H}
                         fill="none" stroke="rgba(75,216,160,0.14)" strokeWidth="0.6" rx="2" />
                 </svg>
+
+                {/* LAYER 4: FLOATING CYBERSECURITY LOGO */}
+                {logoOpacity > 0.005 && (
+                    <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: logoOpacity,
+                        zIndex: 15,
+                        pointerEvents: logoOpacity > 0.05 ? 'auto' : 'none',
+                    }}>
+                        <img 
+                            src={logoImg} 
+                            alt="Hack. Strategize. Observe." 
+                            style={{ 
+                                width: '64%',
+                                height: 'auto',
+                                filter: isDark 
+                                    ? 'drop-shadow(0 0 10px rgba(75,216,160,0.52)) brightness(1.08)' 
+                                    : 'drop-shadow(0 0 8px rgba(13,148,136,0.36))',
+                                animation: 'logo-float 4.2s ease-in-out infinite',
+                            }} 
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

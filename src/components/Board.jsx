@@ -19,7 +19,7 @@ const calculateSignalDot = (dist) => {
     return { x: 85, y: 148 };
 };
 
-const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true }) => {
+const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, componentsOpacityMult = 1, tracesOpacityMult = 1, pcbOpacityMult = 1 }) => {
     const [tooltip, setTooltip] = useState(null);
     const signalDotRef = useRef(null);
     const [ledOn, setLedOn] = useState(true);
@@ -300,7 +300,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true }) => {
                 </g>
 
                 {/* ══════ PCB BASE ══════ */}
-                <g opacity={vis.pcb} style={{ transition: 'opacity 0.3s ease' }}>
+                <g opacity={vis.pcb * pcbOpacityMult} style={{ transition: 'opacity 0.3s ease' }}>
                     {/* Board substrate */}
                     <rect x="4" y="4" width="192" height="152" rx="5" fill={pcbSubstrate} />
 
@@ -586,7 +586,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true }) => {
                 </g>
 
                 {/* ══════ TRACES ══════ */}
-                <g opacity={vis.traces} style={{ transition: 'opacity 0.3s ease' }}>
+                <g opacity={vis.traces * tracesOpacityMult} style={{ transition: 'opacity 0.3s ease' }}>
                     <g stroke={traceColor} fill="none" filter="url(#pcb-glow)">
                         {/* ── POWER RAIL: VCC (top horizontal bus) — thicker trace ── */}
                         <path d="M14 25 L85 25 L88 22 L88 60" strokeWidth="1.6" opacity="0.72" />
@@ -708,7 +708,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true }) => {
                 </g>
 
                 {/* ══════ COMPONENTS ══════ */}
-                <g opacity={vis.components} style={{ transition: 'opacity 0.3s ease' }}>
+                <g opacity={vis.components * componentsOpacityMult} style={{ transition: 'opacity 0.3s ease' }}>
                     {/* ESP32 Module — enhanced with shield mesh and die detail */}
                     <g onMouseEnter={e => handleHover(e, { id: 'U1', label: 'ESP32-WROOM-32', func: 'Core Processing Unit', rating: '240MHz dual-core Xtensa LX6' })}
                         onMouseLeave={handleLeave} style={{ cursor: 'crosshair' }}>

@@ -3,6 +3,7 @@ import PCBBoard from './Board.jsx';
 import ProductShell from './ProductShell.jsx';
 import AvatarDisplay from './AvatarDisplay.jsx';
 import LayerLabel from './LayerLabel.jsx';
+import ScreenGlitchOverlay from './ScreenGlitchOverlay.jsx';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const norm = (v, a, b) => clamp((v - a) / (b - a), 0, 1);
@@ -156,12 +157,13 @@ const dpadBase = {
 const dNS = '0 3px 0 #040d05, 0 0 7px rgba(75,216,160,0.18)';
 const dPS = 'inset 0 2px 5px rgba(0,0,0,0.55), 0 1px 0 #040d05';
 
-function CasingControls() {
+function CasingControls({ opacity }) {
     return (
         <div style={{
             position: 'absolute', zIndex: 5, pointerEvents: 'none',
             left: CASING.left, top: CASING.top,
             width: CASING.width, height: CASING.height,
+            opacity,
         }}>
             {/* PAUSE — top center, maps to SVG translate(156,42) ≈ 36%,24% of casing */}
             <Btn gameKey="Enter" ns="0 2px 0 #3a2800, 0 0 8px rgba(212,168,67,0.25)" ps="inset 0 2px 4px rgba(0,0,0,0.5),0 1px 0 #3a2800"
@@ -340,11 +342,18 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
     }, [mousePosRef, isDark]);
 
     // ── Derived values ────────────────────────────────────────────────────────
-    const pcbFadeIn  = norm(smoothLever, 0.22, 0.55);
-    const pcbFadeOut = 1 - norm(smoothLever, 0.74, 0.88);
-    const pcbOpacity = pcbFadeIn * pcbFadeOut;
-    const shellVisible = smoothLever < 0.58;
+    const pcbFadeIn = norm(smoothLever, 0.22, 0.40);
+    const pcbOpacity = pcbFadeIn;
+    const shellVisible = smoothLever < 0.62;
     const boardLayer = leverToLayer(leverValue);
+
+    // Staggered PCB dematerialization stages (Zone 3 -> Zone 4)
+    const componentsOpacityMult = 1 - norm(smoothLever, 0.60, 0.70);
+    const tracesOpacityMult = 1 - norm(smoothLever, 0.70, 0.77);
+    const pcbOpacityMult = 1 - norm(smoothLever, 0.77, 0.84);
+
+    // Casing controls opacity (Zone 2 -> Zone 3)
+    const casingOpacity = 1 - norm(smoothLever, 0.42, 0.60);
 
     const velocity = Math.abs(leverValue - smoothLever);
     const chromAb = velocity * 55;
@@ -403,7 +412,13 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 position: 'absolute', inset: 0, zIndex: 1,
                 opacity: pcbOpacity,
             }}>
-                <PCBBoard layer={boardLayer} isDark={isDark} />
+                <PCBBoard
+                    layer={boardLayer}
+                    isDark={isDark}
+                    componentsOpacityMult={componentsOpacityMult}
+                    tracesOpacityMult={tracesOpacityMult}
+                    pcbOpacityMult={pcbOpacityMult}
+                />
             </div>
 
             {/* LAYER 2: Avatar Display — expanded screen area (with optimized chromatic aberration filter) */}
@@ -454,6 +469,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 )}
 
                 <AvatarDisplay leverValue={smoothLever} mousePosRef={mousePosRef} isDark={isDark} />
+                <ScreenGlitchOverlay leverValue={smoothLever} />
             </div>
 
             {/* LAYER 3: Product Shell */}
@@ -464,8 +480,8 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
             )}
 
             {/* LAYER 3b: Interactive game controls — z-index 5, above ProductShell */}
-            {shellVisible && (
-                <CasingControls />
+            {casingOpacity > 0.005 && (
+                <CasingControls opacity={casingOpacity} />
             )}
 
 

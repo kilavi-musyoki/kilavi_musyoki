@@ -5,7 +5,8 @@ const norm = (v, a, b) => clamp((v - a) / (b - a), 0, 1);
 
 export default memo(function ProductShell({ leverValue, isDark }) {
     const sep = norm(leverValue, 0.1, 0.56);
-    const shellOpacity = 1 - norm(leverValue, 0.0, 0.52);
+    const shellOpacity = 1 - norm(leverValue, 0.40, 0.58);
+    const glassOpacity = 1 - norm(leverValue, 0.44, 0.62);
     const seamGlow = norm(leverValue, 0.1, 0.42) * (1 - norm(leverValue, 0.42, 0.6));
 
     const topDy = -sep * 26;
@@ -20,7 +21,7 @@ export default memo(function ProductShell({ leverValue, isDark }) {
     const bevelLight = 'rgba(255,255,255,0.045)';
     const bevelDark = 'rgba(0,0,0,0.45)';
     const bevelMid = 'rgba(255,255,255,0.02)';
-    const bezelC = `rgba(75,216,160,${0.34 + shellOpacity * 0.2})`;
+    const bezelC = `rgba(75,216,160,${0.34 + glassOpacity * 0.2})`;
     const seamC = `rgba(75,216,160,${seamGlow * 0.82})`;
     const padColor = '#D4A843';
     const silkColor = 'rgba(206,208,206,0.18)';
@@ -427,20 +428,20 @@ export default memo(function ProductShell({ leverValue, isDark }) {
             {/* Outer bezel shadow */}
             <rect x="23.5" y="24.5" width="85" height="105" rx="4"
                 fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="1"
-                opacity={shellOpacity} />
+                opacity={glassOpacity} />
             {/* Main bezel ring */}
             <rect x="24" y="25" width="84" height="104" rx="3.5"
                 fill="none" stroke={bezelC} strokeWidth="1.4"
                 style={{ transition: 'stroke 0.3s' }} />
             {/* Inner bezel shadow (depth illusion) */}
             <rect x="25" y="26" width="82" height="102" rx="2.5"
-                fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth="1.4" opacity={shellOpacity} />
+                fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth="1.4" opacity={glassOpacity} />
             {/* Top bezel reflection */}
             <rect x="25.5" y="26.5" width="81" height="13" rx="2.5"
-                fill={shellHighlight} opacity={shellOpacity} />
+                fill={shellHighlight} opacity={glassOpacity} />
             {/* Bottom bezel darker edge */}
             <line x1="26" y1="128.5" x2="108" y2="128.5"
-                stroke="rgba(0,0,0,0.2)" strokeWidth="0.5" opacity={shellOpacity} />
+                stroke="rgba(0,0,0,0.2)" strokeWidth="0.5" opacity={glassOpacity} />
 
             {/* ══════════════════════════════════════════════════════════════
                 RIGHT CASING & PHYSICAL CONTROLS
