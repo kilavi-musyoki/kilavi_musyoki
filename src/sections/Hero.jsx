@@ -244,9 +244,9 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
 
                             {/* Tags */}
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '2rem' }}>
-                                {['Embedded Systems', 'RF Engineering', 'IoT', 'Networking', 'PCB Design'].map((tag) => (
+                                {['Embedded Systems','Cybersecurity', 'RF Engineering', 'IoT', 'Networking', 'PCB Design'].map((tag) => (
                                     <span key={tag} style={{
-                                        fontFamily: 'JetBrains Mono, monospace', fontSize: '0.65rem',
+                                        fontFamily: 'JetBrains Mono, monospace', fontSize: '0.63rem',
                                         padding: '3px 10px',
                                         border: `1px solid ${tagBorder}`,
                                         borderRadius: '2px', color: accentColor, background: tagBg,
@@ -271,7 +271,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                                 {' | '}
                                 <span style={{ color: statusTemp }}>TEMP: 42°C</span>
                                 {' | '}
-                                <span>LOC: Machakos, KE</span>
+                                <span>LOC: Nairobi, KE</span>
                             </div>
 
                             {/* Stats strip */}
