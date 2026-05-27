@@ -221,7 +221,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                         >
                             {/* Greeting */}
                             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '1rem', color: accentColor, marginBottom: '0.5rem' }}>
-                                herro`&lt;
+                                herro😁;
                             </div>
 
                             {/* Name */}
@@ -246,7 +246,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '2rem' }}>
                                 {['Embedded Systems','Cybersecurity', 'RF Engineering', 'IoT', 'Networking', 'PCB Design'].map((tag) => (
                                     <span key={tag} style={{
-                                        fontFamily: 'JetBrains Mono, monospace', fontSize: '0.63rem',
+                                        fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6rem',
                                         padding: '3px 10px',
                                         border: `1px solid ${tagBorder}`,
                                         borderRadius: '2px', color: accentColor, background: tagBg,
