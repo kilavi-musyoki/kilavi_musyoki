@@ -367,7 +367,7 @@ const Contact = ({ isDark }) => {
                                         <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6rem', color: dimColor, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                                             {item.label}
                                         </div>
-                                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', color: accentColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', color: accentColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', wordBreak: 'break-all' }}>
                                             {item.value}
                                         </div>
                                     </div>
@@ -389,6 +389,7 @@ const Contact = ({ isDark }) => {
                             marginBottom:  '16px',
                             height:        '100px',
                             position:      'relative',
+                            maxWidth:      '100%',
                             background:    status === 'sent' ? (isDark ? '#000f04' : '#2a3228') : scopeBg,
                             border:        `2px solid ${status === 'sent' ? ecgColor + '88' : status === 'error' ? errorColor + '88' : scopeBorderColor}`,
                             borderRadius:  '8px',
@@ -767,18 +768,18 @@ const Contact = ({ isDark }) => {
                             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '10px' }}>
                                 <div>
                                     <label style={labelStyle}>NAME</label>
-                                    <input className="hud-input" type="text" name="name" value={formData.name} onChange={handleInput} placeholder="Your name" required maxLength={100} />
+                                    <input className="hud-input" type="text" name="name" value={formData.name} onChange={handleInput} placeholder="Your name" required maxLength={100} autoComplete="name" />
                                 </div>
                                 <div>
                                     <label style={labelStyle}>EMAIL</label>
-                                    <input className="hud-input" type="email" name="email" value={formData.email} onChange={handleInput} placeholder="your@email.com" required maxLength={254} />
+                                    <input className="hud-input" type="email" name="email" value={formData.email} onChange={handleInput} placeholder="your@email.com" required maxLength={254} autoComplete="email" />
                                 </div>
                             </div>
 
                             {/* Subject */}
                             <div>
                                 <label style={labelStyle}>SUBJECT</label>
-                                <input className="hud-input" type="text" name="subject" value={formData.subject} onChange={handleInput} placeholder="What do you want to build?" maxLength={200} />
+                                <input className="hud-input" type="text" name="subject" value={formData.subject} onChange={handleInput} placeholder="What do you want to build?" maxLength={200} autoComplete="off" />
                             </div>
 
                             {/* Message */}
@@ -803,7 +804,7 @@ const Contact = ({ isDark }) => {
                                 </div>
                             )}
 
-                            {/* Submit button */}
+                            {/* Submit button — min-height 44px for touch target compliance */}
                             <button
                                 type="submit"
                                 disabled={status === 'sending'}
@@ -813,6 +814,7 @@ const Contact = ({ isDark }) => {
                                     fontWeight:    700,
                                     letterSpacing: '0.1em',
                                     padding:       '14px 28px',
+                                    minHeight:     '44px',
                                     width:         '100%',
                                     background:    status === 'sending' ? `${accentColor}55` : accentColor,
                                     color:         btnColor,

@@ -4,31 +4,31 @@ import DeviceSandbox from '../components/DeviceSandbox.jsx';
 import { getTheme } from '../theme.js';
 
 // ── Boot sequence ────────────────────────────────────────────────────────────
+// All lines render immediately; stagger is handled by CSS animation-delay
 const BOOT_LINES = [
     { text: 'SILICON SOUL v2.0 — INITIALIZING...',         delay: 0    },
-    { text: 'POST CHECK: RAM .................. OK',        delay: 300  },
-    { text: 'POST CHECK: GPU .................. OK',        delay: 600  },
-    { text: 'POST CHECK: PORTFOLIO.EXE ........ LOADED',   delay: 900  },
-    { text: 'POST CHECK: ESP32_CORE ........... ONLINE',   delay: 1200 },
-    { text: 'POST CHECK: RF_MODULE ............ CALIBRATED',delay: 1500 },
-    { text: 'POST CHECK: EGO_MODULE ........... WARN (within limits)', delay: 1800 },
-    { text: 'MOUNTING INTERFACE ...............',            delay: 2100 },
-    { text: 'SIGNAL ACQUIRED. WELCOME, OPERATOR.',         delay: 2400 },
+    { text: 'POST CHECK: RAM .................. OK',        delay: 200  },
+    { text: 'POST CHECK: GPU .................. OK',        delay: 400  },
+    { text: 'POST CHECK: PORTFOLIO.EXE ........ LOADED',   delay: 600  },
+    { text: 'POST CHECK: ESP32_CORE ........... ONLINE',   delay: 800  },
+    { text: 'POST CHECK: RF_MODULE ............ CALIBRATED',delay: 1000 },
+    { text: 'POST CHECK: EGO_MODULE ........... WARN (within limits)', delay: 1200 },
+    { text: 'MOUNTING INTERFACE ...............',            delay: 1400 },
+    { text: 'SIGNAL ACQUIRED. WELCOME, OPERATOR.',         delay: 1650 },
 ];
+
+const BOOT_DURATION_MS = 2600; // Total boot time (was 1800)
 
 const LINE_COLOR_INDEX = [0, 1, 1, 1, 1, 1, 2, 3, 4];
 const UPTIME_START = Date.now();
 
 // ── Premium easing curves ─────────────────────────────────────────────────────
-const EXPO_OUT = [0.16, 1, 0.3, 1];
 const SMOOTH_OUT = [0.25, 1, 0.5, 1];
 const FADE_EASE = [0.4, 0, 0.2, 1];
 
 // ─────────────────────────────────────────────────────────────────────────────
 const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
     // ── State ─────────────────────────────────────────────────────────────────
-    const [visibleLines, setVisibleLines] = useState(0);
-    const [progress,     setProgress]     = useState(0);
     const [uptime,       setUptime]       = useState('00:00:00');
     const mousePosRef                     = useRef({ x: 0.5, y: 0.5 });
     const [isMobile,     setIsMobile]     = useState(() => window.innerWidth < 640);
@@ -86,23 +86,15 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
         return () => { document.body.style.overflow = ''; };
     }, [bootDone]);
 
-    // ── Boot sequence timers ──────────────────────────────────────────────────
+    // ── Boot sequence — single timer, no per-line re-renders ──────────────────
     useEffect(() => {
-        const ids = BOOT_LINES.map((line, i) =>
-            setTimeout(() => {
-                setVisibleLines(i + 1);
-                setProgress(Math.round(((i + 1) / BOOT_LINES.length) * 100));
-            }, line.delay)
-        );
-        const doneId = setTimeout(() => setBootDone(true), 2800);
-        return () => {
-            ids.forEach(clearTimeout);
-            clearTimeout(doneId);
-        };
+        const doneId = setTimeout(() => setBootDone(true), BOOT_DURATION_MS);
+        return () => clearTimeout(doneId);
     }, [setBootDone]);
 
-    // ── Real-time uptime counter ──────────────────────────────────────────────
+    // ── Real-time uptime counter — deferred until boot completes ──────────────
     useEffect(() => {
+        if (!bootDone) return;
         const tick = () => {
             const elapsed = Math.floor((Date.now() - UPTIME_START) / 1000);
             const hh = String(Math.floor(elapsed / 3600)).padStart(2, '0');
@@ -113,7 +105,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
         tick();
         const id = setInterval(tick, 1000);
         return () => clearInterval(id);
-    }, []);
+    }, [bootDone]);
 
     return (
         <section
@@ -127,9 +119,10 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                 {!bootDone && (
                     <motion.div
                         key="boot"
-                        initial={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.01 }}
-                        transition={{ duration: 1.0, ease: FADE_EASE }}
+                        className="boot-overlay"
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5, ease: 'easeInOut' }}
                         style={{
                             position: 'fixed', inset: 0, zIndex: 9990,
                             display: 'flex', flexDirection: 'column',
@@ -157,33 +150,42 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                                 </span>
                             </div>
 
-                            {/* Boot lines */}
+                            {/* Boot lines — all rendered immediately, staggered via CSS animation-delay */}
                             <div style={{ minHeight: '200px' }}>
-                                {BOOT_LINES.slice(0, visibleLines).map((line, i) => (
+                                {BOOT_LINES.map((line, i) => (
                                     <div key={i} className="boot-line" style={{
-                                        fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8rem',
+                                        fontFamily: 'JetBrains Mono, monospace',
+                                        fontSize: 'clamp(0.62rem, 2.2vw, 0.8rem)',
                                         color: lineColors[LINE_COLOR_INDEX[i]],
                                         marginBottom: '6px', lineHeight: 1.4,
+                                        animationDelay: `${line.delay}ms`,
+                                        wordBreak: 'break-word',
                                     }}>
                                         {line.text}
-                                        {i === visibleLines - 1 && (
-                                            <span style={{ animation: 'blink-slow 0.6s step-end infinite' }}>▋</span>
+                                        {i === BOOT_LINES.length - 1 && (
+                                            <span style={{
+                                                animation: 'blink-slow 0.6s step-end infinite',
+                                                animationDelay: `${line.delay}ms`,
+                                            }}>▋</span>
                                         )}
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Progress bar */}
+                            {/* Progress bar — pure CSS animation, no React state */}
                             <div style={{ marginTop: '24px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                                     <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.65rem', color: terminalLabel }}>LOADING INTERFACE</span>
-                                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.65rem', color: accentColor }}>{progress}%</span>
+                                    <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.65rem', color: accentColor }}>
+                                        <span className="boot-line" style={{ animationDelay: '2000ms', color: 'inherit' }}>100%</span>
+                                    </span>
                                 </div>
-                                <div style={{ height: '2px', background: progressTrack, borderRadius: '1px' }}>
+                                <div style={{ height: '2px', background: progressTrack, borderRadius: '1px', overflow: 'hidden' }}>
                                     <div style={{
-                                        height: '100%', width: `${progress}%`,
+                                        height: '100%',
+                                        width: '0%',
                                         background: progressFill, borderRadius: '1px',
-                                        transition: 'width 0.3s ease',
+                                        animation: 'boot-progress 2200ms cubic-bezier(0.16, 1, 0.3, 1) forwards',
                                         boxShadow: `0 0 8px ${accentGlow}`,
                                     }} />
                                 </div>
@@ -198,26 +200,30 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                 {bootDone && (
                     <motion.div
                         key="hero-content"
-                        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                        initial={{ opacity: 0, y: 16, scale: 0.99 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ duration: 1.2, ease: SMOOTH_OUT, delay: 0.15 }}
+                        transition={{ duration: 0.85, ease: SMOOTH_OUT, delay: 0.2 }}
                         style={{
                             width: '100%',
-                            padding: isMobile ? '0 1.25rem' : '0 2rem',
+                            padding: isMobile ? '0 1rem' : '0 2rem',
                             display: 'flex',
-                            alignItems: 'center',
+                            flexDirection: isMobile ? 'column' : 'row',
+                            alignItems: isMobile ? 'flex-start' : 'center',
                             gap: isMobile ? '1.5rem' : '3rem',
                             maxWidth: '1400px',
                             margin: '0 auto',
-                            flexWrap: 'wrap',
                         }}
                     >
                         {/* ────────────── LEFT: text ────────────── */}
                         <motion.div
                             initial={{ x: -20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
-                            transition={{ duration: 0.9, ease: SMOOTH_OUT, delay: 0.3 }}
-                            style={{ flex: '0 0 45%', minWidth: '280px' }}
+                            transition={{ duration: 0.7, ease: SMOOTH_OUT, delay: 0.2 }}
+                            style={{
+                                flex: isMobile ? 'none' : '0 0 45%',
+                                width: isMobile ? '100%' : undefined,
+                                minWidth: isMobile ? undefined : '280px',
+                            }}
                         >
                             {/* Greeting */}
                             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '1rem', color: accentColor, marginBottom: '0.5rem' }}>
@@ -263,15 +269,18 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                                 padding: '10px 14px',
                                 border: `1px solid ${statusBorder}`,
                                 borderRadius: '3px', background: statusBg, color: dimColor,
-                                marginBottom: '1.5rem', letterSpacing: '0.04em', lineHeight: 1.6,
+                                marginBottom: '1.5rem', letterSpacing: '0.04em', lineHeight: 1.8,
+                                overflowX: 'hidden',
                             }}>
-                                <span style={{ color: statusOnline }}>SYSTEM: ONLINE</span>
-                                {' | '}
-                                <span>UPTIME: {uptime}</span>
-                                {' | '}
-                                <span style={{ color: statusTemp }}>TEMP: 42°C</span>
-                                {' | '}
-                                <span>LOC: Nairobi, KE</span>
+                                <span style={{ display: 'flex', flexWrap: 'wrap', gap: '0 8px' }}>
+                                    <span style={{ color: statusOnline }}>SYSTEM: ONLINE</span>
+                                    <span style={{ opacity: 0.5 }}>|</span>
+                                    <span>UPTIME: {uptime}</span>
+                                    <span style={{ opacity: 0.5 }}>|</span>
+                                    <span style={{ color: statusTemp }}>TEMP: 42°C</span>
+                                    <span style={{ opacity: 0.5 }}>|</span>
+                                    <span>LOC: Nairobi, KE</span>
+                                </span>
                             </div>
 
                             {/* Stats strip */}
@@ -331,12 +340,19 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                             </a>
                         </motion.div>
 
-                        {/* ────────────── RIGHT: device + lever ────────────── */}
+                        {/* ────────────── RIGHT: device + lever (deferred until boot completes) ────────────── */}
                         <motion.div
                             initial={{ x: 20, opacity: 0, scale: 0.98 }}
                             animate={{ x: 0, opacity: 1, scale: 1 }}
-                            transition={{ duration: 1.0, ease: SMOOTH_OUT, delay: 0.4 }}
-                            style={{ flex: '1 1 300px', maxWidth: '580px', display: 'flex' }}
+                            transition={{ duration: 0.8, ease: SMOOTH_OUT, delay: 0.3 }}
+                            style={{
+                                flex: isMobile ? 'none' : '1 1 300px',
+                                width: isMobile ? '100%' : undefined,
+                                maxWidth: isMobile ? '100%' : '580px',
+                                maxHeight: isMobile ? '320px' : undefined,
+                                display: 'flex',
+                                overflow: isMobile ? 'hidden' : undefined,
+                            }}
                         >
                             <DeviceSandbox isDark={isDark} mousePosRef={mousePosRef} glitch={glitch} />
                         </motion.div>
@@ -349,3 +365,4 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
 };
 
 export default Hero;
+

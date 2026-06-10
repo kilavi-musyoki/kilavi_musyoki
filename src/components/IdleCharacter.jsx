@@ -291,6 +291,10 @@ const IdleCharacter = ({ isDark = true }) => {
 
     if (!visible) return null;
 
+    // Suppress the idle character on mobile — it overlaps content and wastes
+    // CPU on animations that don't add value on a small touch screen.
+    if (typeof window !== 'undefined' && window.innerWidth < 640) return null;
+
     return (
         <div
             ref={scope}

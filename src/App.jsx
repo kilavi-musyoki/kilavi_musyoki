@@ -61,6 +61,7 @@ function App() {
   const [status,       setStatus]       = useState({ available: true });
   const [navOpen,      setNavOpen]      = useState(false);
   const [bootDone,     setBootDone]     = useState(false);
+  const [isMobile,     setIsMobile]     = useState(() => window.innerWidth < 640);
   const drawerRef = useRef(null);
   useFocusTrap(drawerRef, navOpen);
   const lastScrollY = useRef(0);
@@ -94,14 +95,16 @@ function App() {
     document.documentElement.classList.toggle('dark', isDark);
   }, [isDark]);
 
-  // ── Scroll-driven PCB deconstruction ────────────────────────────────────
+  // ── Scroll-driven PCB deconstruction (deferred until boot completes) ────
   useEffect(() => {
+    if (!bootDone) return;
     const cleanup = initScroll(setBoardLayer, setBoardGlitch);
     return cleanup;
-  }, []);
+  }, [bootDone]);
 
-  // ── Fetch live status ────────────────────────────────────────────────────
+  // ── Fetch live status (deferred until boot completes) ──────────────────
   useEffect(() => {
+    if (!bootDone) return;
     let cancelled = false;
     fetch('/api/status')
       .then((res) => (res.ok ? res.json() : null))
@@ -112,10 +115,11 @@ function App() {
       })
       .catch(() => { /* silent fail */ });
     return () => { cancelled = true; };
-  }, []);
+  }, [bootDone]);
 
-  // ── FPS counter ──────────────────────────────────────────────────────────
+  // ── FPS counter (deferred until boot completes) ────────────────────────
   useEffect(() => {
+    if (!bootDone) return;
     let rafId;
     const countFPS = () => {
       fpsRef.current.frames++;
@@ -129,7 +133,7 @@ function App() {
     };
     rafId = requestAnimationFrame(countFPS);
     return () => cancelAnimationFrame(rafId);
-  }, []);
+  }, [bootDone]);
 
   // ── Debug mode: type "debug" anywhere ───────────────────────────────────
   useEffect(() => {
@@ -176,7 +180,11 @@ function App() {
 
   // ── Close mobile nav on resize to desktop ────────────────────────────────
   useEffect(() => {
-    const handleResize = () => { if (window.innerWidth >= 640) setNavOpen(false); };
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w >= 640) setNavOpen(false);
+      setIsMobile(w < 640);
+    };
     window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -204,7 +212,7 @@ function App() {
           transition: bootDone
             ? 'transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.6s cubic-bezier(0.16,1,0.3,1)'
             : 'none',
-          padding: '0 2rem',
+          padding: isMobile ? '0 1rem' : '0 2rem',
           height: '56px',
           display: 'flex',
           alignItems: 'center',
@@ -379,7 +387,7 @@ function App() {
 
       {/* ── Footer ── */}
       <footer style={{
-        padding: '2rem',
+        padding: isMobile ? '1.5rem 1.25rem' : '2rem',
         textAlign: 'center',
         borderTop: `1px solid ${footerBorder}`,
         background: footerBg,

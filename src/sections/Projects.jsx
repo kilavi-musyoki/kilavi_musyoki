@@ -2,6 +2,19 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getTheme } from '../theme.js';
 
+// Responsive hook — shared pattern used in Contact.jsx
+const useWindowWidth = () => {
+    const [width, setWidth] = useState(
+        () => (typeof window !== 'undefined' ? window.innerWidth : 1024)
+    );
+    React.useEffect(() => {
+        const handler = () => setWidth(window.innerWidth);
+        window.addEventListener('resize', handler, { passive: true });
+        return () => window.removeEventListener('resize', handler);
+    }, []);
+    return width;
+};
+
 const PROJECTS = [
     {
         id: 'p1',
@@ -139,6 +152,7 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
     const t         = getTheme(isDark);
     const textColor = t.textColor;
     const dimColor  = t.dimColor;
+    const isMobile  = window.innerWidth < 640;
 
     // In light mode, project.color values are dark (e.g. #394139) — use a
     // consistent warm card style instead of deriving from those dark colors.
@@ -174,11 +188,11 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
         >
             {/* Card header */}
             <div style={{
-                padding: '20px 24px',
+                padding: '20px',
                 display: 'flex',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
-                gap: '16px',
+                gap: '12px',
             }}>
                 <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flex: 1 }}>
                     {/* Module icon */}
@@ -230,11 +244,11 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div style={{
-                            padding: '0 24px 20px',
+                            padding: '0 20px 20px',
                             borderTop: `1px solid ${moduleColor}22`,
                             paddingTop: '16px',
                             display: 'grid',
-                            gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr)',
+                            gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.5fr) minmax(0, 1fr)',
                             gap: '16px',
                         }}>
                             <div>
@@ -256,7 +270,7 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
                         </div>
 
                         {/* Stack tags + repo link row */}
-                        <div style={{ padding: '12px 24px 20px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ padding: '12px 20px 20px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                 {project.stack.map((tech) => (
                                     <span key={tech} style={{

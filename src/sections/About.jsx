@@ -175,7 +175,9 @@ const About = ({ isDark }) => {
                   }}
                 >
                   <span style={{
-                    width: '170px',
+                    minWidth: '100px',
+                    maxWidth: '50%',
+                    flexShrink: 0,
                     fontFamily: 'JetBrains Mono, monospace',
                     fontSize: '0.75rem',
                     color: textColor,

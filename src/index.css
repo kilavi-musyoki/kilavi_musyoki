@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Syne:wght@400..800&display=swap');
+/* Google Fonts loaded via <link> in index.html — no @import needed */
 
 
 /* ===== CSS Variables ===== */
@@ -47,6 +47,12 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* touch-action: manipulation removes the 300ms tap delay on iOS for all
+   interactive elements without disabling pinch-zoom on the page. */
+button, a, input, textarea, label, select, [role="button"] {
+  touch-action: manipulation;
 }
 
 html {
@@ -195,14 +201,25 @@ body.light-mode ::-webkit-scrollbar-thumb {
   box-shadow: 0 0 40px rgba(107, 113, 107, 0.18), inset 0 0 40px rgba(0, 0, 0, 0.55);
 }
 
+/* Boot overlay — GPU-promoted for smooth fade-out */
+.boot-overlay {
+  will-change: opacity, transform;
+}
+
 .boot-line {
   opacity: 0;
-  animation: boot-line-appear 0.3s ease-out forwards;
+  animation: boot-line-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes boot-line-appear {
-  from { opacity: 0; transform: translateX(-8px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Pure-CSS progress bar — no React state needed */
+@keyframes boot-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
 }
 
 /* ===== Glitch Effect ===== */
@@ -381,14 +398,16 @@ body.light-mode .pcb-card:hover {
 }
 
 /* ===== Form Inputs ===== */
+/* font-size >= 16px on inputs prevents iOS from auto-zooming the page on focus */
 .hud-input {
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(0, 255, 136, 0.2);
   border-radius: 2px;
   color: #e0ffe8;
   font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-size: 16px;          /* ≥16px prevents iOS auto-zoom on focus */
   padding: 0.75rem 1rem;
+  min-height: 44px;         /* WCAG 2.5.5 touch target minimum */
   width: 100%;
   outline: none;
   transition: border-color 0.3s, box-shadow 0.3s;
@@ -534,22 +553,17 @@ body.light-mode .datasheet-table td {
 
 @media (max-width: 768px) {
   .section-base {
-    padding: 3rem 1.5rem;
+    padding: 3rem 1.25rem;
   }
 
   body {
     font-size: 14px;
   }
-
-  .nav-glass {
-    padding-inline: 1rem !important;
-    gap: 0.75rem;
-  }
 }
 
 @media (max-width: 640px) {
   .section-base {
-    padding: 2.75rem 1.25rem;
+    padding: 2.5rem 1rem;
   }
 
   .boot-terminal {
@@ -568,6 +582,13 @@ body.light-mode .datasheet-table td {
   /* Show the hamburger controls on mobile */
   .mobile-nav-controls {
     display: flex !important;
+  }
+}
+
+/* Tiny phone breakpoint — prevent extreme content narrowing */
+@media (max-width: 400px) {
+  .section-base {
+    padding: 2rem 0.875rem;
   }
 }
 
@@ -779,9 +800,10 @@ body.light-mode .lever-range-input::-webkit-slider-thumb {
 }
 
 /* ===== Hamburger Button ===== */
+/* 44×44px minimum touch target per WCAG 2.5.5 */
 .hamburger-btn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   background: transparent;
   border: 1px solid var(--color-border);
   border-radius: 3px;
@@ -829,20 +851,23 @@ body.light-mode .hamburger-btn:hover {
 }
 
 /* ===== Mobile Drawer Nav Links ===== */
+/* min-height 44px for WCAG touch target compliance */
 .mobile-drawer-link {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--color-text);
   text-decoration: none;
-  padding: 0.9rem 0.5rem;
+  padding: 0.9rem 1rem;
+  min-height: 44px;
   border-bottom: 1px solid var(--color-border);
   letter-spacing: 0.08em;
-  display: block;
+  display: flex;
+  align-items: center;
   transition: color 0.2s ease, padding-left 0.2s ease;
 }
 .mobile-drawer-link:hover {
   color: var(--color-accent);
-  padding-left: 0.75rem;
+  padding-left: 1.25rem;
 }
 .mobile-drawer-link:focus-visible {
   outline: 2px solid var(--color-accent);
