@@ -887,3 +887,308 @@ body.light-mode .hamburger-btn:hover {
 body.light-mode .mobile-overlay {
   background: rgba(28, 34, 38, 0.25);
 }
+
+/* ===== Portrait Hub & Game Transition Styles ===== */
+.portrait-hub-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+
+.portrait-card-wrapper {
+  width: 100%;
+  position: relative;
+}
+
+/* Cyber Portrait Card */
+.portrait-card {
+  position: relative;
+  width: 100%;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 16px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.portrait-ambient-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+.corner-reticle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  z-index: 10;
+  pointer-events: none;
+}
+.reticle-tl { top: 6px; left: 6px; border-top-width: 2px; border-top-style: solid; border-left-width: 2px; border-left-style: solid; }
+.reticle-tr { top: 6px; right: 6px; border-top-width: 2px; border-top-style: solid; border-right-width: 2px; border-right-style: solid; }
+.reticle-bl { bottom: 6px; left: 6px; border-bottom-width: 2px; border-bottom-style: solid; border-left-width: 2px; border-left-style: solid; }
+.reticle-br { bottom: 6px; right: 6px; border-bottom-width: 2px; border-bottom-style: solid; border-right-width: 2px; border-right-style: solid; }
+
+.portrait-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  position: relative;
+  z-index: 5;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot-pulsing {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  animation: blink-slow 2s ease-in-out infinite;
+}
+
+.status-text {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+  font-weight: 600;
+}
+
+.hud-badge {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  padding: 2px 7px;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 3px;
+  letter-spacing: 0.09em;
+  font-weight: 700;
+}
+
+.portrait-image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 440px;
+  overflow: hidden;
+}
+
+.portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.portrait-card:hover .portrait-img {
+  transform: scale(1.03);
+}
+
+.portrait-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1) 0px,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  z-index: 2;
+}
+
+.portrait-glow-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Anchored Speech Chat Bubble — Positioned naturally near avatar face */
+.speech-bubble-anchor {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 25;
+  pointer-events: auto;
+  max-width: 82%;
+}
+
+@media (max-width: 480px) {
+  .speech-bubble-anchor {
+    top: 10px;
+    right: 10px;
+    max-width: 90%;
+  }
+}
+
+.chat-bubble-card {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 18px;
+  padding: 10px 18px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.chat-bubble-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Plus Jakarta Sans', 'Outfit', var(--font-mono), sans-serif;
+  font-size: clamp(0.88rem, 2.5vw, 1.02rem);
+  line-height: 1.4;
+}
+
+.chat-avatar-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.chat-text {
+  font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Highlighted "game" / "again" interactive button inside chat bubble */
+.highlight-game-btn {
+  display: inline-block;
+  background: rgba(75, 216, 160, 0.18);
+  border: 1px solid var(--pcb-green);
+  border-bottom: 2px solid var(--pcb-green);
+  color: var(--pcb-green);
+  font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: inherit;
+  cursor: pointer;
+  padding: 2px 10px;
+  margin: 0 3px;
+  border-radius: 6px;
+  text-transform: lowercase;
+  text-shadow: 0 0 8px rgba(75, 216, 160, 0.6);
+  animation: pulse-game-glow 2.2s infinite ease-in-out;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  vertical-align: baseline;
+}
+
+body.light-mode .highlight-game-btn {
+  background: rgba(13, 148, 136, 0.14);
+  border-color: var(--lm-accent);
+  color: var(--lm-accent);
+  text-shadow: 0 0 8px rgba(13, 148, 136, 0.4);
+}
+
+.highlight-game-btn:hover,
+.highlight-game-btn:focus-visible {
+  background: var(--pcb-green) !important;
+  color: #0A0C10 !important;
+  transform: scale(1.08) translateY(-1px);
+  box-shadow: 0 0 18px var(--pcb-green) !important;
+  text-shadow: none !important;
+  outline: none;
+}
+
+body.light-mode .highlight-game-btn:hover,
+body.light-mode .highlight-game-btn:focus-visible {
+  background: var(--lm-accent) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 18px var(--lm-accent) !important;
+}
+
+@keyframes pulse-game-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(75, 216, 160, 0.35);
+    text-shadow: 0 0 8px rgba(75, 216, 160, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(75, 216, 160, 0.75);
+    text-shadow: 0 0 14px rgba(75, 216, 160, 0.9);
+  }
+}
+
+/* Speech tail pointing down-left toward avatar's mouth */
+.chat-speech-tail {
+  position: absolute;
+  bottom: -16px;
+  left: 20px;
+  pointer-events: none;
+}
+
+.portrait-card-footer {
+  padding: 10px 16px;
+  text-align: center;
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+/* Return to Portrait Button in Game View */
+.back-hub-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+  z-index: 30;
+}
+
+.back-hub-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(10, 14, 20, 0.88);
+  border: 1px solid var(--pcb-green);
+  color: var(--pcb-green);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  box-shadow: 0 0 12px rgba(75, 216, 160, 0.25);
+  transition: all 0.2s ease;
+}
+
+body.light-mode .back-hub-btn {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--lm-accent);
+  color: var(--lm-accent);
+  box-shadow: 0 0 12px rgba(13, 148, 136, 0.2);
+}
+
+.back-hub-btn:hover {
+  transform: translateY(-2px);
+  background: var(--pcb-green);
+  color: #0A0C10;
+  box-shadow: 0 4px 20px rgba(75, 216, 160, 0.5);
+}
+
+body.light-mode .back-hub-btn:hover {
+  background: var(--lm-accent);
+  color: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(13, 148, 136, 0.4);
+}
+
+

@@ -340,7 +340,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                             </a>
                         </motion.div>
 
-                        {/* ────────────── RIGHT: device + lever (deferred until boot completes) ────────────── */}
+                        {/* ────────────── RIGHT: device + lever / portrait hub (deferred until boot completes) ────────────── */}
                         <motion.div
                             initial={{ x: 20, opacity: 0, scale: 0.98 }}
                             animate={{ x: 0, opacity: 1, scale: 1 }}
@@ -349,9 +349,8 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                                 flex: isMobile ? 'none' : '1 1 300px',
                                 width: isMobile ? '100%' : undefined,
                                 maxWidth: isMobile ? '100%' : '580px',
-                                maxHeight: isMobile ? '320px' : undefined,
                                 display: 'flex',
-                                overflow: isMobile ? 'hidden' : undefined,
+                                justifyContent: 'center',
                             }}
                         >
                             <DeviceSandbox isDark={isDark} mousePosRef={mousePosRef} glitch={glitch} />
