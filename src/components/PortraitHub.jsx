@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import portraitImg from '../assets/portrait.jpg';
 import { getTheme } from '../theme.js';
+import ComicBubble from './ComicBubble.jsx';
 
 export default function PortraitHub({ onLaunchGame, hasPlayed = false, isDark = true }) {
   const [showBubble, setShowBubble] = useState(false);
@@ -19,8 +20,6 @@ export default function PortraitHub({ onLaunchGame, hasPlayed = false, isDark = 
 
   const cardBorder = isDark ? 'rgba(75, 216, 160, 0.35)' : 'rgba(13, 148, 136, 0.4)';
   const cardBg = isDark ? 'rgba(10, 14, 20, 0.88)' : 'rgba(255, 255, 255, 0.88)';
-  const bubbleBg = isDark ? 'rgba(14, 20, 28, 0.96)' : 'rgba(255, 255, 255, 0.96)';
-  const bubbleBorder = isDark ? 'rgba(75, 216, 160, 0.5)' : 'rgba(13, 148, 136, 0.45)';
 
   return (
     <div className="portrait-hub-container">
@@ -108,74 +107,43 @@ export default function PortraitHub({ onLaunchGame, hasPlayed = false, isDark = 
                   exit={{ opacity: 0, y: 10, scale: 0.9 }}
                   transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <div
-                    className="chat-bubble-card"
-                    style={{
-                      background: bubbleBg,
-                      borderColor: bubbleBorder,
-                      boxShadow: `0 14px 40px rgba(0, 0, 0, 0.55), 0 0 20px ${accentGlow}`,
-                    }}
-                  >
-                    <div className="chat-bubble-content">
-                      <span className="chat-avatar-icon" role="img" aria-label="speech">
-                        💬
-                      </span>
-                      <span className="chat-text" style={{ color: textColor }}>
-                        {!hasPlayed ? (
-                          <>
-                            Want to play a{' '}
-                            <button
-                              type="button"
-                              className="highlight-game-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onLaunchGame();
-                              }}
-                              title="Click to launch game"
-                              aria-label="Launch interactive game"
-                            >
-                              game
-                            </button>
-                            ?
-                          </>
-                        ) : (
-                          <>
-                            Want to play{' '}
-                            <button
-                              type="button"
-                              className="highlight-game-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onLaunchGame();
-                              }}
-                              title="Click to launch game again"
-                              aria-label="Launch interactive game again"
-                            >
-                              again
-                            </button>
-                            ?
-                          </>
-                        )}
-                      </span>
-                    </div>
-
-                    {/* Conversational speech tail pointing toward avatar's mouth */}
-                    <svg
-                      className="chat-speech-tail"
-                      width="20"
-                      height="24"
-                      viewBox="0 0 20 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M0 0C6 4 14 12 18 22C12 18 4 14 0 10V0Z"
-                        fill={bubbleBg}
-                        stroke={bubbleBorder}
-                        strokeWidth="1"
-                      />
-                    </svg>
-                  </div>
+                  <ComicBubble>
+                    {!hasPlayed ? (
+                      <>
+                        WANT TO PLAY A{' '}
+                        <button
+                          type="button"
+                          className="mx-1 px-2.5 py-0.5 rounded-full border-2 border-black bg-emerald-400 text-black hover:bg-emerald-300 transition-colors shadow-[2px_2px_0px_rgba(0,0,0,1)] cursor-pointer font-black inline-flex items-center gap-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onLaunchGame();
+                          }}
+                          title="Click to launch game"
+                          aria-label="Launch interactive game"
+                        >
+                          GAME 🎮
+                        </button>
+                        ?
+                      </>
+                    ) : (
+                      <>
+                        WANT TO PLAY{' '}
+                        <button
+                          type="button"
+                          className="mx-1 px-2.5 py-0.5 rounded-full border-2 border-black bg-emerald-400 text-black hover:bg-emerald-300 transition-colors shadow-[2px_2px_0px_rgba(0,0,0,1)] cursor-pointer font-black inline-flex items-center gap-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onLaunchGame();
+                          }}
+                          title="Click to launch game again"
+                          aria-label="Launch interactive game again"
+                        >
+                          AGAIN 🎮
+                        </button>
+                        ?
+                      </>
+                    )}
+                  </ComicBubble>
                 </motion.div>
               )}
             </AnimatePresence>
