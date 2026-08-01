@@ -109,39 +109,69 @@ export default function PortraitHub({ onLaunchGame, hasPlayed = false, isDark = 
                 >
                   <ComicBubble>
                     {!hasPlayed ? (
-                      <>
+                      <span>
                         WANT TO PLAY A{' '}
-                        <button
-                          type="button"
-                          className="mx-1 px-2.5 py-0.5 rounded-full border-2 border-black bg-emerald-400 text-black hover:bg-emerald-300 transition-colors shadow-[2px_2px_0px_rgba(0,0,0,1)] cursor-pointer font-black inline-flex items-center gap-1"
+                        <span
+                          style={{
+                            color: '#8B0000',
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                            textUnderlineOffset: '3px',
+                            fontWeight: 900,
+                            transition: 'color 0.2s ease',
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             onLaunchGame();
                           }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = '#b91c1c'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = '#8B0000'; }}
                           title="Click to launch game"
-                          aria-label="Launch interactive game"
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.stopPropagation();
+                              onLaunchGame();
+                            }
+                          }}
                         >
-                          GAME 🎮
-                        </button>
+                          GAME
+                        </span>
                         ?
-                      </>
+                      </span>
                     ) : (
-                      <>
+                      <span>
                         WANT TO PLAY{' '}
-                        <button
-                          type="button"
-                          className="mx-1 px-2.5 py-0.5 rounded-full border-2 border-black bg-emerald-400 text-black hover:bg-emerald-300 transition-colors shadow-[2px_2px_0px_rgba(0,0,0,1)] cursor-pointer font-black inline-flex items-center gap-1"
+                        <span
+                          style={{
+                            color: '#8B0000',
+                            cursor: 'pointer',
+                            textDecoration: 'underline',
+                            textUnderlineOffset: '3px',
+                            fontWeight: 900,
+                            transition: 'color 0.2s ease',
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             onLaunchGame();
                           }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = '#b91c1c'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = '#8B0000'; }}
                           title="Click to launch game again"
-                          aria-label="Launch interactive game again"
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.stopPropagation();
+                              onLaunchGame();
+                            }
+                          }}
                         >
-                          AGAIN 🎮
-                        </button>
+                          AGAIN
+                        </span>
                         ?
-                      </>
+                      </span>
                     )}
                   </ComicBubble>
                 </motion.div>

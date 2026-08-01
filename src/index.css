@@ -985,7 +985,7 @@ body.light-mode .mobile-overlay {
   width: 100%;
   aspect-ratio: 1 / 1;
   max-height: 440px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .portrait-img {
@@ -1025,18 +1025,16 @@ body.light-mode .mobile-overlay {
 /* Anchored Speech Chat Bubble — Positioned naturally near avatar face */
 .speech-bubble-anchor {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 18px;
+  right: 18px;
   z-index: 25;
   pointer-events: auto;
-  max-width: 82%;
 }
 
 @media (max-width: 480px) {
   .speech-bubble-anchor {
-    top: 10px;
-    right: 10px;
-    max-width: 90%;
+    top: 12px;
+    right: 12px;
   }
 }
 
