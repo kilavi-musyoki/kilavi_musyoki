@@ -314,7 +314,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
 
                             {/* CTA */}
                             <a
-                                href="#about"
+                                href="#projects"
                                 style={{
                                     display: 'inline-flex', alignItems: 'center', gap: '8px',
                                     fontFamily: 'JetBrains Mono, monospace', fontSize: '0.85rem',
