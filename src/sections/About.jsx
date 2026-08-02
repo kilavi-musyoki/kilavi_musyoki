@@ -8,7 +8,7 @@ const SPECS = [
   { name: 'Digital Logic',    value: 95 },
   { name: 'Software Dev',     value: 78 },
   { name: 'System Design',    value: 71 },
-  { name: 'Cybersecurity',    value: 43 },
+  { name: 'Cybersecurity',    value: 50 },
 ];
 
 const About = ({ isDark }) => {
