@@ -9,7 +9,7 @@ const ComicBubble = ({
   // ── Shared styles ──────────────────────────────────────────────────
   const bubbleBody = {
     position: "relative",
-    width: "min(210px, 72vw)",
+    width: "min(150px, 72vw)",
     minHeight: 90,
     backgroundColor: "#ffffff",
     border: "4px solid #000000",
@@ -47,7 +47,7 @@ const ComicBubble = ({
   const tail1 = {
     ...tailShared,
     left: 32,
-    bottom: -8,
+    bottom: -12,
     width: 22,
     height: 22,
     borderWidth: 3.5,
@@ -57,8 +57,8 @@ const ComicBubble = ({
 
   const tail2 = {
     ...tailShared,
-    left: 18,
-    bottom: -16,
+    left: 17,
+    bottom: -20,
     width: 16,
     height: 16,
     borderWidth: 3,
@@ -68,8 +68,8 @@ const ComicBubble = ({
 
   const tail3 = {
     ...tailShared,
-    left: 8,
-    bottom: -22,
+    left: 3,
+    bottom: -26,
     width: 10,
     height: 10,
     borderWidth: 2.5,

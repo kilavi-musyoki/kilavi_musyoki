@@ -192,7 +192,7 @@ export default function PortraitHub({ onLaunchGame, hasPlayed = false, isDark = 
                 letterSpacing: '0.08em',
               }}
             >
-              [CLICK HIGHLIGHTED &quot;GAME&quot; TO ENTER]
+              [CLICK HIGHLIGHTED &quot;GAME&quot; TO PLAY]
             </span>
           </div>
         </div>
