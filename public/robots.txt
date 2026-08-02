@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kilavi-musyoki.github.io/portfoliov4/sitemap.xml
