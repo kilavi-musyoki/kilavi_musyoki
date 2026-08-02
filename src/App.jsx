@@ -264,7 +264,7 @@ function App() {
               animation: 'blink-slow 2s ease-in-out infinite',
             }} />
             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.55rem', color: dimColor, letterSpacing: '0.08em' }}>
-              {`SYSTEM: ONLINE | SEEKING: ${status.seeking?.toUpperCase() || 'N/A'}`}
+              {`SYSTEM: ONLINE | BUILDING: ${status.building?.toUpperCase() || 'ALWAYS'}`}
             </span>
           </div>
 
