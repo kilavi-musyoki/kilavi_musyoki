@@ -227,7 +227,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                         >
                             {/* Greeting */}
                             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '1rem', color: accentColor, marginBottom: '0.5rem' }}>
-                                herro😁;
+                                hello😁;
                             </div>
 
                             {/* Name */}
