@@ -14,14 +14,14 @@ const CHANGELOG = [
         version: 'v3.6',
         status: 'Highlight',
         title: 'DevSecOps Security Champions Proposal',
-        body: 'Co-presented a Security Champions program proposal to M-Pesa\'s Cyber SteerCo, using the CHARM risk-scoring metric and a cost-of-a-bug ROI argument to make the case.',
+        body: 'Co-presented a Security Champions program proposal to M-Pesa\'s Cyber Security team, using the risk-scoring metric and a cost-of-a-bug ROI argument to make the case.',
         color: '#FF5A3C',   // alert red — security/risk theme
     },
     {
         version: 'v3.5',
         status: 'Experience',
         title: 'Industrial Attachment — M-Pesa Africa (Cybersecurity)',
-        body: '8 weeks in M-Pesa\'s cybersecurity department, working across IAM, cloud security, and offensive security tooling on a Linux foundation. Weekly logbooks covering Prisma Cloud, RBAC/ABAC/MAC access models, cloud security, and bug bounty hunting.',
+        body: '8 weeks in M-Pesa\'s cybersecurity department, working across IAM, cloud security, and offensive security tooling and also covering Prisma Cloud, RBAC/ABAC/MAC access models, cloud security, and bug bounty hunting.',
         color: '#a78bfa',   // soft violet — security theme
     },
     {
