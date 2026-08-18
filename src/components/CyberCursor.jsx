@@ -2,56 +2,53 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { getTheme } from '../theme.js';
 
 /**
- * CyberCursor — Futuristic Telemetry & Precision Engineering Cursor
+ * CyberCursor — Compact Precision Telemetry & Engineering Cursor
  *
- * Action Modes:
- * - 'default': Precision micro-dot with smooth telemetry HUD ring & radar ticks
- * - 'pointer': Target lock-on brackets [ ● ] with pulsing core & calibrated corner reticles
- * - 'text': Cyber laser I-Beam probe for reading and text input inspection
- * - 'grab' / 'grabbing': Caliper gauge with horizontal telemetry arrows for sliders and levers
- * - 'crosshair': Mil-spec circuit probe crosshair for interactive boards, canvas, and oscilloscope
- * - 'disabled': Restricted warning reticle with alert coloration
+ * Sized for minimal unobtrusiveness with ultra-crisp engineering feedback:
+ * - 'default': 18px micro-radar reticle + 3px precision core dot
+ * - 'pointer': 26px corner target brackets [ · ]
+ * - 'project-expand': 30px micro-aperture with glowing '+' expand core & corner ticks
+ * - 'project-collapse': 30px micro-aperture with glowing '−' collapse core
+ * - 'grab': 38×20px sleek robotic caliper claws with tactile hydraulic pinch
+ * - 'crosshair': 26px mil-spec circuit inspection crosshair
+ * - 'text': 14px slim laser I-beam probe
+ * - 'disabled': 20px alert restricted circle
  */
 const CyberCursor = ({ isDark = true }) => {
   const [mode, setMode] = useState('default');
   const [isClicking, setIsClicking] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const [isFinePointer, setIsFinePointer] = useState(true);
+  const [customColor, setCustomColor] = useState(null);
 
-  // Position refs for 60/120fps direct DOM manipulation (no React state lag)
-  const posRef = useRef({ x: -100, y: -100 });
-  const ringRef = useRef({ x: -100, y: -100 });
-  const velRef = useRef({ vx: 0, vy: 0 });
-  const lastPosRef = useRef({ x: -100, y: -100 });
-  const rafId = useRef(null);
-
-  // DOM node refs
+  // High-performance direct DOM references
+  const portalRef = useRef(null);
   const dotElRef = useRef(null);
   const ringElRef = useRef(null);
   const clickPingRef = useRef(null);
 
+  const posRef = useRef({ x: -200, y: -200 });
+  const ringRef = useRef({ x: -200, y: -200 });
+  const isInitRef = useRef(false);
+  const rafId = useRef(null);
+
   const t = getTheme(isDark);
-  const accent = t.accentColor;
+  const accent = customColor || t.accentColor;
   const glow = t.accentGlow;
   const darkText = isDark ? '#ffffff' : '#2C1F0A';
   const alertColor = isDark ? '#FF5A3C' : '#E04C18';
   const altColor = isDark ? '#6FD4FF' : '#D4AF37';
 
-  // ── Detect pointer capability ──────────────────────────────────────────────
-  useEffect(() => {
-    const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
-    setIsFinePointer(mq.matches);
-    const handler = (e) => setIsFinePointer(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  // ── Determine cursor mode from hovered DOM element ─────────────────────────
+  // ── Determine cursor mode from hovered element ─────────────────────────────
   const updateCursorMode = useCallback((target) => {
     if (!target) {
       setMode('default');
+      setCustomColor(null);
       return;
     }
+
+    // Custom color attribute
+    const colorEl = target.closest?.('[data-cursor-color]');
+    const customCol = colorEl?.getAttribute('data-cursor-color');
+    setCustomColor(customCol || null);
 
     // 1. Explicit data-cursor override
     const explicitEl = target.closest?.('[data-cursor]');
@@ -69,15 +66,15 @@ const CyberCursor = ({ isDark = true }) => {
       return;
     }
 
-    // 3. Slider / Range input check
+    // 3. Slider / Range / Lever check -> Grab mode
     if (
-      target.closest?.('input[type="range"], .lever-range-input, [role="slider"]')
+      target.closest?.('input[type="range"], .lever-range-input, [role="slider"], [data-cursor="grab"]')
     ) {
       setMode('grab');
       return;
     }
 
-    // 4. Text / Input check
+    // 4. Text / Input check -> Text mode
     if (
       target.closest?.(
         'input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="range"]):not([type="checkbox"]):not([type="radio"]), textarea, [contenteditable="true"], .hud-input'
@@ -97,10 +94,10 @@ const CyberCursor = ({ isDark = true }) => {
       return;
     }
 
-    // 6. Clickable / Link / Button check
+    // 6. Clickable / Link / Button check -> Pointer mode
     if (
       target.closest?.(
-        'a, button, [role="button"], summary, select, .btn, .hud-btn, .clickable, [onclick], label'
+        'a, button, [role="button"], summary, select, .btn, .hud-btn, .clickable, [onclick], label, .status-pill'
       )
     ) {
       setMode('pointer');
@@ -111,17 +108,29 @@ const CyberCursor = ({ isDark = true }) => {
     setMode('default');
   }, []);
 
-  // ── Global Mouse Listeners ──────────────────────────────────────────────────
+  // ── Stable Global Mouse Listeners ───────────────────────────────────────────
   useEffect(() => {
-    if (!isFinePointer) return;
-
     const handleMouseMove = (e) => {
-      posRef.current = { x: e.clientX, y: e.clientY };
-      if (!isVisible) setIsVisible(true);
+      const x = e.clientX;
+      const y = e.clientY;
+      posRef.current.x = x;
+      posRef.current.y = y;
 
-      // Instant dot positioning
+      // On very first movement, snap ring to cursor without fly-in lag
+      if (!isInitRef.current) {
+        ringRef.current.x = x;
+        ringRef.current.y = y;
+        isInitRef.current = true;
+      }
+
+      // Show cursor portal
+      if (portalRef.current) {
+        portalRef.current.style.opacity = '1';
+      }
+
+      // Instant 0-lag dot tracking
       if (dotElRef.current) {
-        dotElRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+        dotElRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       }
     };
 
@@ -131,7 +140,7 @@ const CyberCursor = ({ isDark = true }) => {
 
     const handleMouseDown = (e) => {
       setIsClicking(true);
-      // Spawn tactile click shockwave
+      // Spawn tactile shockwave ping
       if (clickPingRef.current) {
         const ping = clickPingRef.current;
         ping.style.left = `${e.clientX}px`;
@@ -142,8 +151,8 @@ const CyberCursor = ({ isDark = true }) => {
 
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            ping.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.85, 0.3, 1), opacity 0.4s ease-out';
-            ping.style.transform = 'translate(-50%, -50%) scale(3.5)';
+            ping.style.transition = 'transform 0.35s cubic-bezier(0.1, 0.85, 0.3, 1), opacity 0.35s ease-out';
+            ping.style.transform = 'translate(-50%, -50%) scale(2.4)';
             ping.style.opacity = '0';
           });
         });
@@ -155,11 +164,15 @@ const CyberCursor = ({ isDark = true }) => {
     };
 
     const handleMouseLeave = () => {
-      setIsVisible(false);
+      if (portalRef.current) {
+        portalRef.current.style.opacity = '0';
+      }
     };
 
     const handleMouseEnter = () => {
-      setIsVisible(true);
+      if (portalRef.current) {
+        portalRef.current.style.opacity = '1';
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
@@ -177,24 +190,16 @@ const CyberCursor = ({ isDark = true }) => {
       document.documentElement.removeEventListener('mouseleave', handleMouseLeave);
       document.documentElement.removeEventListener('mouseenter', handleMouseEnter);
     };
-  }, [isFinePointer, isVisible, updateCursorMode]);
+  }, [updateCursorMode]);
 
-  // ── Physics Loop: Smooth Trailing Telemetry Ring ─────────────────────────────
+  // ── Physics Loop: Silky Smooth Trailing HUD Reticle ────────────────────────
   useEffect(() => {
-    if (!isFinePointer) return;
-
-    const lerpFactor = 0.22; // High-precision responsiveness with silky trailing
+    const lerpFactor = 0.28; // Snappier, compact physics
 
     const tick = () => {
       const targetX = posRef.current.x;
       const targetY = posRef.current.y;
 
-      // Calculate velocity
-      velRef.current.vx = targetX - lastPosRef.current.x;
-      velRef.current.vy = targetY - lastPosRef.current.y;
-      lastPosRef.current = { x: targetX, y: targetY };
-
-      // Lerp ring towards mouse pos
       ringRef.current.x += (targetX - ringRef.current.x) * lerpFactor;
       ringRef.current.y += (targetY - ringRef.current.y) * lerpFactor;
 
@@ -207,27 +212,28 @@ const CyberCursor = ({ isDark = true }) => {
 
     rafId.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId.current);
-  }, [isFinePointer]);
+  }, []);
 
-  if (!isFinePointer) return null;
-
-  // ── Style & geometry definitions per mode ────────────────────────────────────
+  // ── Compact Size & Dimension Definitions ────────────────────────────────────
   const getRingDimensions = () => {
     if (mode === 'grab') {
-      return { width: 68, height: 42, size: 68 };
+      return { width: 38, height: 22, size: 38 };
     }
-    if (isClicking) return { width: 24, height: 24, size: 24 };
+    if (mode === 'project-expand' || mode === 'project-collapse') {
+      return { width: 30, height: 30, size: 30 };
+    }
+    if (isClicking) return { width: 16, height: 16, size: 16 };
     switch (mode) {
       case 'pointer':
-        return { width: 44, height: 44, size: 44 };
+        return { width: 26, height: 26, size: 26 };
       case 'text':
-        return { width: 28, height: 28, size: 28 };
+        return { width: 18, height: 18, size: 18 };
       case 'crosshair':
-        return { width: 48, height: 48, size: 48 };
+        return { width: 26, height: 26, size: 26 };
       case 'disabled':
-        return { width: 32, height: 32, size: 32 };
+        return { width: 20, height: 20, size: 20 };
       default:
-        return { width: 30, height: 30, size: 30 };
+        return { width: 18, height: 18, size: 18 };
     }
   };
 
@@ -236,6 +242,7 @@ const CyberCursor = ({ isDark = true }) => {
 
   return (
     <div
+      ref={portalRef}
       className="cyber-cursor-portal"
       style={{
         position: 'fixed',
@@ -244,9 +251,9 @@ const CyberCursor = ({ isDark = true }) => {
         width: '100%',
         height: '100%',
         pointerEvents: 'none',
-        zIndex: 999999,
-        opacity: isVisible ? 1 : 0,
-        transition: 'opacity 0.25s ease',
+        zIndex: 9999999,
+        opacity: 0,
+        transition: 'opacity 0.2s ease',
       }}
       aria-hidden="true"
     >
@@ -259,7 +266,7 @@ const CyberCursor = ({ isDark = true }) => {
           left: 0,
           pointerEvents: 'none',
           willChange: 'transform',
-          zIndex: 1000001,
+          zIndex: 10000001,
         }}
       >
         <div
@@ -268,20 +275,52 @@ const CyberCursor = ({ isDark = true }) => {
             top: 0,
             left: 0,
             transform: 'translate(-50%, -50%)',
-            transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          {mode === 'grab' ? null : mode === 'text' ? (
-            /* Cyber I-Beam Probe */
+          {mode === 'grab' ? null : mode === 'project-expand' ? (
+            /* Glowing Compact Plus */
             <div
               style={{
-                width: '2px',
-                height: '18px',
+                fontFamily: '"JetBrains Mono", monospace',
+                fontSize: '11px',
+                fontWeight: 900,
+                color: currentAccent,
+                textShadow: `0 0 6px ${currentAccent}`,
+                lineHeight: 1,
+                transform: isClicking ? 'scale(1.3) rotate(90deg)' : 'scale(1) rotate(0deg)',
+                transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              }}
+            >
+              +
+            </div>
+          ) : mode === 'project-collapse' ? (
+            /* Glowing Compact Minus */
+            <div
+              style={{
+                fontFamily: '"JetBrains Mono", monospace',
+                fontSize: '12px',
+                fontWeight: 900,
+                color: currentAccent,
+                textShadow: `0 0 6px ${currentAccent}`,
+                lineHeight: 1,
+                transform: isClicking ? 'scale(1.3)' : 'scale(1)',
+                transition: 'transform 0.15s ease',
+              }}
+            >
+              −
+            </div>
+          ) : mode === 'text' ? (
+            /* Slim Laser I-Beam Probe */
+            <div
+              style={{
+                width: '1.5px',
+                height: '14px',
                 background: currentAccent,
-                boxShadow: `0 0 8px ${currentAccent}`,
+                boxShadow: `0 0 6px ${currentAccent}`,
                 borderRadius: '1px',
                 position: 'relative',
               }}
@@ -289,10 +328,10 @@ const CyberCursor = ({ isDark = true }) => {
               <div
                 style={{
                   position: 'absolute',
-                  top: '-2px',
-                  left: '-3px',
-                  width: '8px',
-                  height: '2px',
+                  top: '-1px',
+                  left: '-2px',
+                  width: '5.5px',
+                  height: '1.5px',
                   background: currentAccent,
                   borderRadius: '1px',
                 }}
@@ -300,33 +339,33 @@ const CyberCursor = ({ isDark = true }) => {
               <div
                 style={{
                   position: 'absolute',
-                  bottom: '-2px',
-                  left: '-3px',
-                  width: '8px',
-                  height: '2px',
+                  bottom: '-1px',
+                  left: '-2px',
+                  width: '5.5px',
+                  height: '1.5px',
                   background: currentAccent,
                   borderRadius: '1px',
                 }}
               />
             </div>
           ) : (
-            /* High-precision Core Dot */
+            /* Precision Core Micro-Dot */
             <div
               style={{
-                width: isClicking ? '4px' : mode === 'pointer' ? '6px' : '4px',
-                height: isClicking ? '4px' : mode === 'pointer' ? '6px' : '4px',
+                width: isClicking ? '3px' : mode === 'pointer' ? '4px' : '3px',
+                height: isClicking ? '3px' : mode === 'pointer' ? '4px' : '3px',
                 borderRadius: '50%',
                 background: mode === 'pointer' ? darkText : currentAccent,
-                boxShadow: `0 0 ${mode === 'pointer' ? '12px' : '6px'} ${currentAccent}`,
-                transition: 'width 0.15s, height 0.15s, background 0.15s, transform 0.15s',
-                transform: isClicking ? 'scale(1.4)' : 'scale(1)',
+                boxShadow: `0 0 ${mode === 'pointer' ? '8px' : '4px'} ${currentAccent}`,
+                transition: 'width 0.12s, height 0.12s, background 0.12s, transform 0.12s',
+                transform: isClicking ? 'scale(1.3)' : 'scale(1)',
               }}
             />
           )}
         </div>
       </div>
 
-      {/* ── 2. Smooth Trailing Telemetry HUD Ring / Reticle ── */}
+      {/* ── 2. Compact Trailing Telemetry Reticle ── */}
       <div
         ref={ringElRef}
         style={{
@@ -335,7 +374,7 @@ const CyberCursor = ({ isDark = true }) => {
           left: 0,
           pointerEvents: 'none',
           willChange: 'transform',
-          zIndex: 1000000,
+          zIndex: 10000000,
         }}
       >
         <div
@@ -346,30 +385,109 @@ const CyberCursor = ({ isDark = true }) => {
             width: `${ringDim.width || ringDim.size}px`,
             height: `${ringDim.height || ringDim.size}px`,
             transform: 'translate(-50%, -50%)',
-            transition: 'width 0.22s cubic-bezier(0.16, 1, 0.3, 1), height 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s',
+            transition: 'width 0.18s cubic-bezier(0.16, 1, 0.3, 1), height 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          {/* ──────── MODE: DEFAULT (Precision Radar HUD Ring) ──────── */}
+          {/* ──────── MODE: DEFAULT (Compact Precision Radar HUD Ring) ──────── */}
           {mode === 'default' && (
             <div
               style={{
                 width: '100%',
                 height: '100%',
                 borderRadius: '50%',
-                border: `1.2px solid ${currentAccent}66`,
-                boxShadow: `0 0 10px ${glow}`,
+                border: `1px solid ${currentAccent}55`,
+                boxShadow: `0 0 6px ${glow}`,
                 position: 'relative',
                 transition: 'border-color 0.2s, box-shadow 0.2s',
               }}
             >
               {/* Cardinal micro-ticks */}
-              <div style={{ position: 'absolute', top: '-4px', left: '50%', transform: 'translateX(-50%)', width: '1.5px', height: '3px', background: currentAccent }} />
-              <div style={{ position: 'absolute', bottom: '-4px', left: '50%', transform: 'translateX(-50%)', width: '1.5px', height: '3px', background: currentAccent }} />
-              <div style={{ position: 'absolute', left: '-4px', top: '50%', transform: 'translateY(-50%)', height: '1.5px', width: '3px', background: currentAccent }} />
-              <div style={{ position: 'absolute', right: '-4px', top: '50%', transform: 'translateY(-50%)', height: '1.5px', width: '3px', background: currentAccent }} />
+              <div style={{ position: 'absolute', top: '-2.5px', left: '50%', transform: 'translateX(-50%)', width: '1px', height: '2px', background: currentAccent }} />
+              <div style={{ position: 'absolute', bottom: '-2.5px', left: '50%', transform: 'translateX(-50%)', width: '1px', height: '2px', background: currentAccent }} />
+              <div style={{ position: 'absolute', left: '-2.5px', top: '50%', transform: 'translateY(-50%)', height: '1px', width: '2px', background: currentAccent }} />
+              <div style={{ position: 'absolute', right: '-2.5px', top: '50%', transform: 'translateY(-50%)', height: '1px', width: '2px', background: currentAccent }} />
+            </div>
+          )}
+
+          {/* ──────── MODE: PROJECT EXPAND (Compact Aperture Frame) ──────── */}
+          {mode === 'project-expand' && (
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  transform: isClicking ? 'scale(1.2)' : 'scale(1)',
+                }}
+              >
+                {/* 4 Corner L-Brackets */}
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '5px', height: '5px', borderTop: `1.5px solid ${currentAccent}`, borderLeft: `1.5px solid ${currentAccent}` }} />
+                <div style={{ position: 'absolute', top: 0, right: 0, width: '5px', height: '5px', borderTop: `1.5px solid ${currentAccent}`, borderRight: `1.5px solid ${currentAccent}` }} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '5px', height: '5px', borderBottom: `1.5px solid ${currentAccent}`, borderLeft: `1.5px solid ${currentAccent}` }} />
+                <div style={{ position: 'absolute', bottom: 0, right: 0, width: '5px', height: '5px', borderBottom: `1.5px solid ${currentAccent}`, borderRight: `1.5px solid ${currentAccent}` }} />
+
+                {/* Rotating micro-aperture ring */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: '3px',
+                    borderRadius: '50%',
+                    border: `1px dashed ${currentAccent}66`,
+                    boxShadow: `0 0 8px ${currentAccent}44`,
+                    animation: 'cyber-reticle-spin 8s linear infinite',
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ──────── MODE: PROJECT COLLAPSE (Compact Contraction Frame) ──────── */}
+          {mode === 'project-collapse' && (
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  transform: isClicking ? 'scale(0.85)' : 'scale(1)',
+                }}
+              >
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '5px', height: '5px', borderTop: `1.5px solid ${currentAccent}`, borderLeft: `1.5px solid ${currentAccent}` }} />
+                <div style={{ position: 'absolute', top: 0, right: 0, width: '5px', height: '5px', borderTop: `1.5px solid ${currentAccent}`, borderRight: `1.5px solid ${currentAccent}` }} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '5px', height: '5px', borderBottom: `1.5px solid ${currentAccent}`, borderLeft: `1.5px solid ${currentAccent}` }} />
+                <div style={{ position: 'absolute', bottom: 0, right: 0, width: '5px', height: '5px', borderBottom: `1.5px solid ${currentAccent}`, borderRight: `1.5px solid ${currentAccent}` }} />
+
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: '3px',
+                    borderRadius: '50%',
+                    border: `1px solid ${currentAccent}`,
+                    boxShadow: `0 0 8px ${currentAccent}55`,
+                  }}
+                />
+              </div>
             </div>
           )}
 
@@ -380,29 +498,29 @@ const CyberCursor = ({ isDark = true }) => {
                 width: '100%',
                 height: '100%',
                 position: 'relative',
-                animation: 'cyber-reticle-spin 14s linear infinite',
+                animation: 'cyber-reticle-spin 12s linear infinite',
               }}
             >
               {/* 4 Corner Locking Brackets */}
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '8px', height: '8px', borderTop: `2px solid ${currentAccent}`, borderLeft: `2px solid ${currentAccent}` }} />
-              <div style={{ position: 'absolute', top: 0, right: 0, width: '8px', height: '8px', borderTop: `2px solid ${currentAccent}`, borderRight: `2px solid ${currentAccent}` }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, width: '8px', height: '8px', borderBottom: `2px solid ${currentAccent}`, borderLeft: `2px solid ${currentAccent}` }} />
-              <div style={{ position: 'absolute', bottom: 0, right: 0, width: '8px', height: '8px', borderBottom: `2px solid ${currentAccent}`, borderRight: `2px solid ${currentAccent}` }} />
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '5px', height: '5px', borderTop: `1.5px solid ${currentAccent}`, borderLeft: `1.5px solid ${currentAccent}` }} />
+              <div style={{ position: 'absolute', top: 0, right: 0, width: '5px', height: '5px', borderTop: `1.5px solid ${currentAccent}`, borderRight: `1.5px solid ${currentAccent}` }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, width: '5px', height: '5px', borderBottom: `1.5px solid ${currentAccent}`, borderLeft: `1.5px solid ${currentAccent}` }} />
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: '5px', height: '5px', borderBottom: `1.5px solid ${currentAccent}`, borderRight: `1.5px solid ${currentAccent}` }} />
 
               {/* Concentric subtle target ring */}
               <div
                 style={{
                   position: 'absolute',
-                  inset: '5px',
+                  inset: '3px',
                   borderRadius: '50%',
-                  border: `1px dashed ${altColor}77`,
-                  boxShadow: `0 0 12px ${glow}`,
+                  border: `1px dashed ${altColor}66`,
+                  boxShadow: `0 0 8px ${glow}`,
                 }}
               />
             </div>
           )}
 
-          {/* ──────── MODE: TEXT (Diagnostic Scanning Bracket) ──────── */}
+          {/* ──────── MODE: TEXT (Compact Diagnostic Scan Box) ──────── */}
           {mode === 'text' && (
             <div
               style={{
@@ -414,21 +532,21 @@ const CyberCursor = ({ isDark = true }) => {
               <div
                 style={{
                   position: 'absolute',
-                  top: '2px',
-                  bottom: '2px',
-                  left: '2px',
-                  right: '2px',
-                  borderTop: `1px solid ${currentAccent}88`,
-                  borderBottom: `1px solid ${currentAccent}88`,
-                  borderLeft: `1px dashed ${currentAccent}44`,
-                  borderRight: `1px dashed ${currentAccent}44`,
-                  borderRadius: '2px',
+                  top: '1px',
+                  bottom: '1px',
+                  left: '1px',
+                  right: '1px',
+                  borderTop: `1px solid ${currentAccent}66`,
+                  borderBottom: `1px solid ${currentAccent}66`,
+                  borderLeft: `1px dashed ${currentAccent}33`,
+                  borderRight: `1px dashed ${currentAccent}33`,
+                  borderRadius: '1px',
                 }}
               />
             </div>
           )}
 
-          {/* ──────── MODE: GRAB / SLIDER (Articulated Robotic Calipers) ──────── */}
+          {/* ──────── MODE: GRAB / SLIDER (Compact Robotic Micro-Calipers) ──────── */}
           {mode === 'grab' && (
             <div
               style={{
@@ -440,122 +558,78 @@ const CyberCursor = ({ isDark = true }) => {
                 justifyContent: 'center',
               }}
             >
-              {/* Telemetry status badge above gripper */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '-13px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  fontFamily: '"JetBrains Mono", monospace',
-                  fontSize: '7.5px',
-                  fontWeight: 800,
-                  letterSpacing: '0.08em',
-                  color: isClicking ? currentAccent : altColor,
-                  whiteSpace: 'nowrap',
-                  textShadow: `0 0 8px ${currentAccent}`,
-                  transition: 'color 0.15s',
-                }}
-              >
-                {isClicking ? '● CLAMP' : '◀ GRIP ▶'}
-              </div>
-
               <svg
-                width="64"
-                height="34"
-                viewBox="0 0 64 34"
+                width="38"
+                height="20"
+                viewBox="0 0 38 20"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 style={{ overflow: 'visible' }}
               >
-                {/* Calibration Guide Rail */}
+                {/* Guide Rail */}
                 <line
-                  x1="4"
-                  y1="17"
-                  x2="60"
-                  y2="17"
+                  x1="2"
+                  y1="10"
+                  x2="36"
+                  y2="10"
                   stroke={currentAccent}
-                  strokeWidth="1.2"
-                  strokeDasharray="2 3"
-                  opacity={isClicking ? '0.85' : '0.45'}
+                  strokeWidth="1"
+                  strokeDasharray="2 2"
+                  opacity={isClicking ? '0.85' : '0.4'}
                 />
-                {/* Left & Right Limit Stops */}
-                <line x1="4" y1="11" x2="4" y2="23" stroke={currentAccent} strokeWidth="1.5" opacity="0.8" />
-                <line x1="60" y1="11" x2="60" y2="23" stroke={currentAccent} strokeWidth="1.5" opacity="0.8" />
-                <line x1="14" y1="14" x2="14" y2="20" stroke={currentAccent} strokeWidth="1" opacity="0.4" />
-                <line x1="50" y1="14" x2="50" y2="20" stroke={currentAccent} strokeWidth="1" opacity="0.4" />
+                {/* Left & Right End Stops */}
+                <line x1="2" y1="6" x2="2" y2="14" stroke={currentAccent} strokeWidth="1.2" opacity="0.7" />
+                <line x1="36" y1="6" x2="36" y2="14" stroke={currentAccent} strokeWidth="1.2" opacity="0.7" />
 
-                {/* ── Left Mechanical Caliper Claw ── */}
+                {/* ── Left Micro-Claw ── */}
                 <g
                   style={{
-                    transform: isClicking ? 'translateX(7.5px)' : 'translateX(0px)',
+                    transform: isClicking ? 'translateX(4.5px)' : 'translateX(0px)',
                     transition: 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   <path
-                    d="M12 5 L21 9 L21 13 L19 17 L21 21 L21 25 L12 29 L8 25 L10 17 L8 9 Z"
+                    d="M8 3 L13 6 L13 8 L11 10 L13 12 L13 14 L8 17 L5 14 L7 10 L5 6 Z"
                     fill={isDark ? '#060B12' : '#FFFDE6'}
                     stroke={currentAccent}
-                    strokeWidth="1.5"
+                    strokeWidth="1.2"
                     strokeLinejoin="round"
-                    style={{ filter: `drop-shadow(0 0 4px ${glow})` }}
                   />
-                  {/* Grip Teeth */}
-                  <line x1="21" y1="11" x2="23.5" y2="11" stroke={currentAccent} strokeWidth="1.2" />
-                  <line x1="21" y1="17" x2="24" y2="17" stroke={altColor} strokeWidth="1.5" />
-                  <line x1="21" y1="23" x2="23.5" y2="23" stroke={currentAccent} strokeWidth="1.2" />
-                  <circle cx="12" cy="17" r="1.8" fill={currentAccent} />
+                  <circle cx="8" cy="10" r="1.2" fill={currentAccent} />
                 </g>
 
-                {/* ── Right Mechanical Caliper Claw ── */}
+                {/* ── Right Micro-Claw ── */}
                 <g
                   style={{
-                    transform: isClicking ? 'translateX(-7.5px)' : 'translateX(0px)',
+                    transform: isClicking ? 'translateX(-4.5px)' : 'translateX(0px)',
                     transition: 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   <path
-                    d="M52 5 L43 9 L43 13 L45 17 L43 21 L43 25 L52 29 L56 25 L54 17 L56 9 Z"
+                    d="M30 3 L25 6 L25 8 L27 10 L25 12 L25 14 L30 17 L33 14 L31 10 L33 6 Z"
                     fill={isDark ? '#060B12' : '#FFFDE6'}
                     stroke={currentAccent}
-                    strokeWidth="1.5"
+                    strokeWidth="1.2"
                     strokeLinejoin="round"
-                    style={{ filter: `drop-shadow(0 0 4px ${glow})` }}
                   />
-                  {/* Grip Teeth */}
-                  <line x1="43" y1="11" x2="40.5" y2="11" stroke={currentAccent} strokeWidth="1.2" />
-                  <line x1="43" y1="17" x2="40" y2="17" stroke={altColor} strokeWidth="1.5" />
-                  <line x1="43" y1="23" x2="40.5" y2="23" stroke={currentAccent} strokeWidth="1.2" />
-                  <circle cx="52" cy="17" r="1.8" fill={currentAccent} />
+                  <circle cx="30" cy="10" r="1.2" fill={currentAccent} />
                 </g>
 
-                {/* ── Active Plasma Clamping Arc ── */}
+                {/* ── Active Spark Core ── */}
                 {isClicking && (
-                  <g>
-                    <line
-                      x1="26"
-                      y1="17"
-                      x2="38"
-                      y2="17"
-                      stroke={altColor}
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      style={{ filter: `drop-shadow(0 0 8px ${altColor})` }}
-                    />
-                    <circle
-                      cx="32"
-                      cy="17"
-                      r="3.5"
-                      fill={currentAccent}
-                      style={{ filter: `drop-shadow(0 0 10px ${currentAccent})` }}
-                    />
-                  </g>
+                  <circle
+                    cx="19"
+                    cy="10"
+                    r="2.5"
+                    fill={altColor}
+                    style={{ filter: `drop-shadow(0 0 6px ${altColor})` }}
+                  />
                 )}
               </svg>
             </div>
           )}
 
-          {/* ──────── MODE: CROSSHAIR (PCB & Hardware Mil-Spec Reticle) ──────── */}
+          {/* ──────── MODE: CROSSHAIR (Compact Hardware Inspection Reticle) ──────── */}
           {mode === 'crosshair' && (
             <div
               style={{
@@ -567,37 +641,30 @@ const CyberCursor = ({ isDark = true }) => {
                 justifyContent: 'center',
               }}
             >
-              {/* Precision Laser Crosshair Lines */}
-              <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '1px', background: `${currentAccent}88`, transform: 'translateX(-50%)' }} />
-              <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: '1px', background: `${currentAccent}88`, transform: 'translateY(-50%)' }} />
-
-              {/* Center Aperture Ring */}
+              <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '1px', background: `${currentAccent}77`, transform: 'translateX(-50%)' }} />
+              <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: '1px', background: `${currentAccent}77`, transform: 'translateY(-50%)' }} />
               <div
                 style={{
-                  width: '24px',
-                  height: '24px',
+                  width: '14px',
+                  height: '14px',
                   borderRadius: '50%',
-                  border: `1.5px solid ${currentAccent}`,
+                  border: `1.2px solid ${currentAccent}`,
                   background: isDark ? 'rgba(4,7,15,0.45)' : 'rgba(253,251,212,0.45)',
-                  boxShadow: `0 0 14px ${glow}`,
+                  boxShadow: `0 0 8px ${glow}`,
                 }}
               />
-
-              {/* Diagonal 45-degree micro tick markers */}
-              <div style={{ position: 'absolute', top: '4px', right: '4px', width: '3px', height: '3px', background: altColor, borderRadius: '50%' }} />
-              <div style={{ position: 'absolute', bottom: '4px', left: '4px', width: '3px', height: '3px', background: altColor, borderRadius: '50%' }} />
             </div>
           )}
 
-          {/* ──────── MODE: DISABLED (Alert Restricted Reticle) ──────── */}
+          {/* ──────── MODE: DISABLED (Compact Alert Restricted Reticle) ──────── */}
           {mode === 'disabled' && (
             <div
               style={{
                 width: '100%',
                 height: '100%',
                 borderRadius: '50%',
-                border: `1.5px solid ${alertColor}`,
-                boxShadow: `0 0 12px ${alertColor}77`,
+                border: `1.2px solid ${alertColor}`,
+                boxShadow: `0 0 8px ${alertColor}66`,
                 position: 'relative',
               }}
             >
@@ -607,7 +674,7 @@ const CyberCursor = ({ isDark = true }) => {
                   top: '50%',
                   left: '2px',
                   right: '2px',
-                  height: '1.5px',
+                  height: '1px',
                   background: alertColor,
                   transform: 'translateY(-50%) rotate(-45deg)',
                 }}
@@ -624,15 +691,15 @@ const CyberCursor = ({ isDark = true }) => {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '28px',
-          height: '28px',
+          width: '18px',
+          height: '18px',
           borderRadius: '50%',
-          border: `1.5px solid ${currentAccent}`,
-          boxShadow: `0 0 15px ${currentAccent}`,
+          border: `1.2px solid ${currentAccent}`,
+          boxShadow: `0 0 10px ${currentAccent}`,
           transform: 'translate(-50%, -50%) scale(0)',
           opacity: 0,
           pointerEvents: 'none',
-          zIndex: 999998,
+          zIndex: 9999998,
         }}
       />
     </div>

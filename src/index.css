@@ -1210,10 +1210,15 @@ body.light-mode .back-hub-btn:hover {
   100% { transform: rotate(360deg); }
 }
 
-@media (hover: hover) and (pointer: fine) {
-  /* Cleanly replace system pointer with the Cyber telemetry cursor on fine-pointer devices */
-  body, html, a, button, input, select, textarea, [role="button"], label, .lever-range-input, .hud-btn, .clickable {
+@media (hover: hover) {
+  body, html, a, button, input, select, textarea, [role="button"], label, .lever-range-input, .hud-btn, .clickable, span, div, p, h1, h2, h3, h4 {
     cursor: none !important;
+  }
+}
+
+@media (pointer: coarse) and (hover: none) {
+  .cyber-cursor-portal {
+    display: none !important;
   }
 }
 

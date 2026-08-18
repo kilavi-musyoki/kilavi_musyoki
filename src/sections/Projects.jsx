@@ -210,8 +210,7 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
         : isExpanded ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.35)';
 
     // Module color badge — must be visible in both modes
-    const moduleColor = isDark ? project.color : '#0D9488';
-
+    const moduleColor = isDark ? project.color : '#CE8946';
 
     return (
         <motion.div
@@ -221,6 +220,8 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.5 }}
             className="pcb-card"
+            data-cursor={isExpanded ? 'project-collapse' : 'project-expand'}
+            data-cursor-color={moduleColor}
             style={{
                 border: `1px solid ${borderColor}`,
                 background: bgCard,
