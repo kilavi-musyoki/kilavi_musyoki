@@ -8,6 +8,7 @@ import Contact from './sections/Contact.jsx';
 import ThemeToggle from './components/ThemeToggle.jsx';
 import DebugOverlay from './components/DebugOverlay.jsx';
 import IdleCharacter from './components/IdleCharacter.jsx';
+import CyberCursor from './components/CyberCursor.jsx';
 import { initScroll } from './scrollSetup.js';
 import { useFocusTrap } from './hooks/useFocusTrap';
 import { getTheme } from './theme.js';
@@ -15,8 +16,8 @@ import { getTheme } from './theme.js';
 // Spark particle effect — fires ONLY on interactive elements (buttons, links, inputs)
 // Keeps sparks as tactile feedback for deliberate actions, not ambient noise.
 const createSparks = (x, y, isDark) => {
-  const color = isDark ? '#4BD8A0' : '#0D9488';
-  const glow  = isDark ? 'rgba(75,216,160,0.8)' : 'rgba(13,148,136,0.7)';
+  const color = isDark ? '#4BD8A0' : '#CE8946';
+  const glow  = isDark ? 'rgba(75,216,160,0.8)' : 'rgba(206,137,70,0.75)';
   for (let i = 0; i < 8; i++) {
     const spark = document.createElement('div');
     spark.className = 'spark';
@@ -424,6 +425,9 @@ function App() {
           boxShadow: `0 0 10px ${debugBarColor}`,
         }} />
       )}
+
+      {/* ── Custom Cybernetic Contextual Cursor ── */}
+      <CyberCursor isDark={isDark} />
 
       {/* ── Idle character ── */}
       <IdleCharacter isDark={isDark} />

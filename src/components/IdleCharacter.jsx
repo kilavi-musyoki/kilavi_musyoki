@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAnimate, AnimatePresence, motion } from 'framer-motion';
 
 // ── Speech lines ───────────────────────────────────────────────────────────────
@@ -23,14 +23,153 @@ const KEYFRAMES = `
 @keyframes ic-arm-r      { 0%{transform:rotate(-30deg)} 50%{transform:rotate(30deg)}  100%{transform:rotate(-30deg)} }
 @keyframes ic-device     { 0%,100%{opacity:.45} 50%{opacity:1} }
 @keyframes ic-wifi-1     { 0%,100%{opacity:.12} 25%{opacity:.9} }
-@keyframes ic-wifi-2     { 0%,100%{opacity:.12} 50%{opacity:.9} }
+@keyframes ic-wifi-2     { 0%{opacity:.12} 50%{opacity:.9} }
 @keyframes ic-wifi-3     { 0%,100%{opacity:.12} 75%{opacity:.9} }
 @keyframes ic-led        { 0%,100%{opacity:.8}  50%{opacity:.15} }
 @keyframes ic-visor-scan { 0%,100%{transform:translateY(0px);opacity:0} 50%{transform:translateY(4px);opacity:.85} }
 @keyframes ic-dust-a     { 0%{transform:scale(0);opacity:.7} 100%{transform:scale(1.7) translate(-9px,5px);opacity:0} }
 @keyframes ic-dust-b     { 0%{transform:scale(0);opacity:.5} 100%{transform:scale(1.3) translate(7px,6px);opacity:0}  }
 @keyframes ic-wrench     { 0%{transform:rotate(-18deg)} 50%{transform:rotate(18deg)} 100%{transform:rotate(-18deg)} }
+@keyframes ic-fw-pop     { 0%{transform:scale(0) rotate(0deg);opacity:1} 60%{opacity:1} 100%{transform:scale(1) rotate(var(--fw-r));opacity:0} }
+@keyframes ic-fw-trail   { 0%{opacity:.9;transform:scaleY(1)} 100%{opacity:0;transform:scaleY(0)} }
 `;
+
+// ── Fireworks launcher — pure DOM, multi-burst full screen ────────────────────
+const launchFireworks = (originX, originY, palette) => {
+    const container = document.createElement('div');
+    container.style.cssText = [
+        'position:fixed',
+        'inset:0',
+        'pointer-events:none',
+        'z-index:999999',
+        'overflow:hidden',
+    ].join(';');
+    document.body.appendChild(container);
+
+    const SHAPES = ['●', '★', '✦', '◆', '✸', '✺', '❋', '⬟'];
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // Helper: spawn single burst of sparks + ring
+    const createBurst = (bx, by, count, maxDist, delayOffset = 0, isOrigin = false) => {
+        // Shockwave expansion ring
+        setTimeout(() => {
+            if (!document.body.contains(container)) return;
+            const ring = document.createElement('div');
+            const ringColor = palette[Math.floor(Math.random() * palette.length)];
+            ring.style.cssText = [
+                'position:absolute',
+                `left:${bx}px`, `top:${by}px`,
+                'width:14px', 'height:14px',
+                'border-radius:50%',
+                `border:2px solid ${ringColor}`,
+                `box-shadow:0 0 20px ${ringColor}`,
+                'transform:translate(-50%,-50%) scale(0)',
+                'opacity:1',
+                'pointer-events:none',
+                `transition:transform ${isOrigin ? 0.45 : 0.4}s cubic-bezier(0.1, 0.85, 0.3, 1), opacity 0.45s ease-out`,
+            ].join(';');
+            container.appendChild(ring);
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    ring.style.transform = `translate(-50%,-50%) scale(${isOrigin ? 22 : 12})`;
+                    ring.style.opacity = '0';
+                });
+            });
+        }, delayOffset);
+
+        // Particle sparks
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('span');
+            const color = palette[Math.floor(Math.random() * palette.length)];
+            const shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+            const size = (isOrigin ? 12 : 9) + Math.random() * (isOrigin ? 14 : 10);
+            const angle = Math.random() * 2 * Math.PI;
+            const dist = (isOrigin ? 40 : 20) + Math.random() * maxDist;
+            const tx = Math.cos(angle) * dist;
+            const ty = Math.sin(angle) * dist + (Math.random() * 20); // slight gravity
+            const dur = 600 + Math.random() * 700;
+            const delay = delayOffset + Math.random() * 70;
+            const rot = (Math.random() - 0.5) * 600;
+
+            el.textContent = shape;
+            el.style.cssText = [
+                'position:absolute',
+                `left:${bx}px`,
+                `top:${by}px`,
+                `font-size:${size}px`,
+                `color:${color}`,
+                `text-shadow:0 0 10px ${color}, 0 0 24px ${color}bb`,
+                'transform:translate(-50%,-50%) scale(0.2)',
+                'pointer-events:none',
+                'user-select:none',
+                'will-change:transform,opacity',
+                `transition:transform ${dur}ms cubic-bezier(0.15, 0.85, 0.35, 1) ${delay}ms, opacity ${dur * 0.55}ms ease-in ${delay + dur * 0.45}ms`,
+                'opacity:1',
+            ].join(';');
+            container.appendChild(el);
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    el.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) rotate(${rot}deg) scale(${0.35 + Math.random() * 0.85})`;
+                    el.style.opacity = '0';
+                });
+            });
+        }
+    };
+
+    // 1. Primary explosion right where character was touched
+    createBurst(originX, originY, 70, Math.min(vw, vh) * 0.4, 0, true);
+
+    // Floating comic tag at touch location
+    const popTag = document.createElement('div');
+    const tagColor = palette[0] || '#4BD8A0';
+    popTag.textContent = '💥 BOOM! ✨';
+    popTag.style.cssText = [
+        'position:absolute',
+        `left:${originX}px`, `top:${originY - 30}px`,
+        'transform:translate(-50%,-50%) scale(0.5)',
+        'font-family:"JetBrains Mono","Syne",monospace',
+        'font-weight:900',
+        'font-size:16px',
+        `color:#ffffff`,
+        `background:rgba(0,0,0,0.85)`,
+        `border:2px solid ${tagColor}`,
+        'border-radius:20px',
+        'padding:4px 14px',
+        `box-shadow:0 0 25px ${tagColor}`,
+        'pointer-events:none',
+        'user-select:none',
+        'opacity:1',
+        'transition:transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease-in 0.6s',
+    ].join(';');
+    container.appendChild(popTag);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            popTag.style.transform = 'translate(-50%,-80px) scale(1.15)';
+            popTag.style.opacity = '0';
+        });
+    });
+
+    // 2. 8 secondary fireworks bursts filling the rest of the screen
+    const secondaryCount = 8;
+    for (let b = 0; b < secondaryCount; b++) {
+        const rx = vw * 0.12 + Math.random() * (vw * 0.76);
+        const ry = vh * 0.10 + Math.random() * (vh * 0.70);
+        const delay = 100 + b * 85 + Math.random() * 50;
+        const count = 30 + Math.floor(Math.random() * 20);
+        const maxDist = 70 + Math.random() * 140;
+        createBurst(rx, ry, count, maxDist, delay, false);
+    }
+
+    // Cleanup container
+    setTimeout(() => {
+        if (document.body.contains(container)) {
+            document.body.removeChild(container);
+        }
+    }, 2500);
+};
 
 const makeBounce = (n, h = 9) =>
     Array.from({ length: n + 1 }, (_, i) => (i % 2 === 0 ? 0 : -h));
@@ -40,14 +179,20 @@ const makeTimes = (n) =>
 // ── Component ─────────────────────────────────────────────────────────────────
 const IdleCharacter = ({ isDark = true }) => {
     const [scope, animate] = useAnimate();
-    const [visible, setVisible] = useState(false);
-    const [showMsg, setShowMsg] = useState(false);
-    const [msgIdx, setMsgIdx] = useState(0);
-    const [isJumping, setIsJumping] = useState(false);
+    const [visible,    setVisible]    = useState(false);
+    const [showMsg,    setShowMsg]    = useState(false);
+    const [msgIdx,     setMsgIdx]     = useState(0);
+    const [isJumping,  setIsJumping]  = useState(false);
+    const [exploding,  setExploding]  = useState(false);
 
-    const timerRef = useRef(null);
-    const cancelRef = useRef(false);
-    const activityId = useRef(0);
+    const timerRef     = useRef(null);
+    const cancelRef    = useRef(false);
+    const activityId   = useRef(0);
+    const visibleRef   = useRef(visible);
+    const explodingRef = useRef(exploding);
+
+    visibleRef.current   = visible;
+    explodingRef.current = exploding;
 
     // ── Palette ───────────────────────────────────────────────────────────────
     const C = isDark ? {
@@ -92,7 +237,57 @@ const IdleCharacter = ({ isDark = true }) => {
 
     const gid = isDark ? 'dk' : 'lt';
 
-    // ── Inject keyframes once ─────────────────────────────────────────────────
+    // ── Fireworks palette (full-spectrum for wow factor) ──────────────────────
+    const FW_PALETTE = isDark
+        ? ['#4BD8A0','#6FD4FF','#FF5A3C','#D4A843','#a78bfa','#FF8C00','#ffffff','#00ffcc']
+        : ['#D4AF37','#CE8946','#BDB76B','#FF5A3C','#a78bfa','#4BD8A0','#6FD4FF','#B8722E'];
+
+    // ── Explode handler ───────────────────────────────────────────────────────
+    const handleExplode = useCallback((e) => {
+        if (!visibleRef.current || explodingRef.current || !scope.current) return;
+        if (e) {
+            e.stopPropagation();
+            if (e.preventDefault && e.cancelable) e.preventDefault();
+        }
+
+        // Cancel running sequence immediately
+        cancelRef.current = true;
+        setShowMsg(false);
+        setIsJumping(false);
+        setExploding(true);
+
+        // Get character centre in viewport coordinates
+        const rect = scope.current.getBoundingClientRect();
+        const ox = rect.left + rect.width  / 2;
+        const oy = rect.top  + rect.height / 2;
+
+        // Flash energy white + squish + vanish
+        animate(scope.current, { filter: 'brightness(10) saturate(0) drop-shadow(0 0 30px #ffffff)' }, { duration: 0.05 });
+        setTimeout(() => {
+            if (scope.current) {
+                animate(scope.current,
+                    { scaleX: 2.2, scaleY: 0.15, opacity: 0 },
+                    { duration: 0.16, ease: [0.8, 0, 1, 1] }
+                );
+            }
+        }, 50);
+
+        // Launch full-screen fireworks
+        launchFireworks(ox, oy, FW_PALETTE);
+
+        // Reset after explosion settles
+        setTimeout(() => {
+            if (!scope.current) return;
+            animate(scope.current,
+                { filter: C.glowFx, scaleX: 1, scaleY: 1, opacity: 1, x: -200, y: 0 },
+                { duration: 0 }
+            );
+            setExploding(false);
+            setVisible(false);
+            scheduleAppearance();
+        }, 2200);
+    }, [C.glowFx, FW_PALETTE, animate, scope]);
+
     useEffect(() => {
         const s = document.createElement('style');
         s.dataset.icKf = '1';
@@ -102,7 +297,7 @@ const IdleCharacter = ({ isDark = true }) => {
     }, []);
 
     // ── Idle scheduling ───────────────────────────────────────────────────────
-    const scheduleAppearance = () => {
+    const scheduleAppearance = useCallback(() => {
         const id = ++activityId.current;
         clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
@@ -129,15 +324,22 @@ const IdleCharacter = ({ isDark = true }) => {
                 setVisible(true);
             }
         }, 5000);
-    };
+    }, []);
 
-    const handleActivity = () => {
+    const handleActivity = useCallback((e) => {
+        if (explodingRef.current) return;
+        // If clicking/touching the character itself, don't cancel/dismiss
+        if (e && scope.current && scope.current.contains(e.target)) return;
+
+        // While character is visible, allow mousemove so the user can hover / chase / click it!
+        if (visibleRef.current && e && e.type === 'mousemove') return;
+
         cancelRef.current = true;
         setVisible(false);
         setShowMsg(false);
         setIsJumping(false);
         scheduleAppearance();
-    };
+    }, [scheduleAppearance, scope]);
 
     useEffect(() => {
         const evts = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'];
@@ -147,11 +349,17 @@ const IdleCharacter = ({ isDark = true }) => {
             evts.forEach(e => window.removeEventListener(e, handleActivity));
             clearTimeout(timerRef.current);
         };
-    }, []);
+    }, [handleActivity, scheduleAppearance]);
 
     // ── Animation sequence ────────────────────────────────────────────────────
     useEffect(() => {
-        if (!visible || !scope.current) return;
+        if (!scope.current) return;
+
+        if (!visible) {
+            // Reset off-screen so it doesn't flash in old position on next show
+            animate(scope.current, { x: -200, y: 0, rotate: 0, scaleX: 1, scaleY: 1 }, { duration: 0 });
+            return;
+        }
         cancelRef.current = false;
 
         const seq = async () => {
@@ -289,12 +497,6 @@ const IdleCharacter = ({ isDark = true }) => {
         animation: `${side === 'l' ? 'ic-arm-l' : 'ic-arm-r'} .38s linear infinite`,
     });
 
-    if (!visible) return null;
-
-    // Suppress the idle character on mobile — it overlaps content and wastes
-    // CPU on animations that don't add value on a small touch screen.
-    if (typeof window !== 'undefined' && window.innerWidth < 640) return null;
-
     return (
         <div
             ref={scope}
@@ -307,9 +509,25 @@ const IdleCharacter = ({ isDark = true }) => {
                 userSelect: 'none',
                 filter: C.glowFx,
                 willChange: 'transform',
+                // Hide via opacity rather than returning null — keeps the ref mounted
+                // so useAnimate never fires against a null scope
+                opacity: visible ? 1 : 0,
+                visibility: visible ? 'visible' : 'hidden',
             }}
         >
-            <div style={{ transform: 'scale(0.65)', transformOrigin: 'bottom center', position: 'relative' }}>
+            <div
+                onClick={handleExplode}
+                onTouchStart={handleExplode}
+                onPointerDown={handleExplode}
+                title="Tap to explode!"
+                style={{
+                    transform: 'scale(0.65)',
+                    transformOrigin: 'bottom center',
+                    position: 'relative',
+                    pointerEvents: (visible && !exploding) ? 'auto' : 'none',
+                    cursor: 'pointer',
+                }}
+            >
             {/* ── Speech bubble ─────────────────────────────────────────── */}
             <AnimatePresence>
                 {showMsg && (

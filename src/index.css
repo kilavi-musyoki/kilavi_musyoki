@@ -1204,4 +1204,17 @@ body.light-mode .back-hub-btn:hover {
   box-shadow: 0 4px 20px rgba(13, 148, 136, 0.4);
 }
 
+/* ===== Cyber Cursor Precision Reticle & Physics ===== */
+@keyframes cyber-reticle-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* Cleanly replace system pointer with the Cyber telemetry cursor on fine-pointer devices */
+  body, html, a, button, input, select, textarea, [role="button"], label, .lever-range-input, .hud-btn, .clickable {
+    cursor: none !important;
+  }
+}
+
 
