@@ -112,7 +112,7 @@ const About = ({ isDark }) => {
               lineHeight: 1.8,
               marginBottom: '28px',
             }}>
-              Multidisciplinary engineering student focused on designing and building systems that integrate electronics, embedded software, communication networks, and cybersecurity. I approach engineering with an emphasis on reliability, measurable performance, maintainability, and security by design, from microcontroller based systems and IoT devices to distributed software platforms and networked infrastructure. My work is grounded in engineering fundamentals, with particular attention to system architecture, threat modeling, system hardening, data integrity, and resilient design while keeping up with the new technology trends.
+              Multidisciplinary Telecommunications and Information Engineering student focused on designing and developing systems that integrate electronics, embedded software, communication networks, and cybersecurity. I apply an engineering first approach centered on reliability, measurable performance, maintainability, and security by design. My work spans microcontroller based systems, IoT, networked applications, and distributed software, with particular attention to system architecture, threat modeling, system hardening, and data integrity. I prioritize practical, resilient solutions grounded in engineering fundamentals rather than novelty alone.
             </p>
 
             <div style={{
