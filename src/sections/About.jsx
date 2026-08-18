@@ -79,7 +79,7 @@ const About = ({ isDark }) => {
                 fontSize: '0.65rem',
                 color: dimColor,
               }}>
-                Human Engineering Module
+                Humanwith unfathomable intelligence
               </div>
             </div>
             <div style={{
