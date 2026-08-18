@@ -79,7 +79,7 @@ const About = ({ isDark }) => {
                 fontSize: '0.65rem',
                 color: dimColor,
               }}>
-                Humanwith unfathomable intelligence
+                Human with unfathomable intelligence
               </div>
             </div>
             <div style={{
