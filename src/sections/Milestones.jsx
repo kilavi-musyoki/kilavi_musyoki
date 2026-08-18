@@ -11,11 +11,32 @@ const CHANGELOG = [
         color: '#4BD8A0',   // cyber mint — current / flagship
     },
     {
+        version: 'v3.6',
+        status: 'Highlight',
+        title: 'DevSecOps Security Champions Proposal',
+        body: 'Co-presented a Security Champions program proposal to M-Pesa\'s Cyber SteerCo, using the CHARM risk-scoring metric and a cost-of-a-bug ROI argument to make the case.',
+        color: '#FF5A3C',   // alert red — security/risk theme
+    },
+    {
+        version: 'v3.5',
+        status: 'Experience',
+        title: 'Industrial Attachment — M-Pesa Africa (Cybersecurity)',
+        body: '8 weeks in M-Pesa\'s cybersecurity department, working across IAM, cloud security, and offensive security tooling on a Linux foundation. Weekly logbooks covering Prisma Cloud, RBAC/ABAC/MAC access models, cloud security, and bug bounty hunting.',
+        color: '#a78bfa',   // soft violet — security theme
+    },
+    {
         version: 'v3.0',
         status: 'Leadership',
         title: 'Class Representative',
         body: 'Elected liaison between students and faculty, coordinating academic communication and schedules.',
         color: '#6FD4FF',   // neon tech-blue
+    },
+    {
+        version: 'v2.5',
+        status: 'Experience',
+        title: 'Industrial Attachment — Machakos University ICT Department',
+        body: 'Network configuration, IT support, and FMS demonstrations across departmental systems. 3 weeks.',
+        color: '#D4A843',   // warm copper-gold
     },
     {
         version: 'v2.0',
