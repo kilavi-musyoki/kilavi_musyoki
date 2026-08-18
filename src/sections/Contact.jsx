@@ -100,12 +100,12 @@ const Contact = ({ isDark }) => {
 
     // Component-specific tokens (oscilloscope display)
     const sectionBg        = 'transparent';  // inherits obsidian base
-    const scopeBg          = isDark ? '#00070F'                        : '#2E3A42';
-    const scopeBorderColor = isDark ? 'rgba(75,216,160,0.28)'         : 'rgba(13,148,136,0.55)';
-    const scopeGridColor   = isDark ? 'rgba(75,216,160,0.06)'         : 'rgba(13,148,136,0.09)';
-    const scopeLabelColor  = isDark ? 'rgba(75,216,160,0.55)'         : 'rgba(13,148,136,0.7)';
-    const waveColor        = isDark ? '#4BD8A0'                       : '#0D9488';
-    const ecgColor         = isDark ? '#4BD8A0'                       : '#0D9488';
+    const scopeBg          = isDark ? '#00070F'                        : '#FDFBD4';
+    const scopeBorderColor = isDark ? 'rgba(75,216,160,0.28)'         : 'rgba(189,183,107,0.70)';
+    const scopeGridColor   = isDark ? 'rgba(75,216,160,0.06)'         : 'rgba(189,183,107,0.30)';
+    const scopeLabelColor  = isDark ? 'rgba(75,216,160,0.55)'         : 'rgba(100,80,30,0.65)';
+    const waveColor        = isDark ? '#4BD8A0'                       : '#CE8946';
+    const ecgColor         = isDark ? '#4BD8A0'                       : '#CE8946';
 
     // ── Idle/typing oscilloscope animation ────────────────────────────────────
     useEffect(() => {
@@ -390,7 +390,7 @@ const Contact = ({ isDark }) => {
                             height:        '100px',
                             position:      'relative',
                             maxWidth:      '100%',
-                            background:    status === 'sent' ? (isDark ? '#000f04' : '#2a3228') : scopeBg,
+                            background:    status === 'sent' ? (isDark ? '#000f04' : '#FFF8E0') : scopeBg,
                             border:        `2px solid ${status === 'sent' ? ecgColor + '88' : status === 'error' ? errorColor + '88' : scopeBorderColor}`,
                             borderRadius:  '8px',
                             overflow:      'hidden',

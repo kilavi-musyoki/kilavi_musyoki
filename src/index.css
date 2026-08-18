@@ -29,17 +29,17 @@
   --z-iris:      99990;  /* iris wipe transition           */
   --z-debug:     99999;  /* debug overlay HUD              */
 
-  /* Light mode palette — Clean Silicon */
-  --lm-bg:         #F8FAFC;   /* crisp slate-white */
-  --lm-bg-alt:     #F1F5F9;   /* slightly darker variant for cards */
-  --lm-bg-card:    rgba(255,255,255,0.7); /* glass card surface */
-  --lm-text:       #0F172A;   /* deep slate */
-  --lm-dim:        rgba(15,23,42,0.55);
-  --lm-accent:     #0D9488;   /* vibrant tech teal */
-  --lm-accent-alt: #0F766E;   /* deeper teal for hover */
-  --lm-glow:       rgba(13,148,136,0.35);
-  --lm-border:     rgba(148,163,184,0.45);
-  --lm-border-alt: rgba(148,163,184,0.25);
+  /* Light mode palette — Warm Parchment & Amber */
+  --lm-bg:         #FDFBD4;   /* warm cream parchment */
+  --lm-bg-alt:     #F5F0B8;   /* slightly darker cream for card surfaces */
+  --lm-bg-card:    rgba(255,251,210,0.72); /* warm glass card surface */
+  --lm-text:       #2C1F0A;   /* deep dark brown — anchors the palette */
+  --lm-dim:        rgba(100,80,30,0.75);
+  --lm-accent:     #CE8946;   /* burnt amber — primary interactive */
+  --lm-accent-alt: #B8722E;   /* deeper amber for hover states */
+  --lm-glow:       rgba(206,137,70,0.35);
+  --lm-border:     rgba(189,183,107,0.50);  /* dark khaki border */
+  --lm-border-alt: rgba(189,183,107,0.25);
 }
 
 /* ===== Base Reset ===== */
@@ -69,19 +69,19 @@ body {
   transition: background 0.7s ease, color 0.7s ease;
 }
 
-/* Light mode body — Clean Silicon palette */
+/* Light mode body — Warm Parchment & Amber palette */
 body.light-mode {
   background: var(--lm-bg);
   color: var(--lm-text);
   --pcb-green: var(--lm-accent);
-  --cap-cyan: #94A3B8;
+  --cap-cyan: #BDB76B;  /* dark khaki replaces neon cyan in light mode */
 
   /* Resolved token overrides */
-  --color-text:    #0F172A;
-  --color-accent:  #0D9488;
-  --color-dim:     rgba(15,23,42,0.55);
-  --color-border:  rgba(148,163,184,0.4);
-  --color-card-bg: rgba(255,255,255,0.7);
+  --color-text:    #2C1F0A;
+  --color-accent:  #CE8946;
+  --color-dim:     rgba(100,80,30,0.75);
+  --color-border:  rgba(189,183,107,0.50);
+  --color-card-bg: rgba(255,251,210,0.72);
 }
 
 /* ===== Noise Texture Overlay ===== */
@@ -151,7 +151,7 @@ body.light-mode .skip-link {
 }
 
 body.light-mode ::-webkit-scrollbar-track {
-  background: var(--lm-bg);
+  background: #F5F0B8;
 }
 body.light-mode ::-webkit-scrollbar-thumb {
   background: var(--lm-accent);
@@ -422,7 +422,7 @@ body.light-mode .pcb-card:hover {
 }
 
 body.light-mode .hud-input {
-  background: rgba(255,255,255,0.7);
+  background: rgba(255,251,210,0.80);
   border-color: var(--lm-border);
   color: var(--lm-text);
 }
@@ -430,10 +430,10 @@ body.light-mode .hud-input {
 body.light-mode .hud-input:focus {
   border-color: var(--lm-accent);
   box-shadow: 0 0 12px var(--lm-glow);
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,251,210,0.96);
 }
 body.light-mode .hud-input::placeholder {
-  color: rgba(28,34,38,0.36);
+  color: rgba(100,80,30,0.40);
 }
 
 /* ===== Tooltip ===== */
@@ -478,8 +478,8 @@ body.light-mode .changelog-entry {
   border-bottom: 1px solid rgba(75, 216, 160, 0.12);
 }
 body.light-mode .nav-glass {
-  background: rgba(232,234,231,0.88);
-  border-bottom-color: rgba(104,112,120,0.3);
+  background: rgba(253,247,190,0.90);
+  border-bottom-color: rgba(189,183,107,0.40);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -593,14 +593,29 @@ body.light-mode .datasheet-table td {
 }
 
 body.light-mode .oscilloscope-container {
-  background: #2E3A42;
-  border-color: rgba(13,148,136,0.55);
+  background: #2A1A08;
+  border-color: rgba(206,137,70,0.55);
+}
+
+/* ===== Light mode — section depth tints ===== */
+/* Alternating warm tint so sections aren't flat identical cream */
+body.light-mode #about {
+  background: linear-gradient(180deg, #FDFBD4 0%, #FBF5C8 100%);
+}
+body.light-mode #projects {
+  background: linear-gradient(180deg, #FBF5C8 0%, #FFF8E0 100%);
+}
+body.light-mode #milestones {
+  background: linear-gradient(180deg, #FFF8E0 0%, #FDFBD4 100%);
+}
+body.light-mode #contact {
+  background: linear-gradient(180deg, #FDFBD4 0%, #FBF5C8 100%);
 }
 
 body.light-mode .oscilloscope-grid {
   background-image:
-    linear-gradient(rgba(13,148,136,0.09) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(13,148,136,0.09) 1px, transparent 1px);
+    linear-gradient(rgba(206,137,70,0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(206,137,70,0.09) 1px, transparent 1px);
 }
 
 /* @keyframes levitate — canonical (no-rotation) definition is further below */
@@ -680,8 +695,8 @@ body.light-mode::before {
 
 /* Selection color */
 body.light-mode ::selection {
-  background: rgba(13,148,136,0.2);
-  color: var(--lm-accent);
+  background: rgba(212,175,55,0.28);
+  color: #B8722E;
 }
 
 /* Enhanced card shadow in light */
@@ -704,8 +719,8 @@ body.light-mode .pcb-card {
   display: block;
 }
 body.light-mode .lever-range-input {
-  background: rgba(28,34,38,0.1);
-  border-color: rgba(104,112,120,0.2);
+  background: rgba(189,183,107,0.18);
+  border-color: rgba(189,183,107,0.35);
 }
 .lever-range-input:active { cursor: grabbing; }
 
@@ -732,7 +747,7 @@ body.light-mode .lever-range-input {
 }
 
 body.light-mode .lever-range-input::-webkit-slider-thumb {
-  background: linear-gradient(140deg, #c0c4c0 0%, #909490 60%, #b0b4b0 100%);
+  background: linear-gradient(140deg, #CE8946 0%, #9E6030 60%, #B8722E 100%);
 }
 
 /* ===== Device Screen Glow ===== */
@@ -885,7 +900,7 @@ body.light-mode .hamburger-btn:hover {
   cursor: pointer;
 }
 body.light-mode .mobile-overlay {
-  background: rgba(28, 34, 38, 0.25);
+  background: rgba(44,31,10,0.22);
 }
 
 /* ===== Portrait Hub & Game Transition Styles ===== */

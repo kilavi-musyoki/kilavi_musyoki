@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import portraitImg from '../assets/portrait.jpg';
+import portraitImgDark  from '../assets/portrait.jpg';
+import portraitImgLight from '../assets/portrait_light.jpg';
 import { getTheme } from '../theme.js';
 import ComicBubble from './ComicBubble.jsx';
 
@@ -18,8 +19,8 @@ export default function PortraitHub({ onLaunchGame, hasPlayed = false, isDark = 
     return () => clearTimeout(timer);
   }, [hasPlayed]);
 
-  const cardBorder = isDark ? 'rgba(75, 216, 160, 0.35)' : 'rgba(13, 148, 136, 0.4)';
-  const cardBg = isDark ? 'rgba(10, 14, 20, 0.88)' : 'rgba(255, 255, 255, 0.88)';
+  const cardBorder = isDark ? 'rgba(75, 216, 160, 0.35)' : 'rgba(189,183,107,0.55)';
+  const cardBg = isDark ? 'rgba(10, 14, 20, 0.88)' : 'rgba(255,251,210,0.85)';
 
   return (
     <div className="portrait-hub-container">
@@ -80,7 +81,7 @@ export default function PortraitHub({ onLaunchGame, hasPlayed = false, isDark = 
           {/* Portrait Image Container */}
           <div className="portrait-image-wrapper">
             <img
-              src={portraitImg}
+              src={isDark ? portraitImgDark : portraitImgLight}
               alt="Kilavi Musyoki - Portrait"
               className="portrait-img"
               loading="eager"

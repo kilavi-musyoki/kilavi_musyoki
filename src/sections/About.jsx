@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import { getTheme } from '../theme.js';
 
 const SPECS = [
-  { name: 'Embedded Systems', value: 69 },
-  { name: 'Networking',       value: 80 },
-  { name: 'Digital Logic',    value: 95 },
-  { name: 'Software Dev',     value: 78 },
-  { name: 'System Design',    value: 71 },
-  { name: 'Cybersecurity',    value: 50 },
+  { name: 'Embedded Systems', value: 69, color: '#CE8946' },
+  { name: 'Networking',       value: 80, color: '#D4AF37' },
+  { name: 'Digital Logic',    value: 95, color: '#BDB76B' },
+  { name: 'Software Dev',     value: 78, color: '#CE8946' },
+  { name: 'System Design',    value: 71, color: '#D4AF37' },
+  { name: 'Cybersecurity',    value: 50, color: '#B8722E' },
 ];
 
 const About = ({ isDark }) => {
@@ -198,7 +198,7 @@ const About = ({ isDark }) => {
                       transition={{ duration: 1 }}
                       style={{
                         height: '100%',
-                        background: accentColor,
+                        background: isDark ? accentColor : spec.color,
                         opacity: 0.85,
                       }}
                     />
@@ -222,7 +222,9 @@ const About = ({ isDark }) => {
           {/* Bottom accent strip */}
           <div style={{
             height: '4px',
-            background: `linear-gradient(90deg, transparent, ${textColor}, transparent)`,
+            background: isDark
+              ? `linear-gradient(90deg, transparent, ${textColor}, transparent)`
+              : 'linear-gradient(90deg, #D4AF37, #CE8946, #BDB76B, #B8722E, #D4AF37)',
           }} />
         </div>
 

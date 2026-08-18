@@ -58,21 +58,24 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
     // Component-specific tokens
     const tagBorder      = isDark ? 'rgba(75,216,160,0.35)'   : 'rgba(104,112,120,0.4)';
     const tagBg          = isDark ? 'rgba(75,216,160,0.07)'   : 'rgba(255,255,255,0.35)';
-    const statusBg       = isDark ? 'rgba(10,12,16,0.55)'     : 'rgba(255,255,255,0.25)';
-    const statusBorder   = isDark ? 'rgba(75,216,160,0.18)'   : 'rgba(104,112,120,0.25)';
-    const progressTrack  = isDark ? 'rgba(75,216,160,0.15)'   : 'rgba(13,148,136,0.15)';
+    const statusBg       = isDark ? 'rgba(10,12,16,0.55)'     : 'rgba(253,247,190,0.70)';
+    const statusBorder   = isDark ? 'rgba(75,216,160,0.18)'   : 'rgba(189,183,107,0.45)';
+    const progressTrack  = isDark ? 'rgba(75,216,160,0.15)'   : 'rgba(189,183,107,0.25)';
     const progressFill   = isDark
         ? 'linear-gradient(90deg,#4BD8A0,#6FD4FF)'
-        : 'linear-gradient(90deg,#0D9488,#D4A843)';
-    const terminalBg     = isDark ? '#04060A'                 : '#E8EAE7';
-    const terminalBorder = isDark ? 'rgba(75,216,160,0.3)'    : 'rgba(13,148,136,0.35)';
-    const terminalLabel  = isDark ? 'rgba(75,216,160,0.5)'    : 'rgba(13,148,136,0.6)';
+        : 'linear-gradient(90deg,#D4AF37,#CE8946,#BDB76B)';
+    const terminalBg     = isDark ? '#04060A'                 : '#FDF8E0';
+    const terminalBorder = isDark ? 'rgba(75,216,160,0.3)'    : 'rgba(189,183,107,0.50)';
+    const terminalLabel  = isDark ? 'rgba(75,216,160,0.5)'    : 'rgba(100,80,30,0.55)';
+
+    // Per-tag colors in light mode — cycles through the palette
+    const TAG_COLORS_LIGHT = ['#CE8946','#D4AF37','#BDB76B','#CE8946','#B8722E','#D4AF37'];
 
     const lineColors = {
         0: dimColor,
-        1: isDark ? '#b0ffcc' : accentColor,
-        2: isDark ? '#D4A843' : accentColor,
-        3: isDark ? 'rgba(163,184,204,0.75)' : 'rgba(104,112,120,0.6)',
+        1: isDark ? '#b0ffcc' : '#CE8946',
+        2: isDark ? '#D4A843' : '#D4AF37',
+        3: isDark ? 'rgba(163,184,204,0.75)' : 'rgba(100,80,30,0.55)',
         4: textColor,
     };
 
@@ -250,17 +253,22 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
 
                             {/* Tags */}
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '2rem' }}>
-                                {['Embedded Systems','Cybersecurity', 'RF Engineering', 'IoT', 'Networking', 'PCB Design'].map((tag) => (
-                                    <span key={tag} style={{
-                                        fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6rem',
-                                        padding: '3px 10px',
-                                        border: `1px solid ${tagBorder}`,
-                                        borderRadius: '2px', color: accentColor, background: tagBg,
-                                        letterSpacing: '0.05em',
-                                    }}>
-                                        {tag}
-                                    </span>
-                                ))}
+                                {['Embedded Systems','Cybersecurity', 'RF Engineering', 'IoT', 'Networking', 'PCB Design'].map((tag, i) => {
+                                    const tagColor = isDark ? accentColor : TAG_COLORS_LIGHT[i % TAG_COLORS_LIGHT.length];
+                                    return (
+                                        <span key={tag} style={{
+                                            fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6rem',
+                                            padding: '3px 10px',
+                                            border: `1px solid ${tagColor}55`,
+                                            borderRadius: '2px',
+                                            color: tagColor,
+                                            background: `${tagColor}12`,
+                                            letterSpacing: '0.05em',
+                                        }}>
+                                            {tag}
+                                        </span>
+                                    );
+                                })}
                             </div>
 
                             {/* System status */}
@@ -284,33 +292,41 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                             </div>
 
                             {/* Stats strip */}
-                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: isMobile ? '1rem 0.5rem' : '0.5rem', marginBottom: '2rem' }}>
-                                {[
-                                    { val: '1000+', label: 'Hours Building'   },
-                                    { val: '10+',   label: 'Projects'         },
-                                    { val: '4+',    label: 'Systems Designed' },
-                                    { val: 'Daily', label: 'Learning Rate'    },
-                                    { val: '∞',     label: 'Problems Left'    },
-                                ].map((stat) => (
-                                    <div key={stat.label} style={{ textAlign: 'center', padding: '0.4rem 0' }}>
-                                        <div style={{
-                                            fontFamily: 'Syne, sans-serif', fontWeight: 700,
-                                            fontSize: 'clamp(1.1rem, 3.5vw, 1.6rem)',
-                                            color: accentColor, lineHeight: 1,
-                                        }}>
-                                            {stat.val}
-                                        </div>
-                                        <div style={{
-                                            fontFamily: 'JetBrains Mono, monospace',
-                                            fontSize: 'clamp(0.45rem, 2vw, 0.6rem)',
-                                            color: dimColor, marginTop: '3px',
-                                            letterSpacing: '0.04em', textTransform: 'uppercase',
-                                        }}>
-                                            {stat.label}
-                                        </div>
+                            {(() => {
+                                const STAT_COLORS_LIGHT = ['#D4AF37','#CE8946','#BDB76B','#B8722E','#D4AF37'];
+                                return (
+                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: isMobile ? '1rem 0.5rem' : '0.5rem', marginBottom: '2rem' }}>
+                                        {[
+                                            { val: '1000+', label: 'Hours Building'   },
+                                            { val: '10+',   label: 'Projects'         },
+                                            { val: '4+',    label: 'Systems Designed' },
+                                            { val: 'Daily', label: 'Learning Rate'    },
+                                            { val: '∞',     label: 'Problems Left'    },
+                                        ].map((stat, i) => {
+                                            const statColor = isDark ? accentColor : STAT_COLORS_LIGHT[i];
+                                            return (
+                                                <div key={stat.label} style={{ textAlign: 'center', padding: '0.4rem 0' }}>
+                                                    <div style={{
+                                                        fontFamily: 'Syne, sans-serif', fontWeight: 700,
+                                                        fontSize: 'clamp(1.1rem, 3.5vw, 1.6rem)',
+                                                        color: statColor, lineHeight: 1,
+                                                    }}>
+                                                        {stat.val}
+                                                    </div>
+                                                    <div style={{
+                                                        fontFamily: 'JetBrains Mono, monospace',
+                                                        fontSize: 'clamp(0.45rem, 2vw, 0.6rem)',
+                                                        color: dimColor, marginTop: '3px',
+                                                        letterSpacing: '0.04em', textTransform: 'uppercase',
+                                                    }}>
+                                                        {stat.label}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                ))}
-                            </div>
+                                );
+                            })()}
 
                             {/* CTA */}
                             <a
