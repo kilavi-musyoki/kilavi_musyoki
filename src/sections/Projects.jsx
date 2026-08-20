@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getTheme } from '../theme.js';
 
-// Responsive hook — shared pattern used in Contact.jsx
+// ── Responsive width hook ─────────────────────────────────────────────────────
 const useWindowWidth = () => {
     const [width, setWidth] = useState(
         () => (typeof window !== 'undefined' ? window.innerWidth : 1024)
     );
-    React.useEffect(() => {
+    useEffect(() => {
         const handler = () => setWidth(window.innerWidth);
         window.addEventListener('resize', handler, { passive: true });
         return () => window.removeEventListener('resize', handler);
@@ -15,6 +15,19 @@ const useWindowWidth = () => {
     return width;
 };
 
+// ── Category definitions ──────────────────────────────────────────────────────
+const CATEGORIES = [
+    { id: 'all',   label: 'All',                emoji: '◈',  short: 'All' },
+    { id: 'cyber', label: 'Cybersecurity',       emoji: '🔐', short: 'Security' },
+    { id: 'iot',   label: 'IoT & Embedded',      emoji: '🌐', short: 'IoT' },
+    { id: 'rf',    label: 'RF & Telecom',        emoji: '📡', short: 'RF' },
+    { id: 'sw',    label: 'Software & IS',       emoji: '💻', short: 'Software' },
+    { id: 'elec',  label: 'Digital Electronics', emoji: '⚡', short: 'Electronics' },
+];
+
+const PROJECTS_PER_PAGE = 6;
+
+// ── Project data ──────────────────────────────────────────────────────────────
 const PROJECTS = [
     {
         id: 'p1',
@@ -30,8 +43,9 @@ const PROJECTS = [
         lessons:
             'Separating voter identity from vote data was essential for anonymity while still preventing double voting. Implementing a cryptographic hash chain provided an auditable vote sequence but required careful transaction handling to maintain consistency. Strict TypeScript typing across frontend and backend significantly reduced runtime errors during development.',
         stack: ['React', 'TypeScript', 'Node.js / Express', 'PostgreSQL', 'Prisma ORM', 'JWT Authentication', 'Tailwind CSS', 'Docker'],
-        color: '#4BD8A0',  // cyber mint
+        color: '#4BD8A0',
         icon: '🗳️',
+        category: 'cyber',
         repo: 'https://github.com/kilavi-musyoki/voting-website.git',
     },
     {
@@ -44,8 +58,9 @@ const PROJECTS = [
         outcome: 'Average alert latency under 1.5 seconds from sensor threshold breach to admin notification. Validated across 4 independent zones with 100% detection rate during controlled smoke tests.',
         lessons: 'Wi-Fi reconnection on ESP32 requires a carefully tuned watchdog — naive reconnect loops stall the sensor-read task entirely. FreeRTOS separate tasks eliminated all lockups. MQ-2 sensor warm-up delays are critical for accuracy.',
         stack: ['ESP32 (C++)', 'FreeRTOS', 'MQ-2 / DHT22', 'MQTT / Mosquitto', 'Node-RED', 'Telegram Bot API'],
-        color: '#FF5A3C',  // alert red — fire theme
+        color: '#FF5A3C',
         icon: '🔥',
+        category: 'iot',
         repo: null,
     },
     {
@@ -58,8 +73,9 @@ const PROJECTS = [
         outcome: 'Verified functional correctness across all 1,440 daily minute-states. All edge cases handled without glitching or invalid BCD output.',
         lessons: "Midnight/noon conversions require separate comparator branches — one threshold comparator can't differentiate both. BCD addition overflow must be corrected explicitly; binary adders produce values above 9 without a correction stage.",
         stack: ['Logisim Evolution', 'BCD Logic', 'Combinational Circuits', 'Flip-Flops', 'Comparators', 'MUX/DEMUX'],
-        color: '#D4A843',  // copper-gold
+        color: '#D4A843',
         icon: '🕐',
+        category: 'elec',
         repo: 'https://github.com/kilavi-musyoki/digital-clock-with-logism.git',
     },
     {
@@ -72,8 +88,9 @@ const PROJECTS = [
         outcome: 'Full hardware-software integration across 5 sensor types and 3 actuator subsystems. Sub-200ms response to motion and light changes. Presented as final hardware project to engineering faculty.',
         lessons: 'Polling all sensors in a tight loop introduced 400ms lag. Restructuring into interrupt-driven reads with cooperative scheduler reduced latency to under 200ms and eliminated missed sensor events.',
         stack: ['AVR Microcontroller (C)', 'PIR Sensor', 'LDR', 'DHT22', 'DS3231 RTC', '16×2 LCD', 'Servo', 'Relay'],
-        color: '#6FD4FF',  // neon tech-blue
+        color: '#6FD4FF',
         icon: '🏠',
+        category: 'iot',
         repo: null,
     },
     {
@@ -86,8 +103,9 @@ const PROJECTS = [
         outcome: 'Fully functional offline notes app with hardware-backed encryption, per-note locking, multi-select bulk actions, auto-save, crash recovery, and a 30-day soft-delete trash system. All security layers operate without any network dependency.',
         lessons: 'Note-level locking required careful separation between the biometric prompt lifecycle and Compose recomposition — tightly coupling them caused the auth dialog to dismiss unexpectedly on rotation. Android Keystore key invalidation on biometric enrollment changes also needed explicit handling to avoid silent decryption failures.',
         stack: ['Kotlin', 'Jetpack Compose', 'Material 3', 'Room / SQLite', 'AES-256-GCM', 'Android Keystore', 'AndroidX Biometric', 'Kotlin Coroutines'],
-        color: '#a78bfa',  // soft violet / security theme
+        color: '#a78bfa',
         icon: '🔐',
+        category: 'cyber',
         repo: 'https://github.com/kilavi-musyoki/notes-app.git',
     },
     {
@@ -95,11 +113,12 @@ const PROJECTS = [
         number: '06',
         title: 'CyberPath — OWASP Top 10 Lab Platform',
         subtitle: 'Hands-on OWASP Top 10 labs the user works through themselves, step by step',
-        problem: 'Most security-awareness material for the OWASP Top 10 is read-only — a slide deck or article that explains a vulnerability class without letting anyone actually trigger and fix it. Retention is low because there\'s nothing to do. A platform was needed where the learner performs the exploit and the fix, not just reads about them.',
+        problem: "Most security-awareness material for the OWASP Top 10 is read-only — a slide deck or article that explains a vulnerability class without letting anyone actually trigger and fix it. Retention is low because there's nothing to do. A platform was needed where the learner performs the exploit and the fix, not just reads about them.",
         outcome: 'Delivered an interactive learning platform where users work through the OWASP Top 10 via hands-on labs and step-by-step guidance — each vulnerability class becomes an exercise the learner actively completes, not a page they scroll past. Progress is tracked per user through a Google Apps Script backend as a lightweight SCORM alternative. Deployed on Vercel.',
         stack: ['React 18', 'TypeScript', 'Vite', 'Google Apps Script', 'Vercel'],
-        color: '#4BD8A0',  // cyber mint — security/learning theme
+        color: '#4BD8A0',
         icon: '🛡️',
+        category: 'cyber',
         repo: null,
     },
     {
@@ -110,8 +129,9 @@ const PROJECTS = [
         problem: 'A complex load impedance mismatched to a 50Ω transmission line causes reflection loss and reduced power transfer at RF frequencies. A matching network was required to bring the load to resonance at 2GHz.',
         outcome: 'Derived the single-stub shunt matching solution analytically, then verified stub length and position graphically using the Smith chart — cross-checking closed-form calculation against graphical RF design method.',
         stack: ['Smith Chart', 'RF/Microwave Theory', 'Transmission Line Analysis'],
-        color: '#D4A843',  // copper-gold — RF/antenna theme
+        color: '#D4A843',
         icon: '📻',
+        category: 'rf',
         repo: null,
     },
     {
@@ -122,8 +142,9 @@ const PROJECTS = [
         problem: 'Microstrip trace geometry directly determines characteristic impedance and signal integrity at RF frequencies, and that relationship shifts with substrate material. A comparative simulation was needed to see how dielectric choice changes the design.',
         outcome: 'Designed and simulated 50Ω microstrip transmission lines using Keysight ADS Momentum EM across two substrates — standard FR-4 and RF-grade Rogers RO4003C — comparing electromagnetic behavior and loss characteristics between them.',
         stack: ['Keysight ADS', 'Momentum EM', 'RF Simulation'],
-        color: '#a3b8cc',  // steel blue-gray
+        color: '#a3b8cc',
         icon: '📡',
+        category: 'rf',
         repo: null,
     },
     {
@@ -131,11 +152,12 @@ const PROJECTS = [
         number: '09',
         title: 'UniDMS — University Document Management System',
         subtitle: 'Departmental document routing with versioning, audit trails, and digital signatures',
-        problem: 'University departments routinely pass documents for approval through email threads and physical signatures, with no version history, no audit trail, and no way to verify a signature wasn\'t forged. A structured routing system was needed.',
+        problem: "University departments routinely pass documents for approval through email threads and physical signatures, with no version history, no audit trail, and no way to verify a signature wasn't forged. A structured routing system was needed.",
         outcome: 'Delivered a document management system with departmental inboxes, version control, full audit trails, and digital signature support, wrapped in a Tauri/Rust desktop shell — evolved from an earlier full-stack prototype (SFMS) built on React/TypeScript, Express, Prisma, and PostgreSQL.',
         stack: ['Tauri', 'Rust', 'React', 'TypeScript', 'Express', 'Prisma', 'PostgreSQL', 'Redis'],
-        color: '#a78bfa',  // soft violet — security/document theme
+        color: '#a78bfa',
         icon: '📋',
+        category: 'sw',
         repo: null,
     },
     {
@@ -146,13 +168,14 @@ const PROJECTS = [
         problem: 'University administrative data — students, courses, faculty, enrollment — needs relational structure to stay consistent, but end users need a usable interface rather than raw SQL access.',
         outcome: 'Designed a relational university database in Oracle 21c with normalized entity relationships and full CRUD support, then built a Python Tkinter desktop interface so non-technical users can query and manage records directly.',
         stack: ['Oracle 21c', 'SQL', 'Python', 'Tkinter'],
-        color: '#6FD4FF',  // neon tech-blue — data/admin theme
+        color: '#6FD4FF',
         icon: '🎓',
+        category: 'sw',
         repo: null,
     },
-    
 ];
 
+// ── Repo link ─────────────────────────────────────────────────────────────────
 const RepoLink = ({ url, color }) => {
     if (!url) return null;
     return (
@@ -194,14 +217,14 @@ const RepoLink = ({ url, color }) => {
     );
 };
 
+// ── Project card ──────────────────────────────────────────────────────────────
 const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
     const t         = getTheme(isDark);
     const textColor = t.textColor;
     const dimColor  = t.dimColor;
-    const isMobile  = window.innerWidth < 640;
+    const windowWidth = useWindowWidth();
+    const isMobile  = windowWidth < 640;
 
-    // In light mode, project.color values are dark (e.g. #394139) — use a
-    // consistent warm card style instead of deriving from those dark colors.
     const borderColor = isDark
         ? `${project.color}${isExpanded ? '55' : '22'}`
         : isExpanded ? 'rgba(13,148,136,0.55)' : 'rgba(104,112,120,0.35)';
@@ -215,10 +238,10 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
     return (
         <motion.div
             layout
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.35 }}
             className="pcb-card"
             data-cursor={isExpanded ? 'project-collapse' : 'project-expand'}
             data-cursor-color={moduleColor}
@@ -229,7 +252,7 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
                 overflow: 'hidden',
                 cursor: 'pointer',
                 boxShadow: isExpanded ? `0 0 24px ${moduleColor}22` : 'none',
-                transition: 'all 0.3s ease',
+                transition: 'border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease',
             }}
             onClick={onToggle}
         >
@@ -349,15 +372,239 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
     );
 };
 
+// ── Category filter bar ───────────────────────────────────────────────────────
+const CategoryFilter = ({ active, onChange, isDark, counts }) => {
+    const windowWidth = useWindowWidth();
+    const isNarrow = windowWidth < 700;
+
+    return (
+        <div
+            role="tablist"
+            aria-label="Project categories"
+            style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '8px',
+                marginBottom: '1.25rem',
+            }}
+        >
+            {CATEGORIES.map((cat) => {
+                const isActive = active === cat.id;
+                const accent = isDark ? '#4BD8A0' : '#CE8946';
+                return (
+                    <button
+                        key={cat.id}
+                        role="tab"
+                        aria-selected={isActive}
+                        onClick={() => onChange(cat.id)}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontFamily: 'JetBrains Mono',
+                            fontSize: '0.62rem',
+                            letterSpacing: '0.07em',
+                            padding: '6px 14px',
+                            borderRadius: '2px',
+                            border: isActive
+                                ? `1px solid ${accent}88`
+                                : `1px solid ${isDark ? 'rgba(75,216,160,0.15)' : 'rgba(189,183,107,0.40)'}`,
+                            background: isActive ? `${accent}18` : 'transparent',
+                            color: isActive
+                                ? accent
+                                : (isDark ? 'rgba(206,212,222,0.55)' : 'rgba(100,80,30,0.65)'),
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            outline: 'none',
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isActive) {
+                                e.currentTarget.style.borderColor = `${accent}44`;
+                                e.currentTarget.style.color = isDark ? '#CED4DE' : '#2C1F0A';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!isActive) {
+                                e.currentTarget.style.borderColor = isDark
+                                    ? 'rgba(75,216,160,0.15)'
+                                    : 'rgba(189,183,107,0.40)';
+                                e.currentTarget.style.color = isDark
+                                    ? 'rgba(206,212,222,0.55)'
+                                    : 'rgba(100,80,30,0.65)';
+                            }
+                        }}
+                    >
+                        <span style={{ fontSize: '0.75rem' }}>{cat.emoji}</span>
+                        {isNarrow ? cat.short : cat.label}
+                        <span style={{
+                            fontSize: '0.55rem',
+                            opacity: 0.7,
+                            background: isActive ? `${accent}22` : 'transparent',
+                            border: `1px solid ${isActive ? accent + '33' : 'transparent'}`,
+                            borderRadius: '2px',
+                            padding: '1px 5px',
+                            minWidth: '18px',
+                            textAlign: 'center',
+                        }}>
+                            {counts[cat.id] ?? 0}
+                        </span>
+                    </button>
+                );
+            })}
+        </div>
+    );
+};
+
+// ── Pagination bar ────────────────────────────────────────────────────────────
+const Pagination = ({ currentPage, totalPages, onPageChange, isDark }) => {
+    if (totalPages <= 1) return null;
+    const accent = isDark ? '#4BD8A0' : '#CE8946';
+    const dim    = isDark ? 'rgba(206,212,222,0.45)' : 'rgba(100,80,30,0.55)';
+
+    const btnBase = {
+        fontFamily: 'JetBrains Mono',
+        fontSize: '0.62rem',
+        letterSpacing: '0.06em',
+        border: `1px solid ${isDark ? 'rgba(75,216,160,0.18)' : 'rgba(189,183,107,0.40)'}`,
+        borderRadius: '2px',
+        background: 'transparent',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: '32px',
+        height: '32px',
+        padding: '0 8px',
+    };
+
+    return (
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            marginTop: '2rem',
+            paddingTop: '1.5rem',
+            borderTop: `1px solid ${isDark ? 'rgba(75,216,160,0.10)' : 'rgba(189,183,107,0.25)'}`,
+        }}>
+            {/* Prev */}
+            <button
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                    ...btnBase,
+                    color: currentPage === 1 ? dim : accent,
+                    opacity: currentPage === 1 ? 0.4 : 1,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    borderColor: currentPage === 1
+                        ? (isDark ? 'rgba(75,216,160,0.08)' : 'rgba(189,183,107,0.20)')
+                        : (isDark ? 'rgba(75,216,160,0.18)' : 'rgba(189,183,107,0.40)'),
+                }}
+            >
+                ← PREV
+            </button>
+
+            {/* Page numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                    key={page}
+                    onClick={() => onPageChange(page)}
+                    aria-current={page === currentPage ? 'page' : undefined}
+                    style={{
+                        ...btnBase,
+                        color: page === currentPage ? accent : dim,
+                        background: page === currentPage ? `${accent}14` : 'transparent',
+                        borderColor: page === currentPage
+                            ? `${accent}55`
+                            : (isDark ? 'rgba(75,216,160,0.18)' : 'rgba(189,183,107,0.40)'),
+                        fontWeight: page === currentPage ? 700 : 400,
+                    }}
+                >
+                    {String(page).padStart(2, '0')}
+                </button>
+            ))}
+
+            {/* Next */}
+            <button
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                    ...btnBase,
+                    color: currentPage === totalPages ? dim : accent,
+                    opacity: currentPage === totalPages ? 0.4 : 1,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    borderColor: currentPage === totalPages
+                        ? (isDark ? 'rgba(75,216,160,0.08)' : 'rgba(189,183,107,0.20)')
+                        : (isDark ? 'rgba(75,216,160,0.18)' : 'rgba(189,183,107,0.40)'),
+                }}
+            >
+                NEXT →
+            </button>
+
+            {/* Page info */}
+            <span style={{
+                fontFamily: 'JetBrains Mono',
+                fontSize: '0.55rem',
+                color: dim,
+                marginLeft: '8px',
+                letterSpacing: '0.06em',
+            }}>
+                {currentPage}/{totalPages}
+            </span>
+        </div>
+    );
+};
+
+// ── Main Projects section ─────────────────────────────────────────────────────
 const Projects = ({ isDark }) => {
-    const [expandedId, setExpandedId] = useState(null);
+    const [expandedId,     setExpandedId]     = useState(null);
+    const [activeCategory, setActiveCategory] = useState('all');
+    const [currentPage,    setCurrentPage]    = useState(1);
+
     const t         = getTheme(isDark);
     const textColor = t.textColor;
     const dimColor  = t.dimColor;
 
+    // Category counts (computed once — PROJECTS list is static)
+    const counts = useMemo(() => {
+        const c = { all: PROJECTS.length };
+        CATEGORIES.forEach(cat => {
+            if (cat.id !== 'all') c[cat.id] = PROJECTS.filter(p => p.category === cat.id).length;
+        });
+        return c;
+    }, []);
+
+    // Filtered list
+    const filtered = useMemo(() => {
+        if (activeCategory === 'all') return PROJECTS;
+        return PROJECTS.filter(p => p.category === activeCategory);
+    }, [activeCategory]);
+
+    const totalPages = Math.ceil(filtered.length / PROJECTS_PER_PAGE);
+
+    // Current page slice
+    const paginated = useMemo(() => {
+        const start = (currentPage - 1) * PROJECTS_PER_PAGE;
+        return filtered.slice(start, start + PROJECTS_PER_PAGE);
+    }, [filtered, currentPage]);
+
+    const handleCategoryChange = (cat) => {
+        setActiveCategory(cat);
+        setCurrentPage(1);
+        setExpandedId(null);
+    };
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        setExpandedId(null);
+    };
+
     return (
         <section id="projects" className="section-base" data-debug="projects-section">
             <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+
+                {/* ── Section header ── */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -370,22 +617,84 @@ const Projects = ({ isDark }) => {
                     <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: textColor, marginBottom: '0.5rem' }}>
                         Selected Projects
                     </h2>
-                    <p style={{ fontFamily: 'JetBrains Mono', fontSize: '0.75rem', color: dimColor, marginBottom: '3rem', maxWidth: '500px' }}>
+                    <p style={{ fontFamily: 'JetBrains Mono', fontSize: '0.75rem', color: dimColor, marginBottom: '2.5rem', maxWidth: '500px' }}>
                         Each module represents a complete engineering challenge — click to expand the datasheet.
                     </p>
                 </motion.div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {PROJECTS.map((project) => (
-                        <ProjectCard
-                            key={project.id}
-                            project={project}
-                            isDark={isDark}
-                            isExpanded={expandedId === project.id}
-                            onToggle={() => setExpandedId(expandedId === project.id ? null : project.id)}
-                        />
-                    ))}
+                {/* ── Category filter ── */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                    <CategoryFilter
+                        active={activeCategory}
+                        onChange={handleCategoryChange}
+                        isDark={isDark}
+                        counts={counts}
+                    />
+                </motion.div>
+
+                {/* ── Result metadata line ── */}
+                <div style={{
+                    fontFamily: 'JetBrains Mono',
+                    fontSize: '0.58rem',
+                    color: dimColor,
+                    letterSpacing: '0.08em',
+                    marginBottom: '1rem',
+                    opacity: 0.65,
+                }}>
+                    {'// '}
+                    {filtered.length === PROJECTS.length
+                        ? `showing all ${PROJECTS.length} modules`
+                        : `${filtered.length} module${filtered.length !== 1 ? 's' : ''} · ${CATEGORIES.find(c => c.id === activeCategory)?.label}`}
+                    {totalPages > 1 ? ` · page ${currentPage} of ${totalPages}` : ''}
                 </div>
+
+                {/* ── Cards grid with filter/page transition ── */}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={`${activeCategory}-${currentPage}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.18 }}
+                        style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+                    >
+                        {paginated.length > 0 ? (
+                            paginated.map((project) => (
+                                <ProjectCard
+                                    key={project.id}
+                                    project={project}
+                                    isDark={isDark}
+                                    isExpanded={expandedId === project.id}
+                                    onToggle={() => setExpandedId(expandedId === project.id ? null : project.id)}
+                                />
+                            ))
+                        ) : (
+                            <div style={{
+                                fontFamily: 'JetBrains Mono',
+                                fontSize: '0.75rem',
+                                color: dimColor,
+                                padding: '3rem 0',
+                                textAlign: 'center',
+                                letterSpacing: '0.06em',
+                            }}>
+                                // no modules in this category
+                            </div>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* ── Pagination ── */}
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    isDark={isDark}
+                />
             </div>
         </section>
     );
