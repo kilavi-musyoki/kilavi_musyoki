@@ -173,6 +173,21 @@ const PROJECTS = [
         category: 'sw',
         repo: null,
     },
+    {
+        id: 'p11',
+        number: '11',
+        title: 'Silicon Soul — Personal Portfolio v4',
+        subtitle: 'Hardware diagnostic interface disguised as a personal website',
+        problem: "Most developer portfolios are static pages or template clones that say nothing about how the person actually thinks or builds. The goal was to design a portfolio that is itself a demonstration — a living interface that embodies the engineering discipline behind it, without relying on pre-built UI kits or templates.",
+        approach: 'Designed and built from scratch in React 19 with Vite. The site opens with a boot sequence terminal, then reveals a 7-layer deconstructable SVG PCB board that reacts to scroll position and cursor movement via GSAP + Framer Motion. A custom cybernetic context-aware cursor reads data attributes from DOM elements to change shape and color. An idle pixel character walks the viewport edge. A full dark/light theme system with iris-wipe transition and localStorage persistence covers every token across all five sections. The contact form integrates EmailJS with a Cloudflare Turnstile CAPTCHA and a Vercel serverless Nodemailer fallback. An oscilloscope waveform responds in real time to typing activity. A debug easter egg (type "debug") exposes FPS, heap, and component bounds.',
+        outcome: 'A production-deployed portfolio site that passes Lighthouse with no accessibility warnings, serves under Vercel with hardened security headers (CSP, HSTS, X-Frame-Options, Permissions-Policy), and delivers a sub-3s first contentful paint. Every interactive surface — nav, cards, contact form, cursor, PCB board — is authored without a UI component library.',
+        lessons: 'Framer Motion layout animations and AnimatePresence conflict with direct DOM manipulation (GSAP scroll triggers) — they must be carefully separated by layer to avoid competing transform origins. Cloudflare Turnstile token lifecycle requires explicit reset on form re-submission, otherwise the widget silently returns a stale token. CSS backdrop-filter on overlapping elements in Safari requires explicit -webkit- prefixing and a non-transparent background to take effect.',
+        stack: ['React 19', 'Vite 7', 'Framer Motion', 'GSAP', 'Tailwind CSS v4', 'EmailJS', 'Cloudflare Turnstile', 'Vercel Serverless', 'Nodemailer', 'JetBrains Mono', 'Syne'],
+        color: '#4BD8A0',
+        icon: '🖥️',
+        category: 'sw',
+        repo: 'https://github.com/kilavi-musyoki/portfoliov4.git',
+    },
 ];
 
 // ── Repo link ─────────────────────────────────────────────────────────────────
