@@ -201,7 +201,7 @@ const PROJECTS = [
         color: '#FF5A3C',
         icon: '🏘️',
         category: 'sw',
-        repo: null,
+        repo: 'https://github.com/kilavi-musyoki/house-search.git',
     },
 ];
 
