@@ -21,7 +21,7 @@ const CHANGELOG = [
         version: 'v3.5',
         status: 'Experience',
         title: 'Industrial Attachment — M-Pesa Africa (Cybersecurity)',
-        body: '8 weeks in M-Pesa\'s cybersecurity department, working across IAM, cloud security, and offensive security tooling and also covering Prisma Cloud, RBAC/ABAC/MAC access models, cloud security, and bug bounty hunting.',
+        body: '12 weeks in M-Pesa\'s cybersecurity department, working across IAM, cloud security, and offensive security tooling and also covering Prisma Cloud, RBAC/ABAC/MAC access models, cloud security, and bug bounty hunting.',
         color: '#a78bfa',   // soft violet — security theme
     },
     {
