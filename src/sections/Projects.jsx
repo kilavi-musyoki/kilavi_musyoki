@@ -188,6 +188,21 @@ const PROJECTS = [
         category: 'sw',
         repo: 'https://github.com/kilavi-musyoki/portfoliov4.git',
     },
+    {
+        id: 'p12',
+        number: '12',
+        title: 'KejaMatch — Lead Full-Stack Engineer',
+        subtitle: 'Trust-first rental discovery monorepo with M-Pesa STK push & TrueCost engine',
+        problem: 'Off-campus student housing in Nyeri County & DeKUT is plagued by phantom listings, hidden move-in fees, stale rental availability, and deposit scams. A trust-first platform was needed to guarantee listing freshness, provide transparent move-in fee breakdowns, verify landlords, and protect students with automated community safety mechanisms.',
+        approach: 'Architected a high-performance monorepo using Turborepo with Next.js 15 App Router on the frontend and NestJS with Prisma ORM and PostgreSQL on the backend. Integrated Safaricom M-Pesa Daraja API for STK push payments, built an automated 7-day SMS listing freshness lifecycle, implemented multi-tier landlord verification workflows, and developed an offline-first PWA service worker with local caching.',
+        outcome: 'Architected and delivered a trust-first property discovery monorepo featuring an automated 7-day SMS listing freshness lifecycle, multi-tier landlord verification, and M-Pesa STK push integration. Designed a deterministic TrueCost engine providing move-in cost breakdowns with certainty tagging, reducing hidden rental fees to zero. Implemented community safety mechanisms including multi-category scam reporting with automated quarantine at ≥3 reports and an offline-first PWA service worker.',
+        lessons: 'Maintaining listing freshness without overburdening landlords required an automated SMS-based heartbeat verification lifecycle. Eliminating hidden rental costs required building a deterministic engine that tags fees with explicit certainty levels rather than relying on unstructured text descriptions. Designing scam quarantine thresholds at ≥3 reports prevented malicious spam while protecting legitimate listings.',
+        stack: ['TypeScript', 'Next.js 15', 'NestJS', 'Prisma', 'PostgreSQL', 'M-Pesa Daraja API', 'Turborepo', 'PWA'],
+        color: '#FF5A3C',
+        icon: '🏘️',
+        category: 'sw',
+        repo: null,
+    },
 ];
 
 // ── Repo link ─────────────────────────────────────────────────────────────────
