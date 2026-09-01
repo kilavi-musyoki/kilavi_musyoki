@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import portraitImgDark  from '../assets/portrait.jpg';
-import portraitImgLight from '../assets/portrait_light.jpg';
+import portraitImgDark  from '../assets/portrait-BRfKyegG.jpeg';
+import portraitImgLight from '../assets/portrait-BRfKyegG.jpeg';
 import { getTheme } from '../theme.js';
 import ComicBubble from './ComicBubble.jsx';
 
