@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import portraitImg from '../assets/portrait-BRfKyegG.jpg';
+import portrait from '../assets/portrait.jpg';
+import portraitlight from '../assets/portraitlight.jpg';
 import { getTheme } from '../theme.js';
 import ComicBubble from './ComicBubble.jsx';
 
@@ -79,10 +80,35 @@ export default function PortraitHub({ onLaunchGame, hasPlayed = false, isDark = 
 
           {/* Portrait Image Container */}
           <div className="portrait-image-wrapper">
+            {/* Dark mode portrait */}
             <img
-              src={portraitImg}
+              src={portrait}
               alt="Kilavi Musyoki - Portrait"
               className="portrait-img"
+              aria-hidden={!isDark}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: isDark ? 1 : 0,
+                transition: 'opacity 0.4s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                pointerEvents: isDark ? 'auto' : 'none',
+              }}
+              loading="eager"
+            />
+
+            {/* Light mode portrait */}
+            <img
+              src={portraitlight}
+              alt="Kilavi Musyoki - Portrait (Light Mode)"
+              className="portrait-img"
+              aria-hidden={isDark}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: !isDark ? 1 : 0,
+                transition: 'opacity 0.4s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                pointerEvents: !isDark ? 'auto' : 'none',
+              }}
               loading="eager"
             />
 
