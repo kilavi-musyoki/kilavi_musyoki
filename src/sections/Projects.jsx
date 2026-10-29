@@ -17,15 +17,16 @@ const useWindowWidth = () => {
 
 // ── Category definitions ──────────────────────────────────────────────────────
 const CATEGORIES = [
-    { id: 'all',   label: 'All',                emoji: '◈',  short: 'All' },
-    { id: 'cyber', label: 'Cybersecurity',       emoji: '🔐', short: 'Security' },
-    { id: 'iot',   label: 'IoT & Embedded',      emoji: '🌐', short: 'IoT' },
-    { id: 'rf',    label: 'RF & Telecom',        emoji: '📡', short: 'RF' },
-    { id: 'sw',    label: 'Software & IS',       emoji: '💻', short: 'Software' },
-    { id: 'elec',  label: 'Digital Electronics', emoji: '⚡', short: 'Electronics' },
+    { id: 'all',   label: 'All',                short: 'All' },
+    { id: 'cyber', label: 'Cybersecurity',      short: 'Security' },
+    { id: 'iot',   label: 'IoT & Embedded',     short: 'IoT' },
+    { id: 'rf',    label: 'RF & Telecom',       short: 'RF' },
+    { id: 'sw',    label: 'Software & IS',      short: 'Software' },
+    { id: 'elec',  label: 'Digital Electronics', short: 'Electronics' },
 ];
 
 const PROJECTS_PER_PAGE = 6;
+const PROJECT_IMAGE = '/assets/projects';
 
 // ── Project data ──────────────────────────────────────────────────────────────
 const PROJECTS = [
@@ -44,7 +45,7 @@ const PROJECTS = [
             'Separating voter identity from vote data was essential for anonymity while still preventing double voting. Implementing a cryptographic hash chain provided an auditable vote sequence but required careful transaction handling to maintain consistency. Strict TypeScript typing across frontend and backend significantly reduced runtime errors during development.',
         stack: ['React', 'TypeScript', 'Node.js / Express', 'PostgreSQL', 'Prisma ORM', 'JWT Authentication', 'Tailwind CSS', 'Docker'],
         color: '#4BD8A0',
-        icon: '🗳️',
+        image: `${PROJECT_IMAGE}/data-dashboard.jpg`,
         category: 'cyber',
         repo: 'https://github.com/kilavi-musyoki/voting-website.git',
     },
@@ -59,7 +60,7 @@ const PROJECTS = [
         lessons: 'Wi-Fi reconnection on ESP32 requires a carefully tuned watchdog — naive reconnect loops stall the sensor-read task entirely. FreeRTOS separate tasks eliminated all lockups. MQ-2 sensor warm-up delays are critical for accuracy.',
         stack: ['ESP32 (C++)', 'FreeRTOS', 'MQ-2 / DHT22', 'MQTT / Mosquitto', 'Node-RED', 'Telegram Bot API'],
         color: '#FF5A3C',
-        icon: '🔥',
+        image: `${PROJECT_IMAGE}/iot-breadboard.jpg`,
         category: 'iot',
         repo: null,
     },
@@ -74,7 +75,8 @@ const PROJECTS = [
         lessons: "Midnight/noon conversions require separate comparator branches — one threshold comparator can't differentiate both. BCD addition overflow must be corrected explicitly; binary adders produce values above 9 without a correction stage.",
         stack: ['Logisim Evolution', 'BCD Logic', 'Combinational Circuits', 'Flip-Flops', 'Comparators', 'MUX/DEMUX'],
         color: '#D4A843',
-        icon: '🕐',
+        image: `${PROJECT_IMAGE}/digital-clock-schematic.jpg`,
+        imageFit: 'contain',
         category: 'elec',
         repo: 'https://github.com/kilavi-musyoki/digital-clock-with-logism.git',
     },
@@ -89,7 +91,7 @@ const PROJECTS = [
         lessons: 'Polling all sensors in a tight loop introduced 400ms lag. Restructuring into interrupt-driven reads with cooperative scheduler reduced latency to under 200ms and eliminated missed sensor events.',
         stack: ['AVR Microcontroller (C)', 'PIR Sensor', 'LDR', 'DHT22', 'DS3231 RTC', '16×2 LCD', 'Servo', 'Relay'],
         color: '#6FD4FF',
-        icon: '🏠',
+        image: `${PROJECT_IMAGE}/smart-home.jpg`,
         category: 'iot',
         repo: null,
     },
@@ -104,7 +106,7 @@ const PROJECTS = [
         lessons: 'Note-level locking required careful separation between the biometric prompt lifecycle and Compose recomposition — tightly coupling them caused the auth dialog to dismiss unexpectedly on rotation. Android Keystore key invalidation on biometric enrollment changes also needed explicit handling to avoid silent decryption failures.',
         stack: ['Kotlin', 'Jetpack Compose', 'Material 3', 'Room / SQLite', 'AES-256-GCM', 'Android Keystore', 'AndroidX Biometric', 'Kotlin Coroutines'],
         color: '#a78bfa',
-        icon: '🔐',
+        image: `${PROJECT_IMAGE}/notes-phone.jpg`,
         category: 'cyber',
         repo: 'https://github.com/kilavi-musyoki/notes-app.git',
     },
@@ -117,7 +119,8 @@ const PROJECTS = [
         outcome: 'Delivered an interactive learning platform where users work through the OWASP Top 10 via hands-on labs and step-by-step guidance — each vulnerability class becomes an exercise the learner actively completes, not a page they scroll past. Progress is tracked per user through a Google Apps Script backend as a lightweight SCORM alternative. Deployed on Vercel.',
         stack: ['React 18', 'TypeScript', 'Vite', 'Google Apps Script', 'Vercel'],
         color: '#4BD8A0',
-        icon: '🛡️',
+        image: `${PROJECT_IMAGE}/cyberpath-training.png`,
+        imageFit: 'contain',
         category: 'cyber',
         repo: null,
     },
@@ -130,7 +133,7 @@ const PROJECTS = [
         outcome: 'Derived the single-stub shunt matching solution analytically, then verified stub length and position graphically using the Smith chart — cross-checking closed-form calculation against graphical RF design method.',
         stack: ['Smith Chart', 'RF/Microwave Theory', 'Transmission Line Analysis'],
         color: '#D4A843',
-        icon: '📻',
+        image: `${PROJECT_IMAGE}/telecom-tower.jpg`,
         category: 'rf',
         repo: null,
     },
@@ -143,7 +146,7 @@ const PROJECTS = [
         outcome: 'Designed and simulated 50Ω microstrip transmission lines using Keysight ADS Momentum EM across two substrates — standard FR-4 and RF-grade Rogers RO4003C — comparing electromagnetic behavior and loss characteristics between them.',
         stack: ['Keysight ADS', 'Momentum EM', 'RF Simulation'],
         color: '#a3b8cc',
-        icon: '📡',
+        image: `${PROJECT_IMAGE}/pcb-closeup.jpg`,
         category: 'rf',
         repo: null,
     },
@@ -156,7 +159,7 @@ const PROJECTS = [
         outcome: 'Delivered a document management system with departmental inboxes, version control, full audit trails, and digital signature support, wrapped in a Tauri/Rust desktop shell — evolved from an earlier full-stack prototype (SFMS) built on React/TypeScript, Express, Prisma, and PostgreSQL.',
         stack: ['Tauri', 'Rust', 'React', 'TypeScript', 'Express', 'Prisma', 'PostgreSQL', 'Redis'],
         color: '#a78bfa',
-        icon: '📋',
+        image: `${PROJECT_IMAGE}/data-dashboard.jpg`,
         category: 'sw',
         repo: null,
     },
@@ -169,7 +172,7 @@ const PROJECTS = [
         outcome: 'Designed a relational university database in Oracle 21c with normalized entity relationships and full CRUD support, then built a Python Tkinter desktop interface so non-technical users can query and manage records directly.',
         stack: ['Oracle 21c', 'SQL', 'Python', 'Tkinter'],
         color: '#6FD4FF',
-        icon: '🎓',
+        image: `${PROJECT_IMAGE}/coding-laptop.jpg`,
         category: 'sw',
         repo: null,
     },
@@ -184,7 +187,7 @@ const PROJECTS = [
         lessons: 'Framer Motion layout animations and AnimatePresence conflict with direct DOM manipulation (GSAP scroll triggers) — they must be carefully separated by layer to avoid competing transform origins. Cloudflare Turnstile token lifecycle requires explicit reset on form re-submission, otherwise the widget silently returns a stale token. CSS backdrop-filter on overlapping elements in Safari requires explicit -webkit- prefixing and a non-transparent background to take effect.',
         stack: ['React 19', 'Vite 7', 'Framer Motion', 'GSAP', 'Tailwind CSS v4', 'EmailJS', 'Cloudflare Turnstile', 'Vercel Serverless', 'Nodemailer', 'JetBrains Mono', 'Syne'],
         color: '#4BD8A0',
-        icon: '🖥️',
+        image: `${PROJECT_IMAGE}/cyber-learning.jpg`,
         category: 'sw',
         repo: 'https://github.com/kilavi-musyoki/portfoliov4.git',
     },
@@ -199,7 +202,7 @@ const PROJECTS = [
         lessons: 'Maintaining listing freshness without overburdening landlords required an automated SMS-based heartbeat verification lifecycle. Eliminating hidden rental costs required building a deterministic engine that tags fees with explicit certainty levels rather than relying on unstructured text descriptions. Designing scam quarantine thresholds at ≥3 reports prevented malicious spam while protecting legitimate listings.',
         stack: ['TypeScript', 'Next.js 15', 'NestJS', 'Prisma', 'PostgreSQL', 'M-Pesa Daraja API', 'Turborepo', 'PWA'],
         color: '#FF5A3C',
-        icon: '🏘️',
+        image: `${PROJECT_IMAGE}/apartment.jpg`,
         category: 'sw',
         repo: 'https://github.com/kilavi-musyoki/house-search.git',
     },
@@ -295,16 +298,29 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
                 gap: '12px',
             }}>
                 <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flex: 1 }}>
-                    {/* Module icon */}
+                    {/* Project preview */}
                     <div style={{
-                        width: '48px', height: '48px', flexShrink: 0,
+                        width: isMobile ? '84px' : '124px',
+                        height: isMobile ? '56px' : '72px',
+                        flexShrink: 0,
                         border: `1px solid ${moduleColor}44`,
                         borderRadius: '3px',
-                        background: `${moduleColor}12`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.5rem',
+                        background: project.imageFit === 'contain' ? '#f2f4f5' : `${moduleColor}12`,
+                        overflow: 'hidden',
                     }}>
-                        {project.icon}
+                        <img
+                            src={project.image}
+                            alt={`${project.title} preview`}
+                            loading="lazy"
+                            decoding="async"
+                            style={{
+                                display: 'block',
+                                width: '100%',
+                                height: '100%',
+                                objectFit: project.imageFit || 'cover',
+                                objectPosition: project.imagePosition || 'center',
+                            }}
+                        />
                     </div>
                     <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
@@ -430,7 +446,7 @@ const CategoryFilter = ({ active, onChange, isDark, counts }) => {
                         style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '6px',
+                            gap: '8px',
                             fontFamily: 'JetBrains Mono',
                             fontSize: '0.62rem',
                             letterSpacing: '0.07em',
@@ -464,7 +480,6 @@ const CategoryFilter = ({ active, onChange, isDark, counts }) => {
                             }
                         }}
                     >
-                        <span style={{ fontSize: '0.75rem' }}>{cat.emoji}</span>
                         {isNarrow ? cat.short : cat.label}
                         <span style={{
                             fontSize: '0.55rem',
