@@ -21,7 +21,7 @@ const leverToLayer = (lv) => {
 };
 
 // ── Particle system ──────────────────────────────────────────────────────────
-const MAX_PARTICLES = 60;
+const MAX_PARTICLES = 34;
 
 function createParticle(x, y, color) {
     const angle = Math.random() * Math.PI * 2;
@@ -231,10 +231,10 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
         if (newZone !== prevZoneRef.current) {
             prevZoneRef.current = newZone;
             // Flash
-            setZoneFlash(1);
-            flashDecayRef.current = 1;
+            setZoneFlash(0.66);
+            flashDecayRef.current = 0.66;
             // Distortion burst
-            distortPhaseRef.current = 1;
+            distortPhaseRef.current = 0.72;
 
             // Emit particle burst from center
             const canvas = canvasRef.current;
@@ -242,10 +242,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 const cx = canvas.width / 2;
                 const cy = canvas.height / 2;
                 const color = isDark ? '#4BD8A0' : '#0D9488';
-                emitBurst(particlesRef.current, 18, cx, cy, color);
-                // Secondary burst with accent color
-                const color2 = isDark ? '#6FD4FF' : '#D4A843';
-                emitBurst(particlesRef.current, 8, cx, cy, color2);
+                emitBurst(particlesRef.current, 12, cx, cy, color);
             }
         }
         prevLeverRef.current = leverValue;
@@ -349,14 +346,14 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
 
     // Staggered PCB dematerialization stages (Zone 3 -> Zone 4)
     const componentsOpacityMult = 1 - norm(smoothLever, 0.60, 0.70);
-    const tracesOpacityMult = 1 - norm(smoothLever, 0.70, 0.77);
-    const pcbOpacityMult = 1 - norm(smoothLever, 0.77, 0.84);
+    const tracesOpacityMult = 1 - norm(smoothLever, 0.88, 0.96);
+    const pcbOpacityMult = 1 - norm(smoothLever, 0.96, 1.0);
 
     // Casing controls opacity (Zone 2 -> Zone 3)
     const casingOpacity = 1 - norm(smoothLever, 0.42, 0.60);
 
     const velocity = Math.abs(leverValue - smoothLever);
-    const chromAb = velocity * 55;
+    const chromAb = velocity * 30;
 
     const shadowFade = Math.max(0, Math.min(1, (smoothLever - 0.45) / 0.15));
     const shadowAlpha = 1 - shadowFade;
@@ -449,9 +446,9 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                         position: 'absolute', inset: 0, zIndex: 22, pointerEvents: 'none',
                         overflow: 'hidden',
                     }}>
-                        {[0.15, 0.35, 0.55, 0.72, 0.88].map((yPct, i) => {
-                            const offset = Math.sin(scanDistort * 12 + i * 2.1) * scanDistort * 12;
-                            const height = 1.5 + scanDistort * 3;
+                        {[0.22, 0.5, 0.78].map((yPct, i) => {
+                            const offset = Math.sin(scanDistort * 9 + i * 2.1) * scanDistort * 7;
+                            const height = 1.5 + scanDistort * 2;
                             return (
                                 <div key={i} style={{
                                     position: 'absolute',
@@ -459,7 +456,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                                     left: `${offset}px`,
                                     right: `${-offset}px`,
                                     height: `${height}px`,
-                                    background: `rgba(${accentRgb},${scanDistort * 0.25})`,
+                                    background: `rgba(${accentRgb},${scanDistort * 0.16})`,
                                     transform: `translateX(${offset}px)`,
                                     mixBlendMode: 'screen',
                                 }} />
@@ -468,7 +465,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                     </div>
                 )}
 
-                <AvatarDisplay leverValue={smoothLever} mousePosRef={mousePosRef} isDark={isDark} />
+                <AvatarDisplay leverValue={smoothLever} isDark={isDark} />
                 <ScreenGlitchOverlay leverValue={smoothLever} />
             </div>
 
@@ -525,7 +522,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                     inset: 0,
                     zIndex: 12,
                     pointerEvents: 'none',
-                    background: `radial-gradient(ellipse at center, rgba(${accentRgb},${flashAlpha}) 0%, transparent 65%)`,
+                    background: `radial-gradient(ellipse at center, rgba(${accentRgb},${flashAlpha}) 0%, transparent 58%)`,
                     transition: 'opacity 0.05s',
                 }} />
             )}

@@ -11,6 +11,33 @@ export const PALETTE = {
     border: '#2a7558'
 };
 
+export function getTetrisLayout(W, H) {
+    const screenW = Math.floor(W * 0.58);
+    const caseW = W - screenW;
+    const caseX = screenW;
+    const bezelPad = Math.max(8, Math.floor(Math.min(W, H) * 0.04));
+    const screenAreaW = screenW - bezelPad * 2;
+    const screenAreaH = H - bezelPad * 2;
+    const statsW = Math.floor(screenAreaW * 0.31);
+    const gameW = screenAreaW - statsW;
+    const gameH = screenAreaH;
+    const cellH = Math.floor(gameH / VISIBLE_ROWS);
+    const cellW = Math.floor(gameW / COLS);
+    const cellSize = Math.min(cellH, cellW);
+    const boardX = bezelPad + Math.floor((gameW - COLS * cellSize) / 2);
+    const boardY = bezelPad + Math.floor((gameH - VISIBLE_ROWS * cellSize) / 2);
+
+    return {
+        screenW, caseW, caseX, bezelPad, screenAreaW, screenAreaH,
+        statsW, gameW, gameH, cellSize, boardX, boardY,
+        statsX: bezelPad + gameW,
+        statsY: bezelPad,
+        statsH: screenAreaH,
+        boardW: COLS * cellSize,
+        boardH: VISIBLE_ROWS * cellSize,
+    };
+}
+
 export class TetrisRenderer {
     constructor() {
         this.muteBtn = null; // { x, y, w, h }
@@ -83,7 +110,7 @@ export class TetrisRenderer {
         ctx.fillText(isM ? 'MUTED' : 'SFX ON', x + w / 2, y + h * 0.80);
     }
 
-    draw(ctx, engine, W, H, caseX, caseW, dpr, isDark, isMuted) {
+    draw(ctx, engine, W, H, caseX, caseW, dpr, isDark, isMuted, { skipBlocks = false } = {}) {
         // Clear canvas context
         ctx.clearRect(0, 0, W, H);
 
@@ -95,35 +122,17 @@ export class TetrisRenderer {
         ctx.fillStyle = PALETTE.bg;
         ctx.fillRect(0, 0, caseX, H);
 
-        const bezelPad = Math.max(8, Math.floor(Math.min(W, H) * 0.04));
+        const layout = getTetrisLayout(W, H);
+        const { bezelPad, statsW, cellSize, boardX, boardY, statsX, statsY, statsH, boardW, boardH } = layout;
+        this.cellSize = cellSize;
+        this.boardX = boardX;
+        this.boardY = boardY;
         ctx.strokeStyle = PALETTE.highlight;
         ctx.lineWidth = 2;
         ctx.strokeRect(bezelPad, bezelPad, caseX - bezelPad * 2, H - bezelPad * 2);
 
         // 3. Grid Coordinates setup
-        const screenW = caseX;
-        const screenAreaW = screenW - bezelPad * 2;
-        const screenAreaH = H - bezelPad * 2;
-
-        const statsW = Math.floor(screenAreaW * 0.38);
-        const gameW = screenAreaW - statsW;
-        const gameH = screenAreaH;
-        
-        const cellH = Math.floor(gameH / VISIBLE_ROWS);
-        const cellW = Math.floor(gameW / COLS);
-        this.cellSize = Math.min(cellH, cellW);
-
-        this.boardX = bezelPad + Math.floor((gameW - COLS * this.cellSize) / 2);
-        this.boardY = bezelPad + Math.floor((gameH - VISIBLE_ROWS * this.cellSize) / 2);
-
-        const statsX = bezelPad + gameW;
-        const statsY = bezelPad;
-        const statsH = screenAreaH;
-
-        if (!this.cellSize) return;
-
-        const boardW = COLS * this.cellSize;
-        const boardH = VISIBLE_ROWS * this.cellSize;
+        if (!cellSize) return;
 
         // Draw solid background grid area
         ctx.fillStyle = PALETTE.empty;
@@ -148,17 +157,19 @@ export class TetrisRenderer {
         ctx.stroke();
 
         // Draw Board Cells
-        for (let r = 2; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                const cellVal = engine.board[r][c];
-                if (cellVal !== 0) {
-                    this.drawCell(ctx, this.boardX + c * this.cellSize, this.boardY + (r - 2) * this.cellSize, this.cellSize, cellVal);
+        if (!skipBlocks) {
+            for (let r = 2; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cellVal = engine.board[r][c];
+                    if (cellVal !== 0) {
+                        this.drawCell(ctx, this.boardX + c * cellSize, this.boardY + (r - 2) * cellSize, cellSize, cellVal);
+                    }
                 }
             }
         }
 
         // Draw active falling piece and ghost guide (only if playing or paused)
-        if ((engine.state === 'playing' || engine.state === 'paused') && engine.current) {
+        if (!skipBlocks && (engine.state === 'playing' || engine.state === 'paused') && engine.current) {
             const current = engine.current;
             
             // ── A. Render Ghost Piece (Global Alpha 0.22) ──
@@ -301,10 +312,13 @@ export class TetrisRenderer {
 
             ctx.textAlign = 'center';
             ctx.fillStyle = PALETTE.highlight;
-            this.setCtxFont(ctx, `${Math.floor(this.cellSize * 0.45)}px "Press Start 2P", monospace`);
+            this.setCtxFont(ctx, `${Math.floor(cellSize * 0.45)}px "Press Start 2P", monospace`);
             if (Math.floor(performance.now() / 450) % 2 === 0) {
-                ctx.fillText('CLICK START', this.boardX + boardW / 2, this.boardY + boardH * 0.82);
+                ctx.fillText('ENTER / TAP TO START', this.boardX + boardW / 2, this.boardY + boardH * 0.79);
             }
+            this.setCtxFont(ctx, `${Math.max(3, Math.floor(cellSize * 0.22))}px "Press Start 2P", monospace`);
+            ctx.fillStyle = PALETTE.textDim;
+            ctx.fillText('ARROWS MOVE · ↑ ROTATE · SPACE DROP', this.boardX + boardW / 2, this.boardY + boardH * 0.88);
             
         } else if (engine.state === 'paused') {
             ctx.fillStyle = 'rgba(5, 8, 8, 0.85)';

@@ -1,16 +1,22 @@
-import React, { useEffect, useRef, memo } from 'react';
-import { TetrisEngine, VISIBLE_ROWS, COLS } from '../engine/TetrisEngine.js';
-import { TetrisRenderer } from '../engine/TetrisRenderer.js';
+import { useEffect, useRef, memo } from 'react';
+import PropTypes from 'prop-types';
+import { TetrisEngine } from '../engine/TetrisEngine.js';
+import { getTetrisLayout, TetrisRenderer } from '../engine/TetrisRenderer.js';
 import { TetrisAudio } from '../engine/TetrisAudio.js';
 
-export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
+const TetrusGame = memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
     const canvasRef = useRef(null);
+    const threeCanvasRef = useRef(null);
     const rafRef = useRef(null);
 
     const isDarkRef = useRef(isDark);
+    const progressRef = useRef(glitchLevel);
     useEffect(() => {
         isDarkRef.current = isDark;
     }, [isDark]);
+    useEffect(() => {
+        progressRef.current = glitchLevel;
+    }, [glitchLevel]);
 
     // Ensure retro arcade fonts are loaded into the document head
     useEffect(() => {
@@ -28,25 +34,38 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
         if (!canvas) return;
         
         const ctx = canvas.getContext('2d');
+        if (!ctx) return;
         const engine = new TetrisEngine();
         const renderer = new TetrisRenderer();
+        let renderer3D = null;
+        let disposed = false;
 
-        let W = 0, H = 0;
-        let screenW = 0, caseW = 0, caseX = 0;
-        let dpr = window.devicePixelRatio || 1;
+        let W = 0, H = 0, dpr = 1;
 
         // Dynamic Resize and Layout calculations
         const updateLayout = () => {
             const rect = canvas.getBoundingClientRect();
+            dpr = Math.min(window.devicePixelRatio || 1, 1.5);
             W = Math.round(rect.width * dpr);
             H = Math.round(rect.height * dpr);
             canvas.width = W; 
             canvas.height = H;
-
-            screenW = Math.floor(W * 0.58);
-            caseW = W - screenW;
-            caseX = screenW;
+            renderer3D?.resize(rect.width, rect.height, dpr);
         };
+
+        const load3DRenderer = async () => {
+            try {
+                const { Tetris3DRenderer } = await import('../engine/Tetris3DRenderer.js');
+                if (disposed || !threeCanvasRef.current) return;
+                renderer3D = new Tetris3DRenderer(threeCanvasRef.current);
+                const rect = canvas.getBoundingClientRect();
+                renderer3D.resize(rect.width, rect.height, dpr);
+            } catch {
+                // Keep the 2D renderer as a safe fallback if WebGL is unavailable.
+                if (threeCanvasRef.current) threeCanvasRef.current.style.display = 'none';
+            }
+        };
+        void load3DRenderer();
 
         const ro = new ResizeObserver(updateLayout);
         ro.observe(canvas);
@@ -54,6 +73,7 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
 
         // ── Input Traps ──
         const onKeyDown = (e) => {
+            if (progressRef.current > 0.68) return;
             // Prevent Space and Arrow keys from triggering page scrolls
             const blockKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Enter'];
             if (blockKeys.includes(e.key)) {
@@ -92,24 +112,26 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
             const dt = time - lastTime;
             lastTime = time;
 
-            // Update physics & movement logic
-            engine.update(dt);
-            
-            // Expose game state globally for DeviceCanvas/PCB components
-            window.__tetrusGameState = engine.state;
+            if (progressRef.current <= 0.68) {
+                // Update physics & movement logic while the game is visible.
+                engine.update(dt);
+                window.__tetrusGameState = engine.state;
 
-            // Render updated state to canvas
-            renderer.draw(
-                ctx, 
-                engine, 
-                W, 
-                H, 
-                caseX, 
-                caseW, 
-                dpr, 
-                isDarkRef.current, 
-                TetrisAudio.isMuted
-            );
+                const layout = getTetrisLayout(W, H);
+                renderer.draw(
+                    ctx,
+                    engine,
+                    W,
+                    H,
+                    layout.caseX,
+                    layout.caseW,
+                    dpr,
+                    isDarkRef.current,
+                    TetrisAudio.isMuted,
+                    { skipBlocks: Boolean(renderer3D) },
+                );
+                renderer3D?.draw(engine, W, H, dpr, progressRef.current, isDarkRef.current);
+            }
 
             rafRef.current = requestAnimationFrame(loop);
         };
@@ -117,19 +139,34 @@ export default memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
 
         // Clean up animation loops, layout observers, and active events
         return () => {
+            disposed = true;
             cancelAnimationFrame(rafRef.current);
             ro.disconnect();
+            renderer3D?.dispose();
             window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('keyup', onKeyUp);
             canvas.removeEventListener('pointerdown', onPointerDown);
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
-        <canvas
-            ref={canvasRef}
-            style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
-        />
+        <div style={{ position: 'relative', width: '100%', height: '100%', touchAction: 'none' }}>
+            <canvas
+                ref={canvasRef}
+                style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
+            />
+            <canvas
+                ref={threeCanvasRef}
+                aria-hidden="true"
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+            />
+        </div>
     );
 });
+
+TetrusGame.propTypes = {
+    isDark: PropTypes.bool.isRequired,
+    glitchLevel: PropTypes.number,
+};
+
+export default TetrusGame;
