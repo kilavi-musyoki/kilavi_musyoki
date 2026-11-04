@@ -1,0 +1,273 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Silicon Soul v2.0 PCB floorplan and proposed net list — Gate 2</title>
+  <desc id="desc">A conceptual top-side floorplan on the existing 200 by 160 coordinate frame, with the ESP32-WROOM-32 built-in antenna at the north edge, fixed mounting holes, left 10-pin header and bottom-centre USB-C, plus proposed power, USB-UART, reset, switch, display and buzzer nets.</desc>
+  <defs>
+    <pattern id="board-grid" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M16 0H0V16" fill="none" stroke="#a9c4ad" stroke-opacity=".08" stroke-width=".35"/>
+    </pattern>
+    <pattern id="keepout-hatch" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <path d="M0 0V3" stroke="#d8a253" stroke-opacity=".58" stroke-width=".65"/>
+    </pattern>
+    <linearGradient id="page" x2="0" y2="1">
+      <stop offset="0" stop-color="#171c19"/>
+      <stop offset="1" stop-color="#101411"/>
+    </linearGradient>
+    <linearGradient id="copper" x2="0" y2="1">
+      <stop offset="0" stop-color="#e5c17c"/>
+      <stop offset="1" stop-color="#a87939"/>
+    </linearGradient>
+    <style>
+      text { font-family: Inter, "Segoe UI", Arial, sans-serif; fill: #e8eee9; }
+      .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+      .muted { fill: #a9b6ad; }
+      .dim { fill: #7d8d82; }
+      .accent { fill: #94c4a1; }
+      .gold { fill: #e0bd7d; }
+      .red { fill: #ef8076; }
+      .green { fill: #8bcc9c; }
+      .section { font-size: 18px; font-weight: 700; letter-spacing: 2px; }
+      .label { font-size: 13px; font-weight: 650; }
+      .small { font-size: 11px; }
+      .tiny { font-size: 9px; }
+      .part { fill: #18231c; stroke: #9cb29f; stroke-width: .65; }
+      .part-dark { fill: #131815; stroke: #d0b275; stroke-width: .7; }
+      .pad { fill: url(#copper); stroke: #f1d59b; stroke-width: .25; }
+      .rule { stroke: #536258; stroke-width: 1; }
+      .card { fill: #191f1b; stroke: #34443a; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1200" fill="url(#page)"/>
+  <path d="M48 132H1752" class="rule"/>
+  <text x="52" y="62" font-size="17" class="mono accent" letter-spacing="3">SILICON SOUL / HARDWARE STUDY</text>
+  <text x="52" y="108" font-size="38" font-weight="700">PCB FLOORPLAN + NET LIST</text>
+  <text x="1748" y="66" text-anchor="end" font-size="14" class="mono gold">GATE 2 · ANT1 OPTION A</text>
+  <text x="1748" y="98" text-anchor="end" font-size="13" class="mono muted">SILICON SOUL v2.0 · SN-2024-KM-PORTFOLIO-REV2</text>
+
+  <text x="60" y="174" font-size="14" class="mono accent" letter-spacing="1.5">TOP-SIDE COMPONENT FLOORPLAN</text>
+  <text x="720" y="174" text-anchor="end" font-size="11" class="mono muted">EXISTING SVG FRAME · 200 × 160 UNITS · NOT FABRICATION SCALE</text>
+
+  <!-- PCB floorplan: the existing 200×160 viewBox geometry is retained. -->
+  <g transform="translate(60 190) scale(3.3)">
+    <rect x="4" y="4" width="192" height="152" rx="5" fill="#173024" stroke="#bdc9be" stroke-width=".65"/>
+    <rect x="4" y="4" width="192" height="152" rx="5" fill="url(#board-grid)"/>
+
+    <!-- Fixed mechanical features -->
+    <g fill="#0b100d" stroke="#d5b777" stroke-width=".75">
+      <circle cx="14" cy="14" r="3.5"/><circle cx="186" cy="14" r="3.5"/>
+      <circle cx="14" cy="146" r="3.5"/><circle cx="186" cy="146" r="3.5"/>
+    </g>
+    <g fill="none" stroke="#728778" stroke-width=".35">
+      <circle cx="14" cy="14" r="5.7"/><circle cx="186" cy="14" r="5.7"/>
+      <circle cx="14" cy="146" r="5.7"/><circle cx="186" cy="146" r="5.7"/>
+    </g>
+
+    <!-- Built-in antenna keepout; no separate meander is used. -->
+    <rect x="87" y="4" width="26" height="23" fill="url(#keepout-hatch)" fill-opacity=".36" stroke="#d7ad68" stroke-width=".5" stroke-dasharray="1.5 1"/>
+    <text x="100" y="7.5" text-anchor="middle" class="mono gold" font-size="2.1">ANT1 · BUILT-IN</text>
+    <text x="100" y="11" text-anchor="middle" class="mono muted" font-size="1.55">NO COPPER / GND / PARTS</text>
+
+    <!-- U1 ESP32-WROOM-32, antenna end facing north/top board edge. -->
+    <rect x="91" y="4" width="18" height="25.5" rx="1.2" fill="#6e7772" stroke="#e1e5e1" stroke-width=".7"/>
+    <rect x="93" y="10" width="14" height="17" rx=".6" fill="#333a37" stroke="#aab5ad" stroke-width=".35"/>
+    <circle cx="95" cy="12" r=".7" fill="#f0d28b"/>
+    <text x="100" y="17" text-anchor="middle" class="mono" font-size="2.25" fill="#f2f3ed">ESP32</text>
+    <text x="100" y="20" text-anchor="middle" class="mono" font-size="1.6" fill="#d7e0d8">WROOM-32</text>
+    <text x="100" y="26" text-anchor="middle" class="mono" font-size="2.1" fill="#f0d28b">U1</text>
+
+    <!-- Decoupling and MCU rail bead, immediately adjacent to U1 power entry. -->
+    <g>
+      <rect x="80" y="33" width="7" height="4" rx=".5" class="part-dark"/>
+      <text x="83.5" y="35.7" text-anchor="middle" class="mono" font-size="1.65">C1</text>
+      <text x="83.5" y="38.7" text-anchor="middle" class="mono muted" font-size="1.15">10µ</text>
+      <rect x="89" y="34" width="4" height="3" rx=".4" class="part-dark"/>
+      <text x="91" y="36" text-anchor="middle" class="mono" font-size="1.35">C2</text>
+      <rect x="107" y="34" width="8" height="3.5" rx=".45" class="part-dark"/>
+      <text x="111" y="36.3" text-anchor="middle" class="mono" font-size="1.6">FB1</text>
+    </g>
+
+    <!-- Display FPC connector on board; LCD module and bezel are front-side. -->
+    <rect x="74" y="43" width="52" height="7" rx=".7" class="part-dark"/>
+    <text x="100" y="42" text-anchor="middle" class="mono gold" font-size="2.2">J6 · DISPLAY FPC</text>
+    <text x="100" y="47.5" text-anchor="middle" class="mono muted" font-size="1.45">PIN COUNT / PITCH PER PANEL</text>
+
+    <!-- D-pad switches -->
+    <g>
+      <rect x="43" y="64" width="8" height="8" rx="1" class="part"/><text x="47" y="69" text-anchor="middle" class="mono label">↑</text><text x="47" y="73.8" text-anchor="middle" class="mono muted" font-size="1.6">SW1</text>
+      <rect x="35" y="72" width="8" height="8" rx="1" class="part"/><text x="39" y="77" text-anchor="middle" class="mono label">←</text><text x="39" y="81.8" text-anchor="middle" class="mono muted" font-size="1.6">SW2</text>
+      <rect x="51" y="72" width="8" height="8" rx="1" class="part"/><text x="55" y="77" text-anchor="middle" class="mono label">→</text><text x="55" y="81.8" text-anchor="middle" class="mono muted" font-size="1.6">SW3</text>
+      <rect x="43" y="80" width="8" height="8" rx="1" class="part"/><text x="47" y="85" text-anchor="middle" class="mono label">↓</text><text x="47" y="89.8" text-anchor="middle" class="mono muted" font-size="1.6">SW4</text>
+    </g>
+
+    <!-- Game action switches, kept as a separate control group. -->
+    <g>
+      <rect x="145" y="66" width="10" height="8" rx="1" class="part"/><text x="150" y="71" text-anchor="middle" class="mono" font-size="1.8">ROT</text><text x="150" y="76" text-anchor="middle" class="mono muted" font-size="1.5">SW5</text>
+      <rect x="159" y="78" width="10" height="8" rx="1" class="part"/><text x="164" y="83" text-anchor="middle" class="mono" font-size="1.8">DROP</text><text x="164" y="88" text-anchor="middle" class="mono muted" font-size="1.5">SW6</text>
+      <rect x="145" y="90" width="10" height="8" rx="1" class="part"/><text x="150" y="95" text-anchor="middle" class="mono" font-size="1.8">PAUSE</text><text x="150" y="100" text-anchor="middle" class="mono muted" font-size="1.5">SW7</text>
+    </g>
+
+    <!-- Service controls and auto-reset transistors -->
+    <rect x="119" y="103" width="9" height="8" rx="1" class="part"/>
+    <text x="123.5" y="108" text-anchor="middle" class="mono" font-size="1.7">BOOT</text>
+    <text x="123.5" y="113" text-anchor="middle" class="mono muted" font-size="1.5">SW8</text>
+    <rect x="133" y="103" width="9" height="8" rx="1" class="part"/>
+    <text x="137.5" y="108" text-anchor="middle" class="mono" font-size="1.7">RESET</text>
+    <text x="137.5" y="113" text-anchor="middle" class="mono muted" font-size="1.5">SW9</text>
+    <rect x="112" y="91" width="7" height="5" rx=".5" class="part-dark"/><text x="115.5" y="94.3" text-anchor="middle" class="mono" font-size="1.6">Q1</text>
+    <rect x="121" y="91" width="7" height="5" rx=".5" class="part-dark"/><text x="124.5" y="94.3" text-anchor="middle" class="mono" font-size="1.6">Q2</text>
+    <text x="120" y="99" text-anchor="middle" class="mono muted" font-size="1.3">AUTO RESET</text>
+
+    <!-- USB bridge, protection, power, and connector are kept adjacent. -->
+    <rect x="129" y="119" width="22" height="15" rx="1" class="part-dark"/>
+    <circle cx="132" cy="122" r=".7" fill="#e0bd7d"/>
+    <text x="140" y="126" text-anchor="middle" class="mono" font-size="2.3">CH340C</text>
+    <text x="140" y="131" text-anchor="middle" class="mono gold" font-size="1.8">U2</text>
+    <rect x="91" y="130" width="16" height="7" rx=".7" class="part-dark"/>
+    <text x="99" y="134.5" text-anchor="middle" class="mono" font-size="1.6">U3 · ESD</text>
+    <rect x="155" y="116" width="21" height="14" rx="1" class="part-dark"/>
+    <text x="165.5" y="122" text-anchor="middle" class="mono" font-size="2">VR1</text>
+    <text x="165.5" y="126.5" text-anchor="middle" class="mono muted" font-size="1.5">3V3 BUCK</text>
+    <rect x="155" y="108" width="8" height="5" rx=".6" class="part-dark"/>
+    <text x="159" y="111.4" text-anchor="middle" class="mono" font-size="1.55">L1</text>
+    <rect x="178" y="121" width="8" height="4" rx=".4" class="part-dark"/><text x="182" y="123.8" text-anchor="middle" class="mono" font-size="1.35">C3</text>
+    <rect x="77" y="138" width="7" height="4" rx=".45" class="part-dark"/><text x="80.5" y="140.7" text-anchor="middle" class="mono" font-size="1.45">R1</text>
+    <rect x="116" y="138" width="7" height="4" rx=".45" class="part-dark"/><text x="119.5" y="140.7" text-anchor="middle" class="mono" font-size="1.45">R2</text>
+    <text x="100" y="143" text-anchor="middle" class="mono muted" font-size="1.25">CC1 / CC2 Rd</text>
+
+    <!-- Piezo sounder and low-side driver -->
+    <circle cx="57" cy="124" r="6.5" fill="#1c2520" stroke="#c0cec3" stroke-width=".6"/>
+    <circle cx="57" cy="124" r="3" fill="none" stroke="#77877c" stroke-width=".45"/>
+    <text x="57" y="134" text-anchor="middle" class="mono" font-size="1.7">BZ1</text>
+    <rect x="68" y="121" width="7" height="6" rx=".5" class="part-dark"/><text x="71.5" y="125" text-anchor="middle" class="mono" font-size="1.4">Q3</text>
+    <rect x="77" y="122" width="7" height="4" rx=".4" class="part-dark"/><text x="80.5" y="124.8" text-anchor="middle" class="mono" font-size="1.35">R7</text>
+    <rect x="77" y="128" width="7" height="4" rx=".4" class="part-dark"/><text x="80.5" y="130.8" text-anchor="middle" class="mono" font-size="1.35">R8</text>
+    <rect x="103" y="91" width="7" height="4" rx=".4" class="part-dark"/><text x="106.5" y="93.8" text-anchor="middle" class="mono" font-size="1.35">R3</text>
+    <rect x="103" y="97" width="7" height="4" rx=".4" class="part-dark"/><text x="106.5" y="99.8" text-anchor="middle" class="mono" font-size="1.35">C4</text>
+    <rect x="131" y="96" width="7" height="4" rx=".4" class="part-dark"/><text x="134.5" y="98.8" text-anchor="middle" class="mono" font-size="1.35">R4</text>
+
+    <!-- Rail indicator LEDs and series resistors -->
+    <rect x="168" y="91" width="8" height="4" rx=".4" class="part-dark"/><text x="172" y="93.7" text-anchor="middle" class="mono" font-size="1.35">R5</text>
+    <circle cx="181" cy="93" r="2.6" fill="#8d332d" stroke="#f18a7f" stroke-width=".6"/>
+    <text x="181" y="99" text-anchor="middle" class="mono red" font-size="1.65">LED1</text>
+    <rect x="168" y="103" width="8" height="4" rx=".4" class="part-dark"/><text x="172" y="105.7" text-anchor="middle" class="mono" font-size="1.35">R6</text>
+    <circle cx="181" cy="105" r="2.6" fill="#28583a" stroke="#9bd3a8" stroke-width=".6"/>
+    <text x="181" y="111" text-anchor="middle" class="mono green" font-size="1.65">LED2</text>
+
+    <!-- Fixed USB-C at the bottom centre -->
+    <rect x="87" y="147" width="26" height="8" rx="2" fill="#111714" stroke="#d8bd83" stroke-width=".7"/>
+    <rect x="91" y="149" width="18" height="3.8" rx="1" fill="#070a08" stroke="#8f9f93" stroke-width=".3"/>
+    <text x="100" y="153.8" text-anchor="middle" class="mono gold" font-size="1.9">J2 · USB-C</text>
+
+    <!-- Fixed left-edge 10-pin service header -->
+    <text x="16" y="39" class="mono gold" font-size="2">J1 · 10P I/O</text>
+    <g class="pad">
+      <circle cx="7" cy="44" r="1.5"/><circle cx="7" cy="50" r="1.5"/><circle cx="7" cy="56" r="1.5"/><circle cx="7" cy="62" r="1.5"/><circle cx="7" cy="68" r="1.5"/>
+      <circle cx="7" cy="74" r="1.5"/><circle cx="7" cy="80" r="1.5"/><circle cx="7" cy="86" r="1.5"/><circle cx="7" cy="92" r="1.5"/><circle cx="7" cy="98" r="1.5"/>
+    </g>
+    <g class="mono muted" font-size="1.35" text-anchor="start">
+      <text x="11" y="44.7">1</text><text x="11" y="50.7">2</text><text x="11" y="56.7">3</text><text x="11" y="62.7">4</text><text x="11" y="68.7">5</text>
+      <text x="11" y="74.7">6</text><text x="11" y="80.7">7</text><text x="11" y="86.7">8</text><text x="11" y="92.7">9</text><text x="11" y="98.7">10</text>
+    </g>
+
+    <!-- Identity and title block; match the enclosure verbatim. -->
+    <text x="23" y="137" class="mono" fill="#cbd6cd" font-size="2.2">DeKUT · ELECTRONICS</text>
+    <rect x="143" y="135" width="38" height="8" fill="#14231a" stroke="#8d9d90" stroke-width=".35"/>
+    <text x="145" y="138.4" class="mono" font-size="1.8">SILICON SOUL v2.0</text>
+    <text x="145" y="141.3" class="mono muted" font-size="1.3">SN-2024-KM-PORTFOLIO-REV2</text>
+
+  </g>
+
+  <!-- Board legend and mechanical notes -->
+  <g transform="translate(60 755)">
+    <rect width="680" height="116" rx="8" class="card"/>
+    <text x="20" y="28" class="mono accent" font-size="12" letter-spacing="1.6">FLOORPLAN NOTES</text>
+    <text x="20" y="52" font-size="13">Fixed: outline, 4 holes, J1 left, J2 bottom-centre, U1, LED1/LED2, DeKUT mark.</text>
+    <text x="20" y="74" font-size="13">ANT1 uses U1’s module antenna at the top edge; no separate meander trace.</text>
+    <text x="20" y="96" font-size="13">Component placement only. Copper routing is intentionally not shown.</text>
+  </g>
+
+  <!-- Net list -->
+  <g transform="translate(790 158)">
+    <text x="0" y="18" class="mono accent" font-size="14" letter-spacing="2">PROPOSED NET LIST</text>
+    <text x="940" y="18" text-anchor="end" class="mono muted" font-size="11">LOGICAL CONNECTIONS FOR REVIEW · NOT YET ROUTED</text>
+
+    <!-- Column 1 -->
+    <g transform="translate(0 38)">
+      <rect width="455" height="232" rx="8" class="card"/>
+      <text x="18" y="29" class="section gold">01 · POWER + USB-C</text>
+      <text x="18" y="59" class="mono small">J2.VBUS → VBUS_5V → VR1.VIN</text>
+      <text x="18" y="82" class="mono small">VR1.3V3 → +3V3_SYS → FB1 → +3V3_MCU</text>
+      <text x="18" y="105" class="mono small">U1.3V3 ← +3V3_MCU · U1.GND → GND</text>
+      <text x="18" y="128" class="mono small">C1 10µF + C2 100nF: +3V3_MCU ↔ GND at U1</text>
+      <text x="18" y="151" class="mono small">J2.CC1 → R1 5.1kΩ → GND</text>
+      <text x="18" y="174" class="mono small">J2.CC2 → R2 5.1kΩ → GND</text>
+      <text x="18" y="198" class="small muted">LED1: VBUS via R5 1k · LED2: 3V3 via R6 1k</text>
+      <text x="18" y="219" class="small muted">C3 10µF input bypass at VR1; verify with chosen buck datasheet.</text>
+    </g>
+
+    <g transform="translate(0 284)">
+      <rect width="455" height="234" rx="8" class="card"/>
+      <text x="18" y="29" class="section gold">02 · USB / UART / BOOT</text>
+      <text x="18" y="59" class="mono small">J2.D+ / D− → U3 USBLC6-2 → U2 CH340C</text>
+      <text x="18" y="81" class="mono small">U3.VBUS→VBUS_5V · U3.GND→GND · U2.VCC→3V3</text>
+      <text x="18" y="103" class="mono small">U2.TXD → U1.GPIO3 / U0RXD</text>
+      <text x="18" y="125" class="mono small">U1.GPIO1 / U0TXD → U2.RXD</text>
+      <text x="18" y="147" class="mono small">U2.DTR# / RTS# → Q1/Q2 auto-reset pair</text>
+      <text x="18" y="169" class="mono small">Q1/Q2 → U1.EN / GPIO0 (IO0)</text>
+      <text x="18" y="191" class="mono small">SW8: GPIO0→GND · SW9: EN→GND</text>
+      <text x="18" y="216" class="small muted">R3 EN 10k + C4 100nF to GND · R4 IO0 10k pull-up</text>
+    </g>
+
+    <g transform="translate(0 534)">
+      <rect width="455" height="200" rx="8" class="card"/>
+      <text x="18" y="29" class="section gold">03 · GAME SWITCHES</text>
+      <text x="18" y="59" class="mono small">SW1 UP GPIO32 · SW2 LEFT GPIO25</text>
+      <text x="18" y="82" class="mono small">SW3 RIGHT GPIO26 · SW4 DOWN GPIO33</text>
+      <text x="18" y="105" class="mono small">SW5 ROTATE GPIO27 · SW6 DROP GPIO14</text>
+      <text x="18" y="128" class="mono small">SW7 PAUSE GPIO13</text>
+      <text x="18" y="158" class="small muted">All active-low to GND; use ESP32 internal pull-ups.</text>
+      <text x="18" y="180" class="small muted">J1’s 10-pin physical position is fixed; pinout awaits approval.</text>
+    </g>
+
+    <!-- Column 2 -->
+    <g transform="translate(480 38)">
+      <rect width="460" height="304" rx="8" class="card"/>
+      <text x="18" y="29" class="section gold">04 · DISPLAY FPC (ASSUMPTION)</text>
+      <text x="18" y="58" class="small">Working interface assumption: 4-wire SPI TFT.</text>
+      <text x="18" y="84" class="mono small">J6 +3V3 / GND — panel power</text>
+      <text x="18" y="107" class="mono small">SCLK GPIO18 · MOSI GPIO23 · MISO GPIO19*</text>
+      <text x="18" y="130" class="mono small">CS GPIO21 · D/C GPIO22 · RESET GPIO16</text>
+      <text x="18" y="153" class="mono small">BL_EN/PWM GPIO17 · TE optional*</text>
+      <path d="M18 174H442" class="rule"/>
+      <text x="18" y="198" class="small muted">* MISO/TE depend on the selected panel/controller.</text>
+      <text x="18" y="222" class="small muted">No panel model was supplied. These are logical net names,</text>
+      <text x="18" y="242" class="small muted">not final FPC pin numbers or approved GPIO connections.</text>
+      <text x="18" y="276" class="small gold">Confirm the LCD datasheet before artwork routing.</text>
+    </g>
+
+    <g transform="translate(480 356)">
+      <rect width="460" height="166" rx="8" class="card"/>
+      <text x="18" y="29" class="section gold">05 · BUZZER + INDICATORS</text>
+      <text x="18" y="59" class="small">BZ1 passive piezo → Q3 low-side driver.</text>
+      <text x="18" y="82" class="mono small">GPIO4 → R7 1kΩ → Q3 · R8 100kΩ pull-down</text>
+      <text x="18" y="105" class="mono small">BZ1+ → +3V3 · Q3 return → GND</text>
+      <text x="18" y="137" class="small muted">LED1 red = USB 5V · LED2 green = 3V3 rail present.</text>
+    </g>
+
+    <g transform="translate(480 536)">
+      <rect width="460" height="170" rx="8" fill="#1e211b" stroke="#8b754c" stroke-width="1"/>
+      <text x="18" y="29" class="section gold">REVIEW ITEMS AT THIS GATE</text>
+      <text x="18" y="57" class="small">• VR1 proposed as 3V3 buck (≥1A), replacing the SOT-223 LDO.</text>
+      <text x="31" y="78" class="small muted">At 5V→3.3V and 0.5A, an LDO dissipates about 0.85W.</text>
+      <text x="18" y="103" class="small">• Confirm the SPI display assumption and select the panel.</text>
+      <text x="18" y="128" class="small">• Confirm J1’s 10-pin assignment before routing.</text>
+      <text x="18" y="153" class="small muted">U1 stays WROOM-32 per brief; its datasheet says NRND.</text>
+    </g>
+  </g>
+
+  <!-- Footer: scope and source trail -->
+  <path d="M48 1060H1752" class="rule"/>
+  <text x="52" y="1090" font-size="12" class="mono muted">SCOPE: concept floorplan only · no fabricated pad numbering, copper paths, or electrical claims are frozen at Gate 2.</text>
+  <text x="52" y="1118" font-size="11" class="muted">Source basis: Espressif ESP32-WROOM-32 datasheet + hardware design guidelines; DevKitC V4 reference schematic; WCH CH340 datasheet; USB-IF Type-C spec; ST USBLC6-2 datasheet.</text>
+  <text x="1748" y="1148" text-anchor="end" font-size="11" class="mono gold">SILICON SOUL v2.0 · SN-2024-KM-PORTFOLIO-REV2</text>
+</svg>
