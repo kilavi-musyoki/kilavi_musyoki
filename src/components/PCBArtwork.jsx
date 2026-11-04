@@ -6,7 +6,7 @@ import { memo } from 'react';
 const componentDrafts = [
     { id: 'U1', type: 'module', footprint: 'ESP32-WROOM-32', x: 91, y: 4, w: 18, h: 25.5, rot: 0, stages: ['pcb', 'traces', 'components', 'system', 'routes'], group: 'MCU', mark: 'ESP32' },
     { id: 'J1', type: 'header', footprint: '1x10_THT', x: 7, y: 44, w: 3, h: 57, rot: 0, stages: ['components', 'system'], group: 'I/O' },
-    { id: 'J2', type: 'connector', footprint: 'USB-C-16P', x: 86, y: 148, w: 28, h: 8, rot: 0, stages: ['components', 'system'], group: 'USB', mark: 'USB-C' },
+    { id: 'J2', type: 'connector', footprint: 'USB-C-16P', x: 82, y: 147.5, w: 36, h: 8.5, rot: 0, stages: ['components', 'system'], group: 'USB', mark: 'USB-C' },
     { id: 'J6', type: 'connector', footprint: 'FPC-per-panel', x: 74, y: 43, w: 52, h: 7, rot: 0, stages: ['components', 'system'], group: 'Display', mark: 'DISPLAY · FPC' },
     { id: 'U2', type: 'ic', footprint: 'SOIC-16', x: 130, y: 118, w: 20, h: 16, rot: 0, stages: ['components', 'system'], group: 'USB', mark: 'CH340C' },
     { id: 'U3', type: 'ic', footprint: 'SOT-23-6', x: 91, y: 130, w: 16, h: 7, rot: 0, stages: ['components', 'system'], group: 'USB', mark: 'USBLC6-2' },
@@ -87,11 +87,11 @@ const holes = [[14,14],[186,14],[14,146],[186,146]];
 const stages = {
     thermal: { base: 1, traces: 0, parts: 0 },
     pcb: { base: 1, traces: 1, parts: 0 }, traces: { base: 1, traces: 1, parts: 1 },
-    components: { base: 1, traces: 1, parts: 1 }, system: { base: 1, traces: 1, parts: 0 },
+    components: { base: 1, traces: 1, parts: 1 }, system: { base: 1, traces: 1, parts: 1 },
     routes: { base: .85, traces: 1, parts: 0 },
 };
 
-const PCBArtwork = memo(function PCBArtwork({ stage = 'pcb', isDark = true, opacity = 1, tracesOpacity = 1, componentsOpacity = 1, ledOn = true }) {
+const PCBArtwork = memo(function PCBArtwork({ stage = 'pcb', isDark = true, opacity = 1, tracesOpacity = 1, componentsOpacity = 1, ledOn = true, signalPulseOpacity = 0 }) {
     const visible = stages[stage] || { base: 0, traces: 0, parts: 0 };
     const silk = isDark ? '#dce4dc' : '#eef4ec';
     return <g className="pcb-artwork">
@@ -119,13 +119,18 @@ const PCBArtwork = memo(function PCBArtwork({ stage = 'pcb', isDark = true, opac
             <text x="145" y="142" fontSize="1.25" fill={silk} fontFamily="monospace">SN-2024-KM-PORTFOLIO-REV2</text>
             <text x="88" y="154.7" textAnchor="middle" fontFamily="monospace" fontSize="1.75" fill="#d8c38d">USB-C / J2</text>
         </g>
-        <g opacity={visible.traces * opacity * tracesOpacity} fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <g opacity={visible.traces * opacity * (stage === 'routes' ? Math.max(.18, tracesOpacity) : tracesOpacity)} fill="none" strokeLinecap="round" strokeLinejoin="round">
             {traces.map(trace => <g key={trace.id}>
                 <path d={pathFromPoints(trace.points)} stroke="#523f2a" strokeWidth={trace.width + .45} opacity=".65" />
                 <path d={pathFromPoints(trace.points)} stroke="url(#pcb-copper)" strokeWidth={trace.width} opacity=".92" />
                 <path d={pathFromPoints(trace.points)} stroke="#f3dfb3" strokeWidth={Math.max(.12, trace.width * .12)} opacity=".55" />
             </g>)}
             {traces.map(trace => <g key={`via-${trace.id}`}><circle cx={trace.points[Math.floor(trace.points.length / 2)][0]} cy={trace.points[Math.floor(trace.points.length / 2)][1]} r="1.45" fill="#c69c5a" stroke="#eed79a" strokeWidth=".35"/><circle cx={trace.points[Math.floor(trace.points.length / 2)][0]} cy={trace.points[Math.floor(trace.points.length / 2)][1]} r=".55" fill="#15251b"/></g>)}
+        </g>
+        <g opacity={visible.base * opacity * signalPulseOpacity} pointerEvents="none">
+            {traces.filter(trace => trace.animate).map(trace => <circle key={`pulse-${trace.id}`} r=".7" fill="#73d7a5">
+                <animateMotion path={pathFromPoints(trace.points)} dur="2.8s" repeatCount="indefinite" />
+            </circle>)}
         </g>
         <g opacity={visible.base * opacity}>
             <Part part={components[0]} />

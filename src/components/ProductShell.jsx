@@ -4,13 +4,13 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const norm = (v, a, b) => clamp((v - a) / (b - a), 0, 1);
 
 export default memo(function ProductShell({ leverValue, isDark }) {
-    const sep = norm(leverValue, 0.1, 0.56);
-    const shellOpacity = 1 - norm(leverValue, 0.40, 0.58);
+    const sep = norm(leverValue, 0.1, 0.56) * (1 - norm(leverValue, 0.42, 0.50));
+    const shellOpacity = 1 - norm(leverValue, 0.35, 0.52);
     const glassOpacity = 1 - norm(leverValue, 0.44, 0.62);
     const seamGlow = norm(leverValue, 0.1, 0.42) * (1 - norm(leverValue, 0.42, 0.6));
 
     const topDy = -sep * 26;
-    const botDy = sep * 20;
+    const botDy = norm(leverValue, 0.52, 0.80) * 8;
     const leftDx = -sep * 15;
     const rightDx = sep * 15;
 
@@ -318,7 +318,7 @@ export default memo(function ProductShell({ leverValue, isDark }) {
                     </g>
 
                     {/* Screws */}
-                    {[[14, 151], [186, 151]].map(([cx, cy], i) => screwGroup(cx, cy, i))}
+                    {[[14, 146], [186, 146]].map(([cx, cy], i) => screwGroup(cx, cy, i))}
                 </g>
 
                 {/* ══════════════════════════════════════════════════════════════

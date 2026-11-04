@@ -21,7 +21,7 @@ const calculateSignalDot = (dist) => {
     return { x: 85, y: 148 };
 };
 
-const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, componentsOpacityMult = 1, tracesOpacityMult = 1, pcbOpacityMult = 1 }) => {
+const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, componentsOpacityMult = 1, tracesOpacityMult = 1, pcbOpacityMult = 1, signalPulseOpacity = 0 }) => {
     const [tooltip, setTooltip] = useState(null);
     const signalDotRef = useRef(null);
     const [ledOn, setLedOn] = useState(true);
@@ -385,8 +385,8 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
                     <text x="13" y="10" fontFamily="JetBrains Mono,monospace" fontSize="2.8" fill={silkAccent}>GPIO</text>
 
                     {/* USB-C with shield detail */}
-                    <rect x="86" y="148" width="28" height="8" rx="2" fill={usbFill} stroke={padColor} strokeWidth="0.75" />
-                    <rect x="90" y="150" width="20" height="4" rx="1" fill="#040404" />
+                    <rect x="82" y="147.5" width="36" height="8.5" rx="2.5" fill={usbFill} stroke={padColor} strokeWidth="0.75" />
+                    <rect x="84" y="148" width="32" height="7.5" rx="2" fill="#040404" />
                     {/* USB shield tabs */}
                     <rect x="87" y="149" width="2" height="2" rx=".3" fill={padColor} opacity="0.6" />
                     <rect x="111" y="149" width="2" height="2" rx=".3" fill={padColor} opacity="0.6" />
@@ -817,7 +817,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
 
                 {/* Board ambient glow */}
                 <ellipse cx="100" cy="160" rx="68" ry="18" fill="url(#board-glow)" />
-                <PCBArtwork stage={layer} isDark={isDark} opacity={pcbOpacityMult} tracesOpacity={tracesOpacityMult} componentsOpacity={componentsOpacityMult} ledOn={ledOn} />
+                <PCBArtwork stage={layer} isDark={isDark} opacity={pcbOpacityMult} tracesOpacity={tracesOpacityMult} componentsOpacity={componentsOpacityMult} ledOn={ledOn} signalPulseOpacity={signalPulseOpacity} />
             </svg>
 
             {/* Tooltip */}

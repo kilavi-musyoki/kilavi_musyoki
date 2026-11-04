@@ -13,7 +13,7 @@ const W = 120, H = 96;
 const gridC = 'rgba(75,216,160,0.07)';
 
 const AvatarDisplay = memo(function AvatarDisplay({ leverValue, isDark }) {
-    const gameOpacity = 1 - smoothstep(0.42, 0.66, leverValue);
+    const gameOpacity = 1 - smoothstep(0.40, 0.53, leverValue);
     const logoProgress = smoothstep(0.79, 0.96, leverValue);
     const logoOpacity = logoProgress;
     const bgOpacity = 1 - smoothstep(0.38, 0.58, leverValue) * 0.46;

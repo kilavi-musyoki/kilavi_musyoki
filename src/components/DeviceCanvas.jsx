@@ -345,12 +345,12 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
     const boardLayer = leverToLayer(leverValue);
 
     // Staggered PCB dematerialization stages (Zone 3 -> Zone 4)
-    const componentsOpacityMult = 1 - norm(smoothLever, 0.60, 0.70);
-    const tracesOpacityMult = 1 - norm(smoothLever, 0.88, 0.96);
+    const componentsOpacityMult = 1 - norm(smoothLever, 0.67, 0.80);
+    const tracesOpacityMult = 1 - norm(smoothLever, 0.67, 0.80);
     const pcbOpacityMult = 1 - norm(smoothLever, 0.96, 1.0);
 
     // Casing controls opacity (Zone 2 -> Zone 3)
-    const casingOpacity = 1 - norm(smoothLever, 0.42, 0.60);
+    const casingOpacity = 1 - norm(smoothLever, 0.38, 0.52);
 
     const velocity = Math.abs(leverValue - smoothLever);
     const chromAb = velocity * 30;
@@ -412,6 +412,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 <PCBBoard
                     layer={boardLayer}
                     isDark={isDark}
+                    signalPulseOpacity={norm(smoothLever, 0.67, 0.80)}
                     componentsOpacityMult={componentsOpacityMult}
                     tracesOpacityMult={tracesOpacityMult}
                     pcbOpacityMult={pcbOpacityMult}
