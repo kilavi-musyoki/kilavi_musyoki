@@ -1,4 +1,6 @@
-import React, { useRef, useState, useEffect, memo } from 'react';
+/* eslint-disable react/prop-types */
+import { useRef, useState, useEffect, memo } from 'react';
+import PCBArtwork from './PCBArtwork.jsx';
 
 const calculateSignalDot = (dist) => {
     const segs = [
@@ -206,6 +208,13 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
             <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg"
                 style={{ width: '100%', height: '100%', overflow: 'visible' }}>
                 <defs>
+                    <pattern id="pcb-grain" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+                        <circle cx="1" cy="1" r=".22" fill="#dce4dc" opacity=".18" />
+                    </pattern>
+                    <pattern id="pcb-keepout" x="0" y="0" width="2" height="2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                        <rect width="2" height="2" fill="#171e19" />
+                        <line x1="0" y1="0" x2="0" y2="2" stroke="#b99459" strokeWidth=".35" opacity=".45" />
+                    </pattern>
                     <radialGradient id="board-glow" cx="50%" cy="50%" r="50%">
                         <stop offset="0%" stopColor={glowStop} stopOpacity="0.14" />
                         <stop offset="100%" stopColor={glowStop} stopOpacity="0" />
@@ -300,7 +309,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
                 </g>
 
                 {/* ══════ PCB BASE ══════ */}
-                <g opacity={vis.pcb * pcbOpacityMult} style={{ transition: 'opacity 0.3s ease' }}>
+                <g opacity={0} style={{ transition: 'opacity 0.3s ease' }}>
                     {/* Board substrate */}
                     <rect x="4" y="4" width="192" height="152" rx="5" fill={pcbSubstrate} />
 
@@ -586,7 +595,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
                 </g>
 
                 {/* ══════ TRACES ══════ */}
-                <g opacity={vis.traces * tracesOpacityMult} style={{ transition: 'opacity 0.3s ease' }}>
+                <g opacity={0} style={{ transition: 'opacity 0.3s ease' }}>
                     <g stroke={traceColor} fill="none" filter="url(#pcb-glow)">
                         {/* ── POWER RAIL: VCC (top horizontal bus) — thicker trace ── */}
                         <path d="M14 25 L85 25 L88 22 L88 60" strokeWidth="1.6" opacity="0.72" />
@@ -708,7 +717,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
                 </g>
 
                 {/* ══════ COMPONENTS ══════ */}
-                <g opacity={vis.components * componentsOpacityMult} style={{ transition: 'opacity 0.3s ease' }}>
+                <g opacity={0} style={{ transition: 'opacity 0.3s ease' }}>
                     {/* ESP32 Module — enhanced with shield mesh and die detail */}
                     <g onMouseEnter={e => handleHover(e, { id: 'U1', label: 'ESP32-WROOM-32', func: 'Core Processing Unit', rating: '240MHz dual-core Xtensa LX6' })}
                         onMouseLeave={handleLeave} style={{ cursor: 'crosshair' }}>
@@ -808,6 +817,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
 
                 {/* Board ambient glow */}
                 <ellipse cx="100" cy="160" rx="68" ry="18" fill="url(#board-glow)" />
+                <PCBArtwork stage={layer} isDark={isDark} opacity={pcbOpacityMult} tracesOpacity={tracesOpacityMult} componentsOpacity={componentsOpacityMult} ledOn={ledOn} />
             </svg>
 
             {/* Tooltip */}
@@ -828,5 +838,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
         </div>
     );
 });
+
+PCBBoard.displayName = 'PCBBoard';
 
 export default PCBBoard;
