@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import PropTypes from 'prop-types';
 
 const ZONES = [
@@ -44,6 +44,7 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
     const lastZoneIdx = useRef(getZoneIdx(leverValue));
     const [hintPulse, setHintPulse] = useState(true);
     const [isDragging, setIsDragging] = useState(false);
+    const reduceMotion = useReducedMotion();
 
     const activeZone = getZone(leverValue);
     const activeColor = activeZone.color;
@@ -107,6 +108,15 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
         if (zi !== lastZoneIdx.current) { lastZoneIdx.current = zi; playTick(); }
     };
 
+    const onRailKeyDown = (e) => {
+        const steps = { ArrowUp: 0.05, ArrowRight: 0.05, ArrowDown: -0.05, ArrowLeft: -0.05, PageUp: 0.1, PageDown: -0.1 };
+        if (e.key === 'Home') { e.preventDefault(); onChange(0); return; }
+        if (e.key === 'End') { e.preventDefault(); onChange(1); return; }
+        if (!(e.key in steps)) return;
+        e.preventDefault();
+        onChange(Math.max(0, Math.min(1, leverValue + steps[e.key])));
+    };
+
     // Ticks every 5%
     const ticks = Array.from({ length: 21 }).map((_, i) => i * 0.05);
 
@@ -147,7 +157,7 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
             }}>CTRL</div>
 
             {/* Hint arrow */}
-            {hintPulse && (
+            {hintPulse && !reduceMotion && (
                 <motion.div
                     animate={{ y: [0, 4, 0], opacity: [0.3, 0.8, 0.3] }}
                     transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -160,15 +170,26 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
             {/* Rail */}
             <div
                 ref={railRef}
+                className="lever-rail-control"
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
                 onPointerCancel={onPointerUp}
+                onKeyDown={onRailKeyDown}
+                role="slider"
+                tabIndex={0}
+                aria-label="Deconstruction stage"
+                aria-orientation="vertical"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(leverValue * 100)}
+                aria-valuetext={`${activeZone.label}, ${activeZone.status}`}
                 style={{
                     flex: 1, width: '26px', position: 'relative',
                     background: 'linear-gradient(180deg,rgba(0,0,0,.55) 0%,rgba(0,0,0,.3) 100%)',
                     border: `1px solid ${railBorder}`,
                     borderRadius: '13px',
+                    '--lever-focus': activeColor,
                     boxShadow: `inset 0 0 10px rgba(0,0,0,.8), 0 0 14px ${activeColor}1a`,
                     cursor: 'crosshair',
                     transition: 'box-shadow 0.4s',
@@ -243,8 +264,8 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px',
                         transition: 'border-color 0.3s, box-shadow 0.3s',
                     }}
-                    whileHover={{ scaleX: 1.1, boxShadow: `0 0 22px ${activeColor}75, 0 4px 10px rgba(0,0,0,.62)` }}
-                    whileTap={{ scaleX: 0.95 }}
+                    whileHover={reduceMotion ? undefined : { scaleX: 1.1, boxShadow: `0 0 22px ${activeColor}75, 0 4px 10px rgba(0,0,0,.62)` }}
+                    whileTap={reduceMotion ? undefined : { scaleX: 0.95 }}
                 >
                     {[0, 1, 2].map(i => (
                         <div key={i} style={{

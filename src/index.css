@@ -1223,3 +1223,17 @@ body.light-mode .back-hub-btn:hover {
 }
 
 
+.lever-rail-control:focus-visible {
+  outline: 2px solid var(--lever-focus, #4BD8A0);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 4px rgba(75, 216, 160, 0.16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

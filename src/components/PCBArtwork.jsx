@@ -54,12 +54,12 @@ const traces = traceDrafts.map(trace => ({ ...trace, animate: true }));
 
 const pathFromPoints = points => points.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join(' ');
 
-function Part({ part, ledOn }) {
+function Part({ part }) {
     const { x, y, w, h, id, type, mark } = part;
     const isChip = ['ic', 'module'].includes(type);
     const silk = '#dce4dc';
-    const ledLit = id === 'LED1' ? ledOn : id === 'LED2';
-    return <g transform={`rotate(${part.rot} ${x + w / 2} ${y + h / 2})`} filter={type === 'led' && ledLit ? 'url(#led-glow)' : undefined}>
+    const ledLit = type === 'led';
+    return <g className={id === 'LED1' ? 'pcb-led-blink' : undefined} transform={`rotate(${part.rot} ${x + w / 2} ${y + h / 2})`} filter={type === 'led' && ledLit ? 'url(#led-glow)' : undefined}>
         {type === 'passive' && <>
             <rect x={x - 1.2} y={y + h * .22} width="1.5" height={h * .56} rx=".35" fill="#cba65f" />
             <rect x={x + w - .3} y={y + h * .22} width="1.5" height={h * .56} rx=".35" fill="#cba65f" />
@@ -91,10 +91,11 @@ const stages = {
     routes: { base: .85, traces: 1, parts: 0 },
 };
 
-const PCBArtwork = memo(function PCBArtwork({ stage = 'pcb', isDark = true, opacity = 1, tracesOpacity = 1, componentsOpacity = 1, ledOn = true, signalPulseOpacity = 0 }) {
+const PCBArtwork = memo(function PCBArtwork({ stage = 'pcb' }) {
     const visible = stages[stage] || { base: 0, traces: 0, parts: 0 };
-    const silk = isDark ? '#dce4dc' : '#eef4ec';
+    const silk = '#dce4dc';
     return <g className="pcb-artwork">
+        <style>{`@keyframes pcb-led-pulse{0%,92%,100%{opacity:1}94%,98%{opacity:.28}}.pcb-led-blink{animation:pcb-led-pulse 2.4s ease-in-out infinite}@media(prefers-reduced-motion:reduce){.pcb-led-blink{animation:none!important}.pcb-signal-motion{display:none}}`}</style>
         <defs>
             <linearGradient id="pcb-copper" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0" stopColor="#f0d393" />
@@ -105,7 +106,7 @@ const PCBArtwork = memo(function PCBArtwork({ stage = 'pcb', isDark = true, opac
                 <path d="M0 2.5H5 M2.5 0V5" stroke="#c5a16a" strokeOpacity=".055" strokeWidth=".25" />
             </pattern>
         </defs>
-        <g opacity={visible.base * opacity}>
+        <g opacity={visible.base ? 'var(--pcb-base-opacity,1)' : 0}>
             <rect x="4" y="4" width="192" height="152" rx="5" fill="#183126" stroke="#aab9ad" strokeWidth=".65" />
             <rect x="4.5" y="4.5" width="191" height="151" rx="4.5" fill="url(#pcb-ground-mesh)" />
             <rect x="4.5" y="4.5" width="191" height="151" rx="4.5" fill="url(#pcb-grain)" opacity=".38" />
@@ -119,7 +120,7 @@ const PCBArtwork = memo(function PCBArtwork({ stage = 'pcb', isDark = true, opac
             <text x="145" y="142" fontSize="1.25" fill={silk} fontFamily="monospace">SN-2024-KM-PORTFOLIO-REV2</text>
             <text x="88" y="154.7" textAnchor="middle" fontFamily="monospace" fontSize="1.75" fill="#d8c38d">USB-C / J2</text>
         </g>
-        <g opacity={visible.traces * opacity * (stage === 'routes' ? Math.max(.18, tracesOpacity) : tracesOpacity)} fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <g opacity={visible.traces ? 'var(--pcb-traces-opacity,1)' : 0} fill="none" strokeLinecap="round" strokeLinejoin="round">
             {traces.map(trace => <g key={trace.id}>
                 <path d={pathFromPoints(trace.points)} stroke="#523f2a" strokeWidth={trace.width + .45} opacity=".65" />
                 <path d={pathFromPoints(trace.points)} stroke="url(#pcb-copper)" strokeWidth={trace.width} opacity=".92" />
@@ -127,15 +128,15 @@ const PCBArtwork = memo(function PCBArtwork({ stage = 'pcb', isDark = true, opac
             </g>)}
             {traces.map(trace => <g key={`via-${trace.id}`}><circle cx={trace.points[Math.floor(trace.points.length / 2)][0]} cy={trace.points[Math.floor(trace.points.length / 2)][1]} r="1.45" fill="#c69c5a" stroke="#eed79a" strokeWidth=".35"/><circle cx={trace.points[Math.floor(trace.points.length / 2)][0]} cy={trace.points[Math.floor(trace.points.length / 2)][1]} r=".55" fill="#15251b"/></g>)}
         </g>
-        <g opacity={visible.base * opacity * signalPulseOpacity} pointerEvents="none">
-            {traces.filter(trace => trace.animate).map(trace => <circle key={`pulse-${trace.id}`} r=".7" fill="#73d7a5">
+        <g opacity={visible.base ? 'var(--pcb-signal-opacity,0)' : 0} pointerEvents="none">
+            {traces.filter(trace => trace.animate).map(trace => <circle className="pcb-signal-motion" key={`pulse-${trace.id}`} r=".7" fill="#73d7a5">
                 <animateMotion path={pathFromPoints(trace.points)} dur="2.8s" repeatCount="indefinite" />
             </circle>)}
         </g>
-        <g opacity={visible.base * opacity}>
+        <g opacity={visible.base ? 'var(--pcb-base-opacity,1)' : 0}>
             <Part part={components[0]} />
         </g>
-        <g opacity={visible.parts * opacity * componentsOpacity}>
+        <g opacity={visible.parts ? 'var(--pcb-components-opacity,1)' : 0}>
             {['components', 'system'].includes(stage) && <g fill="none" stroke="#dce4dc" strokeOpacity=".35" strokeWidth=".35" fontFamily="monospace" fontSize="2.8">
                 <rect x="88" y="31" width="42" height="22" rx="1" /><text x="89" y="32" fill="#dce4dc" stroke="none">DISPLAY</text>
                 <rect x="89" y="3" width="22" height="28" rx="1" /><text x="112" y="8" fill="#dce4dc" stroke="none">MCU</text>
@@ -143,9 +144,9 @@ const PCBArtwork = memo(function PCBArtwork({ stage = 'pcb', isDark = true, opac
                 <rect x="32" y="61" width="42" height="41" rx="1" /><text x="33" y="64" fill="#dce4dc" stroke="none">I/O</text>
                 <rect x="153" y="106" width="35" height="31" rx="1" /><text x="154" y="109" fill="#dce4dc" stroke="none">POWER</text>
             </g>}
-            {components.slice(1).map(part => <Part key={part.id} part={part} ledOn={ledOn} />)}
+            {components.slice(1).map(part => <Part key={part.id} part={part} />)}
         </g>
     </g>;
-});
+}, (previous, next) => previous.stage === next.stage);
 
 export default PCBArtwork;

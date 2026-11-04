@@ -1,33 +1,11 @@
 /* eslint-disable react/prop-types */
-import { useRef, useState, useEffect, memo } from 'react';
+import { useRef, useState, memo } from 'react';
 import PCBArtwork from './PCBArtwork.jsx';
 
-const calculateSignalDot = (dist) => {
-    const segs = [
-        { x1: 12, y1: 80, x2: 22, y2: 80 }, { x1: 22, y1: 80, x2: 22, y2: 68 }, { x1: 22, y1: 68, x2: 90, y2: 68 },
-        { x1: 90, y1: 68, x2: 90, y2: 103 }, { x1: 90, y1: 103, x2: 100, y2: 103 }, { x1: 100, y1: 103, x2: 100, y2: 120 },
-        { x1: 100, y1: 120, x2: 114, y2: 120 }, { x1: 114, y1: 120, x2: 114, y2: 135 }, { x1: 114, y1: 135, x2: 85, y2: 135 },
-        { x1: 85, y1: 135, x2: 85, y2: 148 },
-    ];
-    let rem = dist;
-    for (const seg of segs) {
-        const len = Math.hypot(seg.x2 - seg.x1, seg.y2 - seg.y1);
-        if (rem <= len) {
-            const t = rem / len;
-            return { x: seg.x1 + (seg.x2 - seg.x1) * t, y: seg.y1 + (seg.y2 - seg.y1) * t };
-        }
-        rem -= len;
-    }
-    return { x: 85, y: 148 };
-};
-
-const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, componentsOpacityMult = 1, tracesOpacityMult = 1, pcbOpacityMult = 1, signalPulseOpacity = 0 }) => {
+const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true }) => {
     const [tooltip, setTooltip] = useState(null);
-    const signalDotRef = useRef(null);
-    const [ledOn, setLedOn] = useState(true);
+    const ledOn = true;
     const tooltipTimer = useRef(null);
-    const rafRef = useRef(null);
-    const ledTimerRef = useRef(null);
 
     // ── Palette ──────────────────────────────────────────────────────────────
     const traceColor = isDark ? '#4BD8A0' : '#00CC66';
@@ -65,46 +43,6 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
     const solderMask = isDark ? 'rgba(20,60,30,0.55)' : 'rgba(10,50,20,0.6)';
     const diodeColor = '#333';
     const diodeBand = '#c0c0c0';
-
-    // ── Signal pulse animation ────────────────────────────────────────────────
-    useEffect(() => {
-        if (!['traces', 'components', 'routes'].includes(layer)) {
-            cancelAnimationFrame(rafRef.current);
-            return;
-        }
-        let t = 0;
-        const totalLen = 340;
-        const animate = () => {
-            t = (t + 0.003) % 1;
-            const dist = t * totalLen;
-            const dot = calculateSignalDot(dist);
-            if (signalDotRef.current) {
-                const circles = signalDotRef.current.getElementsByTagName('circle');
-                if (circles.length >= 2) {
-                    circles[0].setAttribute('cx', dot.x);
-                    circles[0].setAttribute('cy', dot.y);
-                    circles[1].setAttribute('cx', dot.x);
-                    circles[1].setAttribute('cy', dot.y);
-                }
-            }
-            rafRef.current = requestAnimationFrame(animate);
-        };
-        rafRef.current = requestAnimationFrame(animate);
-        return () => cancelAnimationFrame(rafRef.current);
-    }, [layer]);
-
-    // ── LED blink ─────────────────────────────────────────────────────────────
-    useEffect(() => {
-        const schedule = () => {
-            const delay = 1500 + Math.random() * 2500;
-            ledTimerRef.current = setTimeout(() => {
-                setLedOn(false);
-                setTimeout(() => { setLedOn(true); schedule(); }, 120);
-            }, delay);
-        };
-        schedule();
-        return () => clearTimeout(ledTimerRef.current);
-    }, []);
 
     const components = [
         { id: 'C1', x: 25, y: 30, w: 8, h: 5, label: 'C1 100nF', func: 'Decoupling cap', rating: '50V X7R', color: capColor },
@@ -709,7 +647,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
 
                     {/* Signal dot */}
                     {['traces', 'components', 'routes'].includes(layer) && (
-                        <g filter="url(#signal-glow)" ref={signalDotRef}>
+                        <g filter="url(#signal-glow)">
                             <circle cx="12" cy="80" r="2.4" fill="#00FFAA" opacity="0.9" />
                             <circle cx="12" cy="80" r="1.1" fill="#ffffff" opacity="0.95" />
                         </g>
@@ -817,7 +755,7 @@ const PCBBoard = memo(({ layer = 'casing', className = '', isDark = true, compon
 
                 {/* Board ambient glow */}
                 <ellipse cx="100" cy="160" rx="68" ry="18" fill="url(#board-glow)" />
-                <PCBArtwork stage={layer} isDark={isDark} opacity={pcbOpacityMult} tracesOpacity={tracesOpacityMult} componentsOpacity={componentsOpacityMult} ledOn={ledOn} signalPulseOpacity={signalPulseOpacity} />
+                <PCBArtwork stage={layer} />
             </svg>
 
             {/* Tooltip */}

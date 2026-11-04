@@ -348,6 +348,7 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
     const componentsOpacityMult = 1 - norm(smoothLever, 0.67, 0.80);
     const tracesOpacityMult = 1 - norm(smoothLever, 0.67, 0.80);
     const pcbOpacityMult = 1 - norm(smoothLever, 0.96, 1.0);
+    const signalPulseOpacity = norm(smoothLever, 0.67, 0.80);
 
     // Casing controls opacity (Zone 2 -> Zone 3)
     const casingOpacity = 1 - norm(smoothLever, 0.38, 0.52);
@@ -408,14 +409,14 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
             <div style={{
                 position: 'absolute', inset: 0, zIndex: 1,
                 opacity: pcbOpacity,
+                '--pcb-base-opacity': pcbOpacityMult,
+                '--pcb-traces-opacity': boardLayer === 'routes' ? Math.max(0.18, tracesOpacityMult) : tracesOpacityMult,
+                '--pcb-components-opacity': componentsOpacityMult,
+                '--pcb-signal-opacity': signalPulseOpacity,
             }}>
                 <PCBBoard
                     layer={boardLayer}
                     isDark={isDark}
-                    signalPulseOpacity={norm(smoothLever, 0.67, 0.80)}
-                    componentsOpacityMult={componentsOpacityMult}
-                    tracesOpacityMult={tracesOpacityMult}
-                    pcbOpacityMult={pcbOpacityMult}
                 />
             </div>
 
