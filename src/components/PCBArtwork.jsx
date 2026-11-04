@@ -79,7 +79,7 @@ function Part({ part, ledOn }) {
         {type === 'header' && Array.from({ length: 10 }, (_, i) => <g key={i}><circle cx={x + w / 2} cy={y + 2.5 + i * 5.7} r="1.35" fill="#d1ad66" /><circle cx={x + w / 2} cy={y + 2.5 + i * 5.7} r=".58" fill="#121714" /></g>)}
         {type === 'led' && <><rect x={x - 1} y={y + 1} width="1.2" height="3" fill="#cba65f"/><rect x={x + w - .2} y={y + 1} width="1.2" height="3" fill="#cba65f"/><rect x={x} y={y} width={w} height={h} rx="1.2" fill={id === 'LED1' ? '#7d3934' : '#365c42'} stroke="#c5d0c6" strokeWidth=".45"/><circle cx={x + w / 2} cy={y + h / 2} r=".8" fill={id === 'LED1' ? '#dd7668' : '#83b995'} opacity=".75" /></>}
         {type !== 'header' && type !== 'connector' && <text x={x + w / 2} y={y + h / 2 + .65} textAnchor="middle" fontSize={isChip ? 1.9 : 1.45} fill={silk} fontFamily="monospace">{mark}</text>}
-        <text x={x + w / 2} y={y - 1.4} textAnchor="middle" fontSize="1.8" fill={silk} fontFamily="monospace">{id}</text>
+        <text x={x + w / 2} y={y - 1.8} textAnchor="middle" fontSize="2.8" fill="#f0f3ee" fontFamily="monospace" fontWeight="600">{id}</text>
     </g>;
 }
 
@@ -136,6 +136,13 @@ const PCBArtwork = memo(function PCBArtwork({ stage = 'pcb', isDark = true, opac
             <Part part={components[0]} />
         </g>
         <g opacity={visible.parts * opacity * componentsOpacity}>
+            {['components', 'system'].includes(stage) && <g fill="none" stroke="#dce4dc" strokeOpacity=".35" strokeWidth=".35" fontFamily="monospace" fontSize="2.8">
+                <rect x="88" y="31" width="42" height="22" rx="1" /><text x="89" y="32" fill="#dce4dc" stroke="none">DISPLAY</text>
+                <rect x="89" y="3" width="22" height="28" rx="1" /><text x="112" y="8" fill="#dce4dc" stroke="none">MCU</text>
+                <rect x="127" y="114" width="27" height="24" rx="1" /><text x="128" y="117" fill="#dce4dc" stroke="none">USB</text>
+                <rect x="32" y="61" width="42" height="41" rx="1" /><text x="33" y="64" fill="#dce4dc" stroke="none">I/O</text>
+                <rect x="153" y="106" width="35" height="31" rx="1" /><text x="154" y="109" fill="#dce4dc" stroke="none">POWER</text>
+            </g>}
             {components.slice(1).map(part => <Part key={part.id} part={part} ledOn={ledOn} />)}
         </g>
     </g>;

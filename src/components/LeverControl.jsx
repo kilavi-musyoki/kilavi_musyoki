@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import PropTypes from 'prop-types';
 
 const ZONES = [
     { value: 0.0, label: 'PRODUCT', color: '#ced0ce', status: 'ONLINE' },
@@ -32,7 +33,7 @@ const playTick = (() => {
     };
 })();
 
-const getZoneIdx = (lv) => Math.min(4, Math.floor(lv / 0.2));
+const getZoneIdx = (lv) => Math.min(4, Math.floor((lv + 1e-9) / 0.2));
 const getZone = (lv) => ZONES[getZoneIdx(lv)];
 
 export default function LeverControl({ leverValue, onChange, isDark, isMobile = false }) {
@@ -42,6 +43,7 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
     const startVal = useRef(0);
     const lastZoneIdx = useRef(getZoneIdx(leverValue));
     const [hintPulse, setHintPulse] = useState(true);
+    const [isDragging, setIsDragging] = useState(false);
 
     const activeZone = getZone(leverValue);
     const activeColor = activeZone.color;
@@ -63,6 +65,7 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
     const onPointerDown = (e) => {
         setHintPulse(false);
         dragging.current = true;
+        setIsDragging(true);
         startY.current = e.clientY;
         startVal.current = leverValue;
         e.currentTarget.setPointerCapture(e.pointerId);
@@ -88,6 +91,7 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
     const onPointerUp = () => {
         if (!dragging.current) return;
         dragging.current = false;
+        setIsDragging(false);
         const snapped = snap(leverValue);
         if (snapped !== leverValue) {
             onChange(snapped);
@@ -127,13 +131,6 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
                     className="lever-range-input"
                     style={{ accentColor: activeColor, width: '100%' }}
                 />
-                <div style={{
-                    textAlign: 'center', fontFamily: 'JetBrains Mono, monospace',
-                    fontSize: '0.5rem', color: activeColor, letterSpacing: '0.12em',
-                    transition: 'color 0.3s', textShadow: `0 0 7px ${activeColor}55`,
-                }}>
-                    LAYER: {activeZone.label}
-                </div>
             </div>
         );
     }
@@ -242,7 +239,7 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
                         border: `1.5px solid ${activeColor}`,
                         borderRadius: '6px',
                         boxShadow: `0 0 15px ${activeColor}55, inset 0 2px 0 rgba(255,255,255,0.17), 0 4px 10px rgba(0,0,0,.62)`,
-                        cursor: dragging.current ? 'grabbing' : 'grab',
+                        cursor: isDragging ? 'grabbing' : 'grab',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px',
                         transition: 'border-color 0.3s, box-shadow 0.3s',
                     }}
@@ -268,13 +265,14 @@ export default function LeverControl({ leverValue, onChange, isDark, isMobile = 
                 }}>
                     {Math.round(leverValue * 100)}%
                 </div>
-                <div style={{
-                    fontFamily: 'JetBrains Mono, monospace', fontSize: '0.38rem',
-                    color: labelDim, letterSpacing: '0.12em',
-                }}>
-                    [{activeZone.status}]
-                </div>
             </div>
         </div>
     );
 }
+
+LeverControl.propTypes = {
+    leverValue: PropTypes.number.isRequired,
+    onChange: PropTypes.func.isRequired,
+    isDark: PropTypes.bool.isRequired,
+    isMobile: PropTypes.bool,
+};

@@ -212,7 +212,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                             display: 'flex',
                             flexDirection: isMobile ? 'column' : 'row',
                             alignItems: isMobile ? 'flex-start' : 'center',
-                            gap: isMobile ? '1.5rem' : '3rem',
+                            gap: isMobile ? '1.5rem' : 'clamp(1rem, 2vw, 3rem)',
                             maxWidth: '1400px',
                             margin: '0 auto',
                         }}
@@ -223,9 +223,9 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ duration: 0.7, ease: SMOOTH_OUT, delay: 0.2 }}
                             style={{
-                                flex: isMobile ? 'none' : '0 0 45%',
+                                flex: isMobile ? 'none' : '0 1 45%',
                                 width: isMobile ? '100%' : undefined,
-                                minWidth: isMobile ? undefined : '280px',
+                                minWidth: 0,
                             }}
                         >
                             {/* Greeting */}
@@ -278,7 +278,8 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                                 border: `1px solid ${statusBorder}`,
                                 borderRadius: '3px', background: statusBg, color: dimColor,
                                 marginBottom: '1.5rem', letterSpacing: '0.04em', lineHeight: 1.8,
-                                overflowX: 'hidden',
+                                minWidth: 0,
+                                overflowWrap: 'anywhere',
                             }}>
                                 <span style={{ display: 'flex', flexWrap: 'wrap', gap: '0 8px' }}>
                                     <span style={{ color: statusOnline }}>SYSTEM: ONLINE</span>
@@ -295,7 +296,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                             {(() => {
                                 const STAT_COLORS_LIGHT = ['#D4AF37','#CE8946','#BDB76B','#B8722E','#D4AF37'];
                                 return (
-                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)', gap: isMobile ? '1rem 0.5rem' : '0.5rem', marginBottom: '2rem' }}>
+                                    <div style={{ display: 'grid', minWidth: 0, gridTemplateColumns: isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(5, minmax(0, 1fr))', gap: isMobile ? '1rem 0.5rem' : '0.5rem', marginBottom: '2rem' }}>
                                         {[
                                             { val: '1000+', label: 'Hours Building'   },
                                             { val: '10+',   label: 'Projects'         },
@@ -305,7 +306,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                                         ].map((stat, i) => {
                                             const statColor = isDark ? accentColor : STAT_COLORS_LIGHT[i];
                                             return (
-                                                <div key={stat.label} style={{ textAlign: 'center', padding: '0.4rem 0' }}>
+                                                <div key={stat.label} style={{ minWidth: 0, textAlign: 'center', padding: '0.4rem 0' }}>
                                                     <div style={{
                                                         fontFamily: 'Syne, sans-serif', fontWeight: 700,
                                                         fontSize: 'clamp(1.1rem, 3.5vw, 1.6rem)',
@@ -315,9 +316,10 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                                                     </div>
                                                     <div style={{
                                                         fontFamily: 'JetBrains Mono, monospace',
-                                                        fontSize: 'clamp(0.45rem, 2vw, 0.6rem)',
-                                                        color: dimColor, marginTop: '3px',
+                                                        fontSize: 'clamp(0.4rem, 1.1vw, 0.6rem)',
+                                                        color: dimColor, marginTop: '3px', lineHeight: 1.25,
                                                         letterSpacing: '0.04em', textTransform: 'uppercase',
+                                                        overflowWrap: 'anywhere',
                                                     }}>
                                                         {stat.label}
                                                     </div>
@@ -362,8 +364,9 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
                             animate={{ x: 0, opacity: 1, scale: 1 }}
                             transition={{ duration: 0.8, ease: SMOOTH_OUT, delay: 0.3 }}
                             style={{
-                                flex: isMobile ? 'none' : '1 1 300px',
+                                flex: isMobile ? 'none' : '1 1 280px',
                                 width: isMobile ? '100%' : undefined,
+                                minWidth: 0,
                                 maxWidth: isMobile ? '100%' : '580px',
                                 display: 'flex',
                                 justifyContent: 'center',

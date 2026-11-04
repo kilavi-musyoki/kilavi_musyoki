@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const LAYERS = [
@@ -18,11 +18,18 @@ export default function LayerLabel({ leverValue, isDark }) {
 
     return (
         <div style={{
-            position: 'absolute', bottom: '0.85rem', left: '0.85rem',
-            zIndex: 10, pointerEvents: 'none',
+            position: 'absolute', top: '0.35rem', left: '10%', right: '10%',
+            zIndex: 16, pointerEvents: 'none',
+            minHeight: '24px', boxSizing: 'border-box',
+            display: 'flex', alignItems: 'center',
+            padding: '3px 8px',
+            background: 'rgba(8,12,10,0.92)',
+            border: '1px solid rgba(206,216,208,0.16)',
+            borderRadius: '3px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.24)',
         }}>
             <AnimatePresence mode="wait">
-                {leverValue < 0.8 && (
+                {leverValue < 0.98 && (
                     <motion.div
                         key={layer.name}
                         initial={{ opacity: 0, y: 5 }}
@@ -31,10 +38,10 @@ export default function LayerLabel({ leverValue, isDark }) {
                         transition={{ duration: 0.2, ease: 'easeOut' }}
                     >
                     {/* Name + status badge */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '7px', width: '100%' }}>
                         <div style={{
                             fontFamily: 'JetBrains Mono, monospace',
-                            fontSize: '0.62rem',
+                            fontSize: '0.58rem',
                             color: layer.color,
                             letterSpacing: '0.15em',
                             fontWeight: 700,
@@ -64,7 +71,7 @@ export default function LayerLabel({ leverValue, isDark }) {
                         letterSpacing: '0.04em',
                     }}>
                         {layer.desc}{' '}
-                        <span style={{ opacity: 0.45 }}>// DEPTH: {pct}%</span>
+                            <span style={{ opacity: 0.7, whiteSpace: 'nowrap' }}>DEPTH {pct}%</span>
                     </div>
                 </motion.div>
                 )}
@@ -72,3 +79,8 @@ export default function LayerLabel({ leverValue, isDark }) {
         </div>
     );
 }
+
+LayerLabel.propTypes = {
+    leverValue: PropTypes.number.isRequired,
+    isDark: PropTypes.bool.isRequired,
+};
