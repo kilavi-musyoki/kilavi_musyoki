@@ -27,17 +27,17 @@ export class Tetris3DRenderer {
 
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0.1, 1200);
-        this.camera.position.set(0.5, 0.5, 700);
-        this.camera.lookAt(0.5, 0.5, 0);
+        this.camera.position.set(0, 0, 700);
+        this.camera.lookAt(0, 0, 0);
 
-        this.scene.add(new THREE.AmbientLight(0xdfffee, 1.45));
+        this.scene.add(new THREE.AmbientLight(0xdfffee, 1.5));
 
-        const keyLight = new THREE.DirectionalLight(0xffffff, 2.1);
-        keyLight.position.set(-180, 320, 260);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+        keyLight.position.set(0, 350, 400);
         this.scene.add(keyLight);
 
         const rimLight = new THREE.DirectionalLight(0x57f2c0, 1.0);
-        rimLight.position.set(280, -160, 180);
+        rimLight.position.set(250, 50, 300);
         this.scene.add(rimLight);
         this.rimLight = rimLight;
 
@@ -141,8 +141,8 @@ export class Tetris3DRenderer {
         this.camera.right = this.width;
         this.camera.top = this.height;
         this.camera.bottom = 0;
-        this.camera.position.set(this.width / 2, this.height / 2, 700);
-        this.camera.lookAt(this.width / 2, this.height / 2, 0);
+        this.camera.position.set(0, 0, 700);
+        this.camera.lookAt(0, 0, 0);
         this.camera.updateProjectionMatrix();
     }
 
@@ -288,6 +288,14 @@ export class Tetris3DRenderer {
                     if (mesh.visible) {
                         mesh.material.transparent = true;
                         mesh.material.opacity = 0.25;
+                        mesh.material.needsUpdate = true;
+                    }
+                }
+            } else {
+                for (const mesh of this.activeMeshes) {
+                    if (mesh.visible) {
+                        mesh.material.transparent = false;
+                        mesh.material.opacity = 1.0;
                         mesh.material.needsUpdate = true;
                     }
                 }

@@ -97,7 +97,7 @@ export class TetrisEngine {
             color: PIECE_COLORS[type],
             shape: PIECES[type].shape.map(r => [...r]),
             x: Math.floor((COLS - PIECES[type].shape[0].length) / 2),
-            y: type === 'I' ? -1 : 0 
+            y: (type === 'I' || type === 'T') ? 1 : 2 
         };
     }
 
@@ -168,7 +168,7 @@ export class TetrisEngine {
                 color: temp.color,
                 shape: temp.shape,
                 x: Math.floor((COLS - temp.shape[0].length) / 2),
-                y: temp.type === 'I' ? -1 : 0
+                y: (temp.type === 'I' || temp.type === 'T') ? 1 : 2
             };
         }
 
