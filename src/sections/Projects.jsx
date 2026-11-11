@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getTheme } from '../theme.js';
 
@@ -15,6 +16,21 @@ const useWindowWidth = () => {
     return width;
 };
 
+// ── Reduced-motion preference ─────────────────────────────────────────────────
+const usePrefersReducedMotion = () => {
+    const [reduced, setReduced] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    });
+    useEffect(() => {
+        const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const handler = (e) => setReduced(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+    return reduced;
+};
+
 // ── Category definitions ──────────────────────────────────────────────────────
 const CATEGORIES = [
     { id: 'all',   label: 'All',                short: 'All' },
@@ -28,11 +44,56 @@ const CATEGORIES = [
 const PROJECTS_PER_PAGE = 6;
 const PROJECT_IMAGE = '/assets/projects';
 
-// ── Project data ──────────────────────────────────────────────────────────────
+// ── Project data (Ranked from most impressive to least) ───────────────────────
 const PROJECTS = [
     {
-        id: 'p1',
+        id: 'p12',
         number: '01',
+        title: 'KejaMatch — Lead Full-Stack Engineer',
+        subtitle: 'Trust-first rental discovery monorepo with M-Pesa STK push & TrueCost engine',
+        problem: 'Off-campus student housing in Nyeri County & DeKUT is plagued by phantom listings, hidden move-in fees, stale rental availability, and deposit scams. A trust-first platform was needed to guarantee listing freshness, provide transparent move-in fee breakdowns, verify landlords, and protect students with automated community safety mechanisms.',
+        approach: 'Architected a high-performance monorepo using Turborepo with Next.js 15 App Router on the frontend and NestJS with Prisma ORM and PostgreSQL on the backend. Integrated Safaricom M-Pesa Daraja API for STK push payments, built an automated 7-day SMS listing freshness lifecycle, implemented multi-tier landlord verification workflows, and developed an offline-first PWA service worker with local caching.',
+        outcome: 'Architected and delivered a trust-first property discovery monorepo featuring an automated 7-day SMS listing freshness lifecycle, multi-tier landlord verification, and M-Pesa STK push integration. Designed a deterministic TrueCost engine providing move-in cost breakdowns with certainty tagging, reducing hidden rental fees to zero. Implemented community safety mechanisms including multi-category scam reporting with automated quarantine at ≥3 reports and an offline-first PWA service worker.',
+        lessons: 'Maintaining listing freshness without overburdening landlords required an automated SMS-based heartbeat verification lifecycle. Eliminating hidden rental costs required building a deterministic engine that tags fees with explicit certainty levels rather than relying on unstructured text descriptions. Designing scam quarantine thresholds at ≥3 reports prevented malicious spam while protecting legitimate listings.',
+        stack: ['TypeScript', 'Next.js 15', 'NestJS', 'Prisma', 'PostgreSQL', 'M-Pesa Daraja API', 'Turborepo', 'PWA'],
+        color: '#FF5A3C',
+        image: `${PROJECT_IMAGE}/apartment.jpg`,
+        category: 'sw',
+        repo: 'https://github.com/kilavi-musyoki/house-search.git',
+    },
+    {
+        id: 'p11',
+        number: '02',
+        title: 'Silicon Soul — Personal Portfolio v4',
+        subtitle: 'Hardware diagnostic interface disguised as a personal website',
+        problem: "Most developer portfolios are static pages or template clones that say nothing about how the person actually thinks or builds. The goal was to design a portfolio that is itself a demonstration — a living interface that embodies the engineering discipline behind it, without relying on pre-built UI kits or templates.",
+        approach: 'Designed and built from scratch in React 19 with Vite. The site opens with a boot sequence terminal, then reveals a 7-layer deconstructable SVG PCB board that reacts to scroll position and cursor movement via GSAP + Framer Motion. A custom cybernetic context-aware cursor reads data attributes from DOM elements to change shape and color. An idle pixel character walks the viewport edge. A full dark/light theme system with iris-wipe transition and localStorage persistence covers every token across all five sections. The contact form integrates EmailJS with a Cloudflare Turnstile CAPTCHA and a Vercel serverless Nodemailer fallback. An oscilloscope waveform responds in real time to typing activity. A debug easter egg (type "debug") exposes FPS, heap, and component bounds.',
+        outcome: 'A production-deployed portfolio site that passes Lighthouse with no accessibility warnings, serves under Vercel with hardened security headers (CSP, HSTS, X-Frame-Options, Permissions-Policy), and delivers a sub-3s first contentful paint. Every interactive surface — nav, cards, contact form, cursor, PCB board — is authored without a UI component library.',
+        lessons: 'Framer Motion layout animations and AnimatePresence conflict with direct DOM manipulation (GSAP scroll triggers) — they must be carefully separated by layer to avoid competing transform origins. Cloudflare Turnstile token lifecycle requires explicit reset on form re-submission, otherwise the widget silently returns a stale token. CSS backdrop-filter on overlapping elements in Safari requires explicit -webkit- prefixing and a non-transparent background to take effect.',
+        stack: ['React 19', 'Vite 7', 'Framer Motion', 'GSAP', 'Tailwind CSS v4', 'EmailJS', 'Cloudflare Turnstile', 'Vercel Serverless', 'Nodemailer', 'JetBrains Mono', 'Syne'],
+        color: '#4BD8A0',
+        image: `${PROJECT_IMAGE}/cyber-learning.jpg`,
+        category: 'sw',
+        repo: 'https://github.com/kilavi-musyoki/portfoliov4.git',
+    },
+    {
+        id: 'p5',
+        number: '03',
+        title: 'LinkUp Notes — Secure Android Notes App',
+        subtitle: 'Offline-first notes with AES-256 encryption & biometric lock',
+        problem: 'Most note-taking apps either lack meaningful security or require cloud connectivity, exposing sensitive personal notes to data breaches or loss of access offline. A fully local solution was needed with hardware-backed encryption and zero-trust access control at both app and note level.',
+        approach: 'Built with Kotlin and Jetpack Compose following MVVM architecture. AES-256-GCM encryption is backed by Android Keystore hardware keys; notes are encrypted before hitting the Room/SQLite layer. Biometric authentication (fingerprint/face with PIN fallback) gates app entry with configurable auto-lock timeouts. Individual notes can be independently locked. A rich text editor with formatting toolbar, tag-based organization, full-text search, and undo/redo round out the feature set. Export to TXT, Markdown, and PDF is supported via FileProvider sharing.',
+        outcome: 'Fully functional offline notes app with hardware-backed encryption, per-note locking, multi-select bulk actions, auto-save, crash recovery, and a 30-day soft-delete trash system. All security layers operate without any network dependency.',
+        lessons: 'Note-level locking required careful separation between the biometric prompt lifecycle and Compose recomposition — tightly coupling them caused the auth dialog to dismiss unexpectedly on rotation. Android Keystore key invalidation on biometric enrollment changes also needed explicit handling to avoid silent decryption failures.',
+        stack: ['Kotlin', 'Jetpack Compose', 'Material 3', 'Room / SQLite', 'AES-256-GCM', 'Android Keystore', 'AndroidX Biometric', 'Kotlin Coroutines'],
+        color: '#a78bfa',
+        image: `${PROJECT_IMAGE}/notes-phone.jpg`,
+        category: 'cyber',
+        repo: 'https://github.com/kilavi-musyoki/notes-app.git',
+    },
+    {
+        id: 'p1',
+        number: '04',
         title: 'ClubVote Secure Election Platform',
         subtitle: 'Anonymous web-based voting system with cryptographic verification',
         problem:
@@ -51,7 +112,7 @@ const PROJECTS = [
     },
     {
         id: 'p2',
-        number: '02',
+        number: '05',
         title: 'ESP32 / MQTT Fire Detection System',
         subtitle: 'IoT sensor mesh with edge alerting',
         problem: 'Smoke detectors in multi-room buildings operate in isolation with no centralized visibility. A network-aware system was needed for real-time monitoring, automatic threshold alerting, and zone-level escalation.',
@@ -63,52 +124,6 @@ const PROJECTS = [
         image: `${PROJECT_IMAGE}/iot-breadboard.jpg`,
         category: 'iot',
         repo: null,
-    },
-    {
-        id: 'p3',
-        number: '03',
-        title: 'Digital Clock Converter (24H → 12H)',
-        subtitle: 'BCD logic design & Logisim validation',
-        problem: 'Embedded display systems operating on 24-hour BCD time need 12-hour format output for user interfaces — including AM/PM detection, tens-digit rollover, and midnight/noon edge cases — all without a microcontroller.',
-        approach: 'Combinational and sequential digital logic using comparators, BCD decoders, flip-flops, and a multiplexer network. Tens-of-hours digit conditionally suppressed for hours 01–09. Dedicated comparator block for 12:xx AM/PM toggling; second comparator for 00:xx → 12:xx midnight remapping. Full circuit built and exhaustively simulated in Logisim Evolution with 1,440 test vectors.',
-        outcome: 'Verified functional correctness across all 1,440 daily minute-states. All edge cases handled without glitching or invalid BCD output.',
-        lessons: "Midnight/noon conversions require separate comparator branches — one threshold comparator can't differentiate both. BCD addition overflow must be corrected explicitly; binary adders produce values above 9 without a correction stage.",
-        stack: ['Logisim Evolution', 'BCD Logic', 'Combinational Circuits', 'Flip-Flops', 'Comparators', 'MUX/DEMUX'],
-        color: '#D4A843',
-        image: `${PROJECT_IMAGE}/digital-clock-schematic.jpg`,
-        imageFit: 'contain',
-        category: 'elec',
-        repo: 'https://github.com/kilavi-musyoki/digital-clock-with-logism.git',
-    },
-    {
-        id: 'p4',
-        number: '04',
-        title: 'Home Automation System',
-        subtitle: 'Microcontroller-based integrated control',
-        problem: 'Manual household subsystem control is inefficient and unresponsive. A unified, sensor-driven system was needed for lighting, curtains, and environmental monitoring — without internet connectivity.',
-        approach: 'AVR microcontroller integrating PIR motion detection for occupancy-driven lighting, LDR for ambient-light-dependent control, DHT22 for temperature/humidity monitoring. DS3231 RTC for time-based curtain actuation via servo. All readings on 16×2 LCD. Control logic structured as cooperative state machine with interrupt-driven sensor reads for sub-200ms response.',
-        outcome: 'Full hardware-software integration across 5 sensor types and 3 actuator subsystems. Sub-200ms response to motion and light changes. Presented as final hardware project to engineering faculty.',
-        lessons: 'Polling all sensors in a tight loop introduced 400ms lag. Restructuring into interrupt-driven reads with cooperative scheduler reduced latency to under 200ms and eliminated missed sensor events.',
-        stack: ['AVR Microcontroller (C)', 'PIR Sensor', 'LDR', 'DHT22', 'DS3231 RTC', '16×2 LCD', 'Servo', 'Relay'],
-        color: '#6FD4FF',
-        image: `${PROJECT_IMAGE}/smart-home.jpg`,
-        category: 'iot',
-        repo: null,
-    },
-    {
-        id: 'p5',
-        number: '05',
-        title: 'LinkUp Notes — Secure Android Notes App',
-        subtitle: 'Offline-first notes with AES-256 encryption & biometric lock',
-        problem: 'Most note-taking apps either lack meaningful security or require cloud connectivity, exposing sensitive personal notes to data breaches or loss of access offline. A fully local solution was needed with hardware-backed encryption and zero-trust access control at both app and note level.',
-        approach: 'Built with Kotlin and Jetpack Compose following MVVM architecture. AES-256-GCM encryption is backed by Android Keystore hardware keys; notes are encrypted before hitting the Room/SQLite layer. Biometric authentication (fingerprint/face with PIN fallback) gates app entry with configurable auto-lock timeouts. Individual notes can be independently locked. A rich text editor with formatting toolbar, tag-based organization, full-text search, and undo/redo round out the feature set. Export to TXT, Markdown, and PDF is supported via FileProvider sharing.',
-        outcome: 'Fully functional offline notes app with hardware-backed encryption, per-note locking, multi-select bulk actions, auto-save, crash recovery, and a 30-day soft-delete trash system. All security layers operate without any network dependency.',
-        lessons: 'Note-level locking required careful separation between the biometric prompt lifecycle and Compose recomposition — tightly coupling them caused the auth dialog to dismiss unexpectedly on rotation. Android Keystore key invalidation on biometric enrollment changes also needed explicit handling to avoid silent decryption failures.',
-        stack: ['Kotlin', 'Jetpack Compose', 'Material 3', 'Room / SQLite', 'AES-256-GCM', 'Android Keystore', 'AndroidX Biometric', 'Kotlin Coroutines'],
-        color: '#a78bfa',
-        image: `${PROJECT_IMAGE}/notes-phone.jpg`,
-        category: 'cyber',
-        repo: 'https://github.com/kilavi-musyoki/notes-app.git',
     },
     {
         id: 'p6',
@@ -125,34 +140,8 @@ const PROJECTS = [
         repo: null,
     },
     {
-        id: 'p7',
-        number: '07',
-        title: 'RF Impedance Matching Network',
-        subtitle: 'Single-stub shunt matching at 2GHz, solved analytically and via Smith chart',
-        problem: 'A complex load impedance mismatched to a 50Ω transmission line causes reflection loss and reduced power transfer at RF frequencies. A matching network was required to bring the load to resonance at 2GHz.',
-        outcome: 'Derived the single-stub shunt matching solution analytically, then verified stub length and position graphically using the Smith chart — cross-checking closed-form calculation against graphical RF design method.',
-        stack: ['Smith Chart', 'RF/Microwave Theory', 'Transmission Line Analysis'],
-        color: '#D4A843',
-        image: `${PROJECT_IMAGE}/telecom-tower.jpg`,
-        category: 'rf',
-        repo: null,
-    },
-    {
-        id: 'p8',
-        number: '08',
-        title: 'Microstrip Transmission Line Simulation',
-        subtitle: '50Ω microstrip design on FR-4 and Rogers RO4003C via Keysight ADS',
-        problem: 'Microstrip trace geometry directly determines characteristic impedance and signal integrity at RF frequencies, and that relationship shifts with substrate material. A comparative simulation was needed to see how dielectric choice changes the design.',
-        outcome: 'Designed and simulated 50Ω microstrip transmission lines using Keysight ADS Momentum EM across two substrates — standard FR-4 and RF-grade Rogers RO4003C — comparing electromagnetic behavior and loss characteristics between them.',
-        stack: ['Keysight ADS', 'Momentum EM', 'RF Simulation'],
-        color: '#a3b8cc',
-        image: `${PROJECT_IMAGE}/pcb-closeup.jpg`,
-        category: 'rf',
-        repo: null,
-    },
-    {
         id: 'p9',
-        number: '09',
+        number: '07',
         title: 'UniDMS — University Document Management System',
         subtitle: 'Departmental document routing with versioning, audit trails, and digital signatures',
         problem: "University departments routinely pass documents for approval through email threads and physical signatures, with no version history, no audit trail, and no way to verify a signature wasn't forged. A structured routing system was needed.",
@@ -164,8 +153,65 @@ const PROJECTS = [
         repo: null,
     },
     {
-        id: 'p10',
+        id: 'p4',
+        number: '08',
+        title: 'Home Automation System',
+        subtitle: 'Microcontroller-based integrated control',
+        problem: 'Manual household subsystem control is inefficient and unresponsive. A unified, sensor-driven system was needed for lighting, curtains, and environmental monitoring — without internet connectivity.',
+        approach: 'AVR microcontroller integrating PIR motion detection for occupancy-driven lighting, LDR for ambient-light-dependent control, DHT22 for temperature/humidity monitoring. DS3231 RTC for time-based curtain actuation via servo. All readings on 16×2 LCD. Control logic structured as cooperative state machine with interrupt-driven sensor reads for sub-200ms response.',
+        outcome: 'Full hardware-software integration across 5 sensor types and 3 actuator subsystems. Sub-200ms response to motion and light changes. Presented as final hardware project to engineering faculty.',
+        lessons: 'Polling all sensors in a tight loop introduced 400ms lag. Restructuring into interrupt-driven reads with cooperative scheduler reduced latency to under 200ms and eliminated missed sensor events.',
+        stack: ['AVR Microcontroller (C)', 'PIR Sensor', 'LDR', 'DHT22', 'DS3231 RTC', '16×2 LCD', 'Servo', 'Relay'],
+        color: '#6FD4FF',
+        image: `${PROJECT_IMAGE}/smart-home.jpg`,
+        category: 'iot',
+        repo: null,
+    },
+    {
+        id: 'p8',
+        number: '09',
+        title: 'Microstrip Transmission Line Simulation',
+        subtitle: '50Ω microstrip design on FR-4 and Rogers RO4003C via Keysight ADS',
+        problem: 'Microstrip trace geometry directly determines characteristic impedance and signal integrity at RF frequencies, and that relationship shifts with substrate material. A comparative simulation was needed to see how dielectric choice changes the design.',
+        outcome: 'Designed and simulated 50Ω microstrip transmission lines using Keysight ADS Momentum EM across two substrates — standard FR-4 and RF-grade Rogers RO4003C — comparing electromagnetic behavior and loss characteristics between them.',
+        stack: ['Keysight ADS', 'Momentum EM', 'RF Simulation'],
+        color: '#a3b8cc',
+        image: `${PROJECT_IMAGE}/pcb-closeup.jpg`,
+        category: 'rf',
+        repo: null,
+    },
+    {
+        id: 'p7',
         number: '10',
+        title: 'RF Impedance Matching Network',
+        subtitle: 'Single-stub shunt matching at 2GHz, solved analytically and via Smith chart',
+        problem: 'A complex load impedance mismatched to a 50Ω transmission line causes reflection loss and reduced power transfer at RF frequencies. A matching network was required to bring the load to resonance at 2GHz.',
+        outcome: 'Derived the single-stub shunt matching solution analytically, then verified stub length and position graphically using the Smith chart — cross-checking closed-form calculation against graphical RF design method.',
+        stack: ['Smith Chart', 'RF/Microwave Theory', 'Transmission Line Analysis'],
+        color: '#D4A843',
+        image: `${PROJECT_IMAGE}/telecom-tower.jpg`,
+        category: 'rf',
+        repo: null,
+    },
+    {
+        id: 'p3',
+        number: '11',
+        title: 'Digital Clock Converter (24H → 12H)',
+        subtitle: 'BCD logic design & Logisim validation',
+        problem: 'Embedded display systems operating on 24-hour BCD time need 12-hour format output for user interfaces — including AM/PM detection, tens-digit rollover, and midnight/noon edge cases — all without a microcontroller.',
+        approach: 'Combinational and sequential digital logic using comparators, BCD decoders, flip-flops, and a multiplexer network. Tens-of-hours digit conditionally suppressed for hours 01–09. Dedicated comparator block for 12:xx AM/PM toggling; second comparator for 00:xx → 12:xx midnight remapping. Full circuit built and exhaustively simulated in Logisim Evolution with 1,440 test vectors.',
+        outcome: 'Verified functional correctness across all 1,440 daily minute-states. All edge cases handled without glitching or invalid BCD output.',
+        lessons: "Midnight/noon conversions require separate comparator branches — one threshold comparator can't differentiate both. BCD addition overflow must be corrected explicitly; binary adders produce values above 9 without a correction stage.",
+        stack: ['Logisim Evolution', 'BCD Logic', 'Combinational Circuits', 'Flip-Flops', 'Comparators', 'MUX/DEMUX'],
+        color: '#D4A843',
+        image: `${PROJECT_IMAGE}/digital-clock-schematic.jpg`,
+        imageFit: 'contain',
+        category: 'elec',
+        repo: 'https://github.com/kilavi-musyoki/digital-clock-with-logism.git',
+    },
+    {
+        id: 'p10',
+        number: '12',
         title: 'University Management System',
         subtitle: 'Relational university database with CRUD operations via Python/Tkinter GUI',
         problem: 'University administrative data — students, courses, faculty, enrollment — needs relational structure to stay consistent, but end users need a usable interface rather than raw SQL access.',
@@ -175,36 +221,6 @@ const PROJECTS = [
         image: `${PROJECT_IMAGE}/coding-laptop.jpg`,
         category: 'sw',
         repo: null,
-    },
-    {
-        id: 'p11',
-        number: '11',
-        title: 'Silicon Soul — Personal Portfolio v4',
-        subtitle: 'Hardware diagnostic interface disguised as a personal website',
-        problem: "Most developer portfolios are static pages or template clones that say nothing about how the person actually thinks or builds. The goal was to design a portfolio that is itself a demonstration — a living interface that embodies the engineering discipline behind it, without relying on pre-built UI kits or templates.",
-        approach: 'Designed and built from scratch in React 19 with Vite. The site opens with a boot sequence terminal, then reveals a 7-layer deconstructable SVG PCB board that reacts to scroll position and cursor movement via GSAP + Framer Motion. A custom cybernetic context-aware cursor reads data attributes from DOM elements to change shape and color. An idle pixel character walks the viewport edge. A full dark/light theme system with iris-wipe transition and localStorage persistence covers every token across all five sections. The contact form integrates EmailJS with a Cloudflare Turnstile CAPTCHA and a Vercel serverless Nodemailer fallback. An oscilloscope waveform responds in real time to typing activity. A debug easter egg (type "debug") exposes FPS, heap, and component bounds.',
-        outcome: 'A production-deployed portfolio site that passes Lighthouse with no accessibility warnings, serves under Vercel with hardened security headers (CSP, HSTS, X-Frame-Options, Permissions-Policy), and delivers a sub-3s first contentful paint. Every interactive surface — nav, cards, contact form, cursor, PCB board — is authored without a UI component library.',
-        lessons: 'Framer Motion layout animations and AnimatePresence conflict with direct DOM manipulation (GSAP scroll triggers) — they must be carefully separated by layer to avoid competing transform origins. Cloudflare Turnstile token lifecycle requires explicit reset on form re-submission, otherwise the widget silently returns a stale token. CSS backdrop-filter on overlapping elements in Safari requires explicit -webkit- prefixing and a non-transparent background to take effect.',
-        stack: ['React 19', 'Vite 7', 'Framer Motion', 'GSAP', 'Tailwind CSS v4', 'EmailJS', 'Cloudflare Turnstile', 'Vercel Serverless', 'Nodemailer', 'JetBrains Mono', 'Syne'],
-        color: '#4BD8A0',
-        image: `${PROJECT_IMAGE}/cyber-learning.jpg`,
-        category: 'sw',
-        repo: 'https://github.com/kilavi-musyoki/portfoliov4.git',
-    },
-    {
-        id: 'p12',
-        number: '12',
-        title: 'KejaMatch — Lead Full-Stack Engineer',
-        subtitle: 'Trust-first rental discovery monorepo with M-Pesa STK push & TrueCost engine',
-        problem: 'Off-campus student housing in Nyeri County & DeKUT is plagued by phantom listings, hidden move-in fees, stale rental availability, and deposit scams. A trust-first platform was needed to guarantee listing freshness, provide transparent move-in fee breakdowns, verify landlords, and protect students with automated community safety mechanisms.',
-        approach: 'Architected a high-performance monorepo using Turborepo with Next.js 15 App Router on the frontend and NestJS with Prisma ORM and PostgreSQL on the backend. Integrated Safaricom M-Pesa Daraja API for STK push payments, built an automated 7-day SMS listing freshness lifecycle, implemented multi-tier landlord verification workflows, and developed an offline-first PWA service worker with local caching.',
-        outcome: 'Architected and delivered a trust-first property discovery monorepo featuring an automated 7-day SMS listing freshness lifecycle, multi-tier landlord verification, and M-Pesa STK push integration. Designed a deterministic TrueCost engine providing move-in cost breakdowns with certainty tagging, reducing hidden rental fees to zero. Implemented community safety mechanisms including multi-category scam reporting with automated quarantine at ≥3 reports and an offline-first PWA service worker.',
-        lessons: 'Maintaining listing freshness without overburdening landlords required an automated SMS-based heartbeat verification lifecycle. Eliminating hidden rental costs required building a deterministic engine that tags fees with explicit certainty levels rather than relying on unstructured text descriptions. Designing scam quarantine thresholds at ≥3 reports prevented malicious spam while protecting legitimate listings.',
-        stack: ['TypeScript', 'Next.js 15', 'NestJS', 'Prisma', 'PostgreSQL', 'M-Pesa Daraja API', 'Turborepo', 'PWA'],
-        color: '#FF5A3C',
-        image: `${PROJECT_IMAGE}/apartment.jpg`,
-        category: 'sw',
-        repo: 'https://github.com/kilavi-musyoki/house-search.git',
     },
 ];
 
@@ -250,13 +266,196 @@ const RepoLink = ({ url, color }) => {
     );
 };
 
+// ── Lightbox ──────────────────────────────────────────────────────────────────
+const Lightbox = ({ project, onClose, isDark }) => {
+    const reducedMotion = usePrefersReducedMotion();
+    const moduleColor = isDark ? project.color : '#CE8946';
+
+    // Lock body scroll while open
+    useEffect(() => {
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = prev; };
+    }, []);
+
+    // Escape key closes
+    useEffect(() => {
+        const handler = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [onClose]);
+
+    const overlayVariants = reducedMotion
+        ? { hidden: { opacity: 0 }, visible: { opacity: 1 }, exit: { opacity: 0 } }
+        : { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.22 } }, exit: { opacity: 0, transition: { duration: 0.18 } } };
+
+    const panelVariants = reducedMotion
+        ? { hidden: { opacity: 0 }, visible: { opacity: 1 }, exit: { opacity: 0 } }
+        : {
+            hidden: { opacity: 0, scale: 0.88, y: 24 },
+            visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.38, ease: [0.16, 1, 0.3, 1] } },
+            exit: { opacity: 0, scale: 0.90, y: 12, transition: { duration: 0.22, ease: 'easeIn' } },
+        };
+
+    return ReactDOM.createPortal(
+        <motion.div
+            key="lightbox-overlay"
+            variants={overlayVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${project.title} — full preview`}
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 99980,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+                background: 'rgba(4, 10, 8, 0.82)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
+            }}
+        >
+            <motion.div
+                key="lightbox-panel"
+                variants={panelVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    position: 'relative',
+                    maxWidth: '900px',
+                    width: '100%',
+                    maxHeight: '90vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    borderRadius: '6px',
+                    border: `1px solid ${moduleColor}44`,
+                    background: isDark ? '#080f0d' : '#f5f7f6',
+                    boxShadow: `0 0 60px ${moduleColor}22, 0 24px 80px rgba(0,0,0,0.6)`,
+                    overflow: 'hidden',
+                }}
+            >
+                {/* Header bar */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 18px',
+                    borderBottom: `1px solid ${moduleColor}22`,
+                    background: isDark ? `${moduleColor}08` : `${moduleColor}10`,
+                    flexShrink: 0,
+                }}>
+                    <span style={{
+                        fontFamily: 'JetBrains Mono',
+                        fontSize: '0.6rem',
+                        color: moduleColor,
+                        letterSpacing: '0.12em',
+                        opacity: 0.9,
+                    }}>
+                        MODULE {project.number} // PREVIEW
+                    </span>
+                    <button
+                        onClick={onClose}
+                        aria-label="Close preview"
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            fontFamily: 'JetBrains Mono',
+                            fontSize: '0.58rem',
+                            color: moduleColor,
+                            background: `${moduleColor}10`,
+                            border: `1px solid ${moduleColor}33`,
+                            borderRadius: '2px',
+                            padding: '4px 10px',
+                            cursor: 'pointer',
+                            letterSpacing: '0.08em',
+                            transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = `${moduleColor}20`;
+                            e.currentTarget.style.borderColor = `${moduleColor}66`;
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.background = `${moduleColor}10`;
+                            e.currentTarget.style.borderColor = `${moduleColor}33`;
+                        }}
+                    >
+                        ✕ CLOSE [ESC]
+                    </button>
+                </div>
+
+                {/* Image area */}
+                <div style={{
+                    flex: 1,
+                    overflow: 'auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '24px',
+                    background: project.imageFit === 'contain'
+                        ? (isDark ? '#0d1410' : '#eef0f1')
+                        : (isDark ? '#060d0a' : '#ecefed'),
+                }}>
+                    <img
+                        src={project.image}
+                        alt={`${project.title} — full preview`}
+                        style={{
+                            display: 'block',
+                            maxWidth: '100%',
+                            maxHeight: '70vh',
+                            objectFit: project.imageFit || 'contain',
+                            objectPosition: project.imagePosition || 'center',
+                            borderRadius: '3px',
+                            border: `1px solid ${moduleColor}22`,
+                            boxShadow: `0 8px 32px rgba(0,0,0,0.4)`,
+                        }}
+                    />
+                </div>
+
+                {/* Footer: title + PCB strip */}
+                <div style={{
+                    flexShrink: 0,
+                    padding: '10px 18px 8px',
+                    borderTop: `1px solid ${moduleColor}18`,
+                    background: isDark ? `${moduleColor}05` : `${moduleColor}08`,
+                }}>
+                    <span style={{
+                        fontFamily: 'JetBrains Mono',
+                        fontSize: '0.6rem',
+                        color: isDark ? 'rgba(206,212,222,0.55)' : 'rgba(80,70,50,0.65)',
+                        letterSpacing: '0.07em',
+                    }}>
+                        {project.title}
+                    </span>
+                </div>
+                {/* PCB connector strip */}
+                <div style={{
+                    height: '3px',
+                    background: `linear-gradient(90deg, ${moduleColor}00 0%, ${moduleColor}66 30%, ${moduleColor}66 70%, ${moduleColor}00 100%)`,
+                    flexShrink: 0,
+                }} />
+            </motion.div>
+        </motion.div>,
+        document.body
+    );
+};
+
 // ── Project card ──────────────────────────────────────────────────────────────
-const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
+const ProjectCard = ({ project, isDark, isExpanded, onToggle, onLightbox }) => {
     const t         = getTheme(isDark);
     const textColor = t.textColor;
     const dimColor  = t.dimColor;
     const windowWidth = useWindowWidth();
     const isMobile  = windowWidth < 640;
+    const reducedMotion = usePrefersReducedMotion();
 
     const borderColor = isDark
         ? `${project.color}${isExpanded ? '55' : '22'}`
@@ -268,13 +467,30 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
     // Module color badge — must be visible in both modes
     const moduleColor = isDark ? project.color : '#CE8946';
 
+    const handleImageClick = (e) => {
+        if (isExpanded) {
+            // When already expanded, clicking the enlarged image triggers the full-screen lightbox
+            e.stopPropagation();
+            onLightbox(project);
+        }
+        // When collapsed, the click naturally bubbles to onToggle
+    };
+
+    // Fast, crisp spring physics for the layout morphing transition
+    const springTransition = reducedMotion
+        ? { duration: 0 }
+        : {
+            layout: { type: 'spring', stiffness: 360, damping: 28 },
+            opacity: { duration: 0.22 },
+        };
+
     return (
         <motion.div
             layout
+            transition={springTransition}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.35 }}
             className="pcb-card"
             data-cursor={isExpanded ? 'project-collapse' : 'project-expand'}
             data-cursor-color={moduleColor}
@@ -289,125 +505,197 @@ const ProjectCard = ({ project, isDark, isExpanded, onToggle }) => {
             }}
             onClick={onToggle}
         >
-            {/* Card header */}
+            {/* Card Content Row */}
             <div style={{
-                padding: '20px',
+                padding: isMobile ? '16px' : '20px',
                 display: 'flex',
+                flexDirection: isMobile && isExpanded ? 'column' : 'row',
                 alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                gap: '12px',
+                gap: isMobile ? (isExpanded ? '16px' : '12px') : (isExpanded ? '22px' : '16px'),
             }}>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flex: 1 }}>
-                    {/* Project preview */}
-                    <div style={{
-                        width: isMobile ? '84px' : '124px',
-                        height: isMobile ? '56px' : '72px',
-                        flexShrink: 0,
-                        border: `1px solid ${moduleColor}44`,
-                        borderRadius: '3px',
-                        background: project.imageFit === 'contain' ? '#f2f4f5' : `${moduleColor}12`,
-                        overflow: 'hidden',
-                    }}>
-                        <img
-                            src={project.image}
-                            alt={`${project.title} preview`}
-                            loading="lazy"
-                            decoding="async"
-                            style={{
-                                display: 'block',
-                                width: '100%',
-                                height: '100%',
-                                objectFit: project.imageFit || 'cover',
-                                objectPosition: project.imagePosition || 'center',
-                            }}
-                        />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                            <span style={{ fontFamily: 'JetBrains Mono', fontSize: '0.65rem', color: moduleColor, letterSpacing: '0.1em' }}>
-                                MODULE {project.number}
-                            </span>
-                            <div style={{ width: '40px', height: '1px', background: `${moduleColor}44` }} />
-                        </div>
-                        <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '1.1rem', color: textColor, marginBottom: '4px' }}>
-                            {project.title}
-                        </h3>
-                        <div style={{ fontFamily: 'JetBrains Mono', fontSize: '0.7rem', color: dimColor }}>
-                            {project.subtitle}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Expand indicator */}
+                {/* ── THE SINGLE IMAGE: morphs from thumbnail to enlarged preview ── */}
                 <motion.div
-                    animate={{ rotate: isExpanded ? 45 : 0 }}
-                    transition={{ duration: 0.3 }}
-                    style={{ color: moduleColor, fontSize: '1.2rem', flexShrink: 0, marginTop: '4px' }}
+                    layout
+                    transition={springTransition}
+                    style={{
+                        width: isExpanded
+                            ? (isMobile ? '100%' : 'clamp(260px, 36%, 350px)')
+                            : (isMobile ? '84px' : '124px'),
+                        height: isExpanded
+                            ? (isMobile ? '210px' : 'clamp(200px, 24vw, 290px)')
+                            : (isMobile ? '56px' : '72px'),
+                        flexShrink: 0,
+                        border: `1px solid ${moduleColor}${isExpanded ? '66' : '44'}`,
+                        borderRadius: '3px',
+                        background: project.imageFit === 'contain'
+                            ? (isDark ? '#0d1410' : '#eef0f2')
+                            : `${moduleColor}12`,
+                        overflow: 'hidden',
+                        position: 'relative',
+                        cursor: isExpanded ? 'zoom-in' : 'pointer',
+                        boxShadow: isExpanded ? `0 0 24px ${moduleColor}24, 0 6px 20px rgba(0,0,0,0.3)` : 'none',
+                    }}
+                    onClick={handleImageClick}
+                    title={isExpanded ? 'Click to inspect full resolution [ZOOM]' : 'Click to expand module'}
                 >
-                    +
+                    <motion.img
+                        layout
+                        transition={springTransition}
+                        src={project.image}
+                        alt={`${project.title} preview`}
+                        loading="lazy"
+                        decoding="async"
+                        style={{
+                            display: 'block',
+                            width: '100%',
+                            height: '100%',
+                            objectFit: project.imageFit || 'cover',
+                            objectPosition: project.imagePosition || 'center',
+                            transition: reducedMotion ? 'none' : 'transform 0.35s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            if (isExpanded && !reducedMotion) e.currentTarget.style.transform = 'scale(1.04)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                    />
+
+                    {/* Zoom indicator — smoothly fades in only when expanded */}
+                    <AnimatePresence>
+                        {isExpanded && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.85 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.85 }}
+                                transition={{ duration: 0.2 }}
+                                aria-hidden="true"
+                                style={{
+                                    position: 'absolute',
+                                    bottom: '7px',
+                                    right: '8px',
+                                    fontFamily: 'JetBrains Mono',
+                                    fontSize: '0.5rem',
+                                    color: moduleColor,
+                                    letterSpacing: '0.08em',
+                                    background: isDark ? 'rgba(0,0,0,0.72)' : 'rgba(255,255,255,0.85)',
+                                    padding: '2px 7px',
+                                    borderRadius: '2px',
+                                    border: `1px solid ${moduleColor}44`,
+                                    pointerEvents: 'none',
+                                    userSelect: 'none',
+                                }}
+                            >
+                                ⊕ ZOOM
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </motion.div>
-            </div>
 
-            {/* Expanded content */}
-            <AnimatePresence>
-                {isExpanded && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.4, ease: 'easeInOut' }}
-                        style={{ overflow: 'hidden' }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div style={{
-                            padding: '0 20px 20px',
-                            borderTop: `1px solid ${moduleColor}22`,
-                            paddingTop: '16px',
-                            display: 'grid',
-                            gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.5fr) minmax(0, 1fr)',
-                            gap: '16px',
-                        }}>
-                            <div>
-                                <div style={{ fontFamily: 'JetBrains Mono', fontSize: '0.6rem', color: moduleColor, letterSpacing: '0.1em', marginBottom: '6px', opacity: 0.8 }}>
-                                    // OVERVIEW
-                                </div>
-                                <p style={{ fontFamily: 'JetBrains Mono', fontSize: '0.75rem', color: textColor, lineHeight: 1.7 }}>
-                                    {project.problem}
-                                </p>
+                {/* ── Content column: Title, overview, result, stack tags ── */}
+                <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+                    {/* Header info row */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                        gap: '12px',
+                    }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                                <span style={{ fontFamily: 'JetBrains Mono', fontSize: '0.65rem', color: moduleColor, letterSpacing: '0.1em' }}>
+                                    MODULE {project.number}
+                                </span>
+                                <div style={{ width: '40px', height: '1px', background: `${moduleColor}44` }} />
                             </div>
-                            <div>
-                                <div style={{ fontFamily: 'JetBrains Mono', fontSize: '0.6rem', color: moduleColor, letterSpacing: '0.1em', marginBottom: '6px', opacity: 0.8 }}>
-                                    // RESULT
-                                </div>
-                                <p style={{ fontFamily: 'JetBrains Mono', fontSize: '0.75rem', color: dimColor, lineHeight: 1.7 }}>
-                                    {project.outcome}
-                                </p>
+                            <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: isMobile ? '1.02rem' : '1.15rem', color: textColor, marginBottom: '4px' }}>
+                                {project.title}
+                            </h3>
+                            <div style={{ fontFamily: 'JetBrains Mono', fontSize: '0.7rem', color: dimColor, lineHeight: 1.4 }}>
+                                {project.subtitle}
                             </div>
                         </div>
 
-                        {/* Stack tags + repo link row */}
-                        <div style={{ padding: '12px 20px 20px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                {project.stack.map((tech) => (
-                                    <span key={tech} style={{
-                                        fontFamily: 'JetBrains Mono',
-                                        fontSize: '0.6rem',
-                                        padding: '3px 8px',
-                                        border: `1px solid ${moduleColor}44`,
-                                        borderRadius: '2px',
-                                        color: moduleColor,
-                                        background: `${moduleColor}12`,
-                                        letterSpacing: '0.04em',
+                        {/* Expand indicator (+) */}
+                        <motion.div
+                            animate={{ rotate: isExpanded ? 45 : 0 }}
+                            transition={{ duration: 0.25 }}
+                            style={{ color: moduleColor, fontSize: '1.25rem', flexShrink: 0, marginTop: '2px', lineHeight: 1 }}
+                        >
+                            +
+                        </motion.div>
+                    </div>
+
+                    {/* Expanded body (Overview, Result, Stack tags, Repo link) */}
+                    <AnimatePresence>
+                        {isExpanded && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                                style={{ overflow: 'hidden' }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div style={{
+                                    borderTop: `1px solid ${moduleColor}22`,
+                                    marginTop: '16px',
+                                    paddingTop: '16px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '14px',
+                                }}>
+                                    <div>
+                                        <div style={{ fontFamily: 'JetBrains Mono', fontSize: '0.6rem', color: moduleColor, letterSpacing: '0.1em', marginBottom: '5px', opacity: 0.85 }}>
+                                            // OVERVIEW
+                                        </div>
+                                        <p style={{ fontFamily: 'JetBrains Mono', fontSize: '0.75rem', color: textColor, lineHeight: 1.75, margin: 0 }}>
+                                            {project.problem}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <div style={{ fontFamily: 'JetBrains Mono', fontSize: '0.6rem', color: moduleColor, letterSpacing: '0.1em', marginBottom: '5px', opacity: 0.85 }}>
+                                            // RESULT
+                                        </div>
+                                        <p style={{ fontFamily: 'JetBrains Mono', fontSize: '0.75rem', color: dimColor, lineHeight: 1.75, margin: 0 }}>
+                                            {project.outcome}
+                                        </p>
+                                    </div>
+
+                                    {/* Stack tags + repo link row */}
+                                    <div style={{
+                                        paddingTop: '6px',
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: '6px',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
                                     }}>
-                                        {tech}
-                                    </span>
-                                ))}
-                            </div>
-                            <RepoLink url={project.repo} color={moduleColor} />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {project.stack.map((tech) => (
+                                                <span key={tech} style={{
+                                                    fontFamily: 'JetBrains Mono',
+                                                    fontSize: '0.6rem',
+                                                    padding: '3px 8px',
+                                                    border: `1px solid ${moduleColor}44`,
+                                                    borderRadius: '2px',
+                                                    color: moduleColor,
+                                                    background: `${moduleColor}12`,
+                                                    letterSpacing: '0.04em',
+                                                }}>
+                                                    {tech}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <RepoLink url={project.repo} color={moduleColor} />
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </div>
 
             {/* PCB connector strip */}
             <div style={{
@@ -606,6 +894,7 @@ const Projects = ({ isDark }) => {
     const [expandedId,     setExpandedId]     = useState(null);
     const [activeCategory, setActiveCategory] = useState('all');
     const [currentPage,    setCurrentPage]    = useState(1);
+    const [lightboxProject, setLightboxProject] = useState(null);
 
     const t         = getTheme(isDark);
     const textColor = t.textColor;
@@ -638,12 +927,19 @@ const Projects = ({ isDark }) => {
         setActiveCategory(cat);
         setCurrentPage(1);
         setExpandedId(null);
+        setLightboxProject(null);
     };
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
         setExpandedId(null);
+        setLightboxProject(null);
     };
+
+    // Close lightbox when the expanded module collapses
+    useEffect(() => {
+        if (!expandedId) setLightboxProject(null);
+    }, [expandedId]);
 
     return (
         <section id="projects" className="section-base" data-debug="projects-section">
@@ -716,6 +1012,7 @@ const Projects = ({ isDark }) => {
                                     isDark={isDark}
                                     isExpanded={expandedId === project.id}
                                     onToggle={() => setExpandedId(expandedId === project.id ? null : project.id)}
+                                    onLightbox={setLightboxProject}
                                 />
                             ))
                         ) : (
@@ -741,6 +1038,18 @@ const Projects = ({ isDark }) => {
                     isDark={isDark}
                 />
             </div>
+
+            {/* ── Lightbox — rendered via portal to escape card overflow:hidden ── */}
+            <AnimatePresence>
+                {lightboxProject && (
+                    <Lightbox
+                        key={lightboxProject.id}
+                        project={lightboxProject}
+                        onClose={() => setLightboxProject(null)}
+                        isDark={isDark}
+                    />
+                )}
+            </AnimatePresence>
         </section>
     );
 };
