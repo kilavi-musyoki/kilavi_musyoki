@@ -115,7 +115,7 @@ const _ku = (key) => window.dispatchEvent(new KeyboardEvent('keyup',   { key, bu
 // ── Shared button press/release with 3-D visual feedback ──────────────────────
 function btnDown(key, el) {
     const gs = window.__tetrusGameState || 'menu';
-    if (gs === 'menu' || gs === 'gameover' || gs === 'paused') _kd('Enter');
+    if (key !== 'Enter' && (gs === 'menu' || gs === 'gameover' || gs === 'paused')) _kd('Enter');
     _kd(key);
     if (el) { el.style.transform = 'translateY(2px) scale(0.93)'; el.style.filter = 'brightness(1.5)'; el.style.boxShadow = el.dataset.ps || 'none'; }
 }

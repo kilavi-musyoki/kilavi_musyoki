@@ -2,11 +2,18 @@ let actx = null;
 let muted = true; // Default muted — consent-first audio
 
 const initContext = () => {
-    if (!actx) {
-        actx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (actx && actx.state === 'suspended') {
-        actx.resume();
+    try {
+        if (typeof window === 'undefined') return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!actx) {
+            actx = new AudioCtx();
+        }
+        if (actx && actx.state === 'suspended') {
+            actx.resume().catch(() => {});
+        }
+    } catch (e) {
+        console.warn('AudioContext init error:', e);
     }
 };
 
@@ -14,6 +21,7 @@ export const playTone = (freq, type, dur, vol = 0.05) => {
     if (muted) return;
     try {
         initContext();
+        if (!actx) return;
         const o = actx.createOscillator();
         const g = actx.createGain();
         

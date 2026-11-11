@@ -49,7 +49,13 @@ export class TetrisEngine {
         this.lockDelayTimer = 0;
         this.lockMoveCount = 0;
         
-        this.highScores = JSON.parse(localStorage.getItem('blockdrop_gb_scores') || '[]');
+        try {
+            const rawScores = typeof window !== 'undefined' ? localStorage.getItem('blockdrop_gb_scores') : null;
+            this.highScores = rawScores ? JSON.parse(rawScores) : [];
+            if (!Array.isArray(this.highScores)) this.highScores = [];
+        } catch {
+            this.highScores = [];
+        }
         this.initials = ['A', 'A', 'A'];
         this.initialsCursor = 0;
         
@@ -222,14 +228,12 @@ export class TetrisEngine {
             this.state = 'gameover';
             TetrisAudio.SFX.gameOver();
             
-            // Check if score makes it to top 10
-            const qualifies = this.highScores.length < 10 || this.score > this.highScores[this.highScores.length - 1].score;
+            // Check if score makes it to top 10 (only if score > 0)
+            const qualifies = this.score > 0 && (this.highScores.length < 10 || this.score > this.highScores[this.highScores.length - 1].score);
             if (qualifies) {
                 this.state = 'initials_entry';
                 this.initials = ['A', 'A', 'A'];
                 this.initialsCursor = 0;
-            } else {
-                this.saveHighScore('???');
             }
         }
     }
@@ -243,11 +247,30 @@ export class TetrisEngine {
         });
         this.highScores.sort((a, b) => b.score - a.score);
         this.highScores = this.highScores.slice(0, 10);
-        localStorage.setItem('blockdrop_gb_scores', JSON.stringify(this.highScores));
+        try {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('blockdrop_gb_scores', JSON.stringify(this.highScores));
+            }
+        } catch {
+            // localStorage might be unavailable or restricted
+        }
     }
 
     handleInitialsInput(key) {
         if (this.state !== 'initials_entry') return;
+
+        if (key.length === 1 && /[a-zA-Z]/.test(key) && key.toLowerCase() !== 'x' && key.toLowerCase() !== 'z') {
+            this.initials[this.initialsCursor] = key.toUpperCase();
+            this.initialsCursor = (this.initialsCursor + 1) % 3;
+            TetrisAudio.SFX.rotate();
+            return;
+        }
+
+        if (key === 'Backspace') {
+            this.initialsCursor = (this.initialsCursor + 2) % 3;
+            TetrisAudio.SFX.move();
+            return;
+        }
 
         if (key === 'ArrowLeft') {
             this.initialsCursor = (this.initialsCursor + 2) % 3; // wrap around left
@@ -274,6 +297,11 @@ export class TetrisEngine {
     }
 
     handleInputDown(key) {
+        if (this.state === 'initials_entry') {
+            this.handleInitialsInput(key);
+            return;
+        }
+
         if (key === 'p' || key === 'Enter') {
             if (this.state === 'menu') {
                 this.reset();
@@ -284,11 +312,6 @@ export class TetrisEngine {
             } else if (this.state === 'gameover') {
                 this.state = 'menu';
             }
-            return;
-        }
-
-        if (this.state === 'initials_entry') {
-            this.handleInitialsInput(key);
             return;
         }
 
@@ -380,7 +403,18 @@ export class TetrisEngine {
         handleDirection('ArrowRight', 1, 0);
         handleDirection('ArrowDown', 0, 1);
 
-        // ── 2. Gravity Fall Cycles ──
+        // ── 2. Ground Contact & Lock Delay Tracker ──
+        const isGrounded = !this.isValid(this.current.x, this.current.y + 1, this.current.shape);
+        if (isGrounded) {
+            if (this.lockDelayTimer === 0) {
+                this.lockDelayTimer = performance.now();
+            }
+        } else {
+            this.lockDelayTimer = 0;
+            this.lockMoveCount = 0;
+        }
+
+        // ── 3. Gravity Fall Cycles ──
         this.fallTimer += dt;
         const msPerFrame = 1000 / 60;
         const dropInterval = getGravityFrames(this.level) * msPerFrame;
@@ -391,15 +425,10 @@ export class TetrisEngine {
                 this.current.y++;
                 this.lockDelayTimer = 0; // reset lock delay if falling succeeds
                 this.lockMoveCount = 0;
-            } else {
-                // Ground contacted: start lock delay
-                if (this.lockDelayTimer === 0) {
-                    this.lockDelayTimer = performance.now();
-                }
             }
         }
 
-        // ── 3. Lock Delay Resolution ──
+        // ── 4. Lock Delay Resolution ──
         if (this.lockDelayTimer > 0 && performance.now() - this.lockDelayTimer >= LOCK_DELAY) {
             this.lockPiece();
         }

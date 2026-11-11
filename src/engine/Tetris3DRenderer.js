@@ -153,11 +153,13 @@ export class Tetris3DRenderer {
         const cell = cellSize;
         const driftX = Math.cos(angle) * cell * 0.34 * scatter;
         const driftY = -cell * (0.25 + Math.sin(angle * 1.7) * 0.16) * scatter;
-        const xFromCenter = x - (this.width * 0.29);
+        const centerX = x + cell / 2;
+        const centerY = height - y - cell / 2;
+        const xFromCenter = centerX - (this.width * 0.29);
         const z = 0.8 + scatter * cell * 1.25;
         const shrink = 1 - scatter * 0.58;
 
-        mesh.position.set(x + driftX + xFromCenter * scatter * 0.045, height - y - cell / 2 + driftY, z);
+        mesh.position.set(centerX + driftX + xFromCenter * scatter * 0.045, centerY + driftY, z);
         mesh.rotation.set(
             this.reducedMotion ? -0.08 : -0.13 + scatter * (0.9 + seed * 0.28),
             this.reducedMotion ? 0.08 : 0.16 + scatter * (1.15 + seed * 0.22),
@@ -206,7 +208,9 @@ export class Tetris3DRenderer {
         const height = H * scale;
         const reveal = clamp01(progress);
 
-        if (engine.lines > this.lastLineCount) {
+        if (engine.lines < this.lastLineCount) {
+            this.lastLineCount = engine.lines;
+        } else if (engine.lines > this.lastLineCount) {
             this.clearStartedAt = performance.now();
             this.clearStrength = Math.min(0.78, 0.3 + (engine.lines - this.lastLineCount) * 0.16);
             this.lastLineCount = engine.lines;
@@ -217,21 +221,34 @@ export class Tetris3DRenderer {
         this.clearPlane.scale.set(boardW, Math.max(2, cellSize * 0.55), 1);
         this.clearPlane.position.set(boardX + boardW / 2, height - boardY - boardH / 2, 12);
 
+        const isPaused = engine.state === 'paused';
+        const isOverlayState = engine.state === 'menu' || engine.state === 'gameover' || engine.state === 'initials_entry';
+
         const instancesByColor = new Map(this.colors.map((color) => [color, []]));
-        for (let r = 2; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                const value = engine.board[r][c];
-                if (!value) continue;
-                const color = keyForColor(value);
-                if (!instancesByColor.has(color)) instancesByColor.set(color, []);
-                instancesByColor.get(color).push({ row: r, col: c, color });
+        if (!isOverlayState) {
+            for (let r = 2; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const value = engine.board[r][c];
+                    if (!value) continue;
+                    const color = keyForColor(value);
+                    if (!instancesByColor.has(color)) instancesByColor.set(color, []);
+                    instancesByColor.get(color).push({ row: r, col: c, color });
+                }
             }
         }
 
         for (const [color, mesh] of this.locked) {
+            if (isOverlayState) {
+                mesh.count = 0;
+                mesh.instanceMatrix.needsUpdate = true;
+                continue;
+            }
             const cells = instancesByColor.get(color) || [];
             mesh.count = 0;
-            mesh.material.emissiveIntensity = 0.13 + reveal * 0.52;
+            mesh.material.emissiveIntensity = isPaused ? 0.05 : 0.13 + reveal * 0.52;
+            mesh.material.transparent = isPaused;
+            mesh.material.opacity = isPaused ? 0.25 : 1.0;
+            mesh.material.needsUpdate = true;
             for (const cell of cells) {
                 this.matrixHelper.position.set(0, 0, 0);
                 const x = boardX + cell.col * cellSize;
@@ -262,10 +279,19 @@ export class Tetris3DRenderer {
             mesh.instanceMatrix.needsUpdate = true;
         }
 
-        if (engine.state === 'playing' || engine.state === 'paused') {
+        if (engine.state === 'playing' || isPaused) {
             const ghostY = engine.getGhostY();
             this.drawPiece(this.ghostMeshes, { ...engine.current, y: ghostY }, boardX, boardY, cellSize, height, reveal, true);
             this.drawPiece(this.activeMeshes, engine.current, boardX, boardY, cellSize, height, reveal, false);
+            if (isPaused) {
+                for (const mesh of this.activeMeshes) {
+                    if (mesh.visible) {
+                        mesh.material.transparent = true;
+                        mesh.material.opacity = 0.25;
+                        mesh.material.needsUpdate = true;
+                    }
+                }
+            }
         } else {
             for (const mesh of this.activeMeshes) mesh.visible = false;
             for (const mesh of this.ghostMeshes) mesh.visible = false;

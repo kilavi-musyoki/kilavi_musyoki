@@ -74,6 +74,7 @@ const TetrusGame = memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
         // ── Input Traps ──
         const onKeyDown = (e) => {
             if (progressRef.current > 0.68) return;
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
             // Prevent Space and Arrow keys from triggering page scrolls
             const blockKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Enter'];
             if (blockKeys.includes(e.key)) {
@@ -83,24 +84,33 @@ const TetrusGame = memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
         };
 
         const onKeyUp = (e) => {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
             engine.handleInputUp(e.key);
         };
 
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
 
-        // Pointer click listener on canvas (tracks mute toggle hit regions)
+        // Pointer click listener on canvas (tracks mute toggle & screen tap actions)
         const onPointerDown = (e) => {
-            const btn = renderer.muteBtn;
-            if (!btn) return;
-            
             const rect = canvas.getBoundingClientRect();
             const px = (e.clientX - rect.left) * dpr;
             const py = (e.clientY - rect.top)  * dpr;
             
-            if (px >= btn.x && px <= btn.x + btn.w &&
+            const btn = renderer.muteBtn;
+            if (btn && px >= btn.x && px <= btn.x + btn.w &&
                 py >= btn.y && py <= btn.y + btn.h) {
                 TetrisAudio.isMuted = !TetrisAudio.isMuted;
+                return;
+            }
+
+            // Screen tap to start / continue / unpause
+            if (engine.state === 'menu' || engine.state === 'gameover') {
+                engine.handleInputDown('Enter');
+            } else if (engine.state === 'paused') {
+                engine.handleInputDown('p');
+            } else if (engine.state === 'initials_entry') {
+                engine.handleInputDown('Enter');
             }
         };
         canvas.addEventListener('pointerdown', onPointerDown);
@@ -153,7 +163,7 @@ const TetrusGame = memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
         <div style={{ position: 'relative', width: '100%', height: '100%', touchAction: 'none' }}>
             <canvas
                 ref={canvasRef}
-                style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
+                style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none', cursor: 'pointer' }}
             />
             <canvas
                 ref={threeCanvasRef}
