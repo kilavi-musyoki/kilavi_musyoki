@@ -39,7 +39,7 @@ export default function DeviceSandbox({ isDark, mousePosRef, glitch }) {
                 flexDirection: 'column',
                 alignItems: 'center',
                 width: '100%',
-                minHeight: isMobile ? '420px' : '480px',
+                minHeight: viewMode === 'game' ? 'auto' : (isMobile ? '420px' : '480px'),
                 justifyContent: 'center',
             }}
         >
@@ -62,6 +62,7 @@ export default function DeviceSandbox({ isDark, mousePosRef, glitch }) {
                 ) : (
                     <motion.div
                         key="game-view"
+                        className="hero-game-view"
                         initial={{ opacity: 0, scale: 0.88, filter: 'blur(10px)' }}
                         animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
                         exit={{ opacity: 0, scale: 0.9, filter: 'blur(6px)' }}
@@ -71,7 +72,7 @@ export default function DeviceSandbox({ isDark, mousePosRef, glitch }) {
                             paddingRight: isMobile ? '0' : '70px',
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: '1rem',
+                            gap: 'clamp(0.5rem, 2vh, 1rem)',
                             width: '100%',
                         }}
                     >
@@ -98,12 +99,14 @@ export default function DeviceSandbox({ isDark, mousePosRef, glitch }) {
                         </div>
 
                         {/* Device canvas */}
-                        <DeviceCanvas
-                            leverValue={leverValue}
-                            isDark={isDark}
-                            mousePosRef={mousePosRef}
-                            glitch={glitch}
-                        />
+                        <div className="hero-game-device">
+                            <DeviceCanvas
+                                leverValue={leverValue}
+                                isDark={isDark}
+                                mousePosRef={mousePosRef}
+                                glitch={glitch}
+                            />
+                        </div>
 
                         {/* Desktop Lever */}
                         {!isMobile && (
@@ -138,7 +141,7 @@ export default function DeviceSandbox({ isDark, mousePosRef, glitch }) {
                         )}
 
                         {/* Hint text */}
-                        <div style={{
+                        <div className="hero-game-hint" style={{
                             fontFamily: 'JetBrains Mono, monospace',
                             fontSize: '0.52rem',
                             color: isDark ? 'rgba(206,208,206,0.28)' : 'rgba(28,34,38,0.28)',

@@ -113,7 +113,7 @@ const Hero = ({ isDark, glitch = false, bootDone, setBootDone }) => {
     return (
         <section
             id="hero"
-            style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center' }}
+            style={{ minHeight: '100vh', position: 'relative', overflowX: 'hidden', display: 'flex', alignItems: 'center' }}
             onMouseMove={handleMouseMove}
             data-debug="hero-section"
         >

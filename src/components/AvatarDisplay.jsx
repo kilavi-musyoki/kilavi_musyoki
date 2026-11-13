@@ -51,7 +51,7 @@ const AvatarDisplay = memo(function AvatarDisplay({ leverValue, isDark }) {
                     <TetrusGame glitchLevel={leverValue} isDark={isDark} />
                 </div>
 
-                <svg viewBox={`0 0 ${W} ${H}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', zIndex: 2, pointerEvents: 'none' }} xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', zIndex: 2, pointerEvents: 'none' }} xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <pattern id="av-grid" x="0" y="0" width="20" height="16" patternUnits="userSpaceOnUse">
                             <line x1="0" y1="0" x2="20" y2="0" stroke={gridC} strokeWidth="0.4" />

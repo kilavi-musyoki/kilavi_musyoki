@@ -420,13 +420,13 @@ export default memo(function DeviceCanvas({ leverValue, isDark, mousePosRef, gli
                 />
             </div>
 
-            {/* LAYER 2: Avatar Display — expanded screen area (with optimized chromatic aberration filter) */}
+            {/* LAYER 2: Avatar Display — fitted to screen opening */}
             <div style={{
                 position: 'absolute',
                 left: '12%',
-                top: '10%',
-                width: '76%',
-                height: '80%',
+                top: '16.25%',
+                width: '75%',
+                height: '63.75%',
                 zIndex: 3,
                 borderRadius: shadowAlpha > 0.05 ? '3px' : '0px',
                 overflow: shadowAlpha > 0.05 ? 'hidden' : 'visible',

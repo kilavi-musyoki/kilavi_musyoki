@@ -1,4 +1,4 @@
-import { useEffect, useRef, memo } from 'react';
+﻿import { useEffect, useRef, memo } from 'react';
 import PropTypes from 'prop-types';
 import { TetrisEngine } from '../engine/TetrisEngine.js';
 import { getTetrisLayout, TetrisRenderer } from '../engine/TetrisRenderer.js';
@@ -115,6 +115,49 @@ const TetrusGame = memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
         };
         canvas.addEventListener('pointerdown', onPointerDown);
 
+        // ── Swipe / Touch gesture controls ──
+        let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+        const SWIPE_MIN_PX = 24; // minimum pixels to register as a swipe
+        const SWIPE_MAX_MS = 400; // maximum ms for a swipe gesture
+
+        const onTouchStart = (e) => {
+            if (e.touches.length !== 1) return;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = performance.now();
+        };
+
+        const onTouchEnd = (e) => {
+            if (e.changedTouches.length !== 1) return;
+            if (engine.state !== 'playing') return;
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            const dt = performance.now() - touchStartTime;
+            if (dt > SWIPE_MAX_MS) return;
+            const absDx = Math.abs(dx), absDy = Math.abs(dy);
+            if (absDx < SWIPE_MIN_PX && absDy < SWIPE_MIN_PX) {
+                // Short tap in-game: rotate CW
+                engine.handleInputDown('x');
+                return;
+            }
+            if (absDx > absDy) {
+                // Horizontal swipe: move left/right
+                engine.handleInputDown(dx < 0 ? 'ArrowLeft' : 'ArrowRight');
+                engine.handleInputUp(dx < 0 ? 'ArrowLeft' : 'ArrowRight');
+            } else {
+                if (dy > 0) {
+                    // Swipe down: hard drop
+                    engine.handleInputDown(' ');
+                } else {
+                    // Swipe up: hold piece
+                    engine.hold();
+                }
+            }
+        };
+
+        canvas.addEventListener('touchstart', onTouchStart, { passive: true });
+        canvas.addEventListener('touchend', onTouchEnd, { passive: true });
+
         let lastTime = performance.now();
 
         // ── Main Game Loop tick ──
@@ -156,6 +199,8 @@ const TetrusGame = memo(function TetrusGame({ isDark, glitchLevel = 0 }) {
             window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('keyup', onKeyUp);
             canvas.removeEventListener('pointerdown', onPointerDown);
+            canvas.removeEventListener('touchstart', onTouchStart);
+            canvas.removeEventListener('touchend', onTouchEnd);
         };
     }, []);
 

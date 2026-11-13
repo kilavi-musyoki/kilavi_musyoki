@@ -1,4 +1,4 @@
-import { COLS, ROWS, VISIBLE_ROWS } from './TetrisEngine.js';
+﻿import { COLS, ROWS, VISIBLE_ROWS } from './TetrisEngine.js';
 
 export const PALETTE = {
     bg: '#050808',
@@ -12,19 +12,20 @@ export const PALETTE = {
 };
 
 export function getTetrisLayout(W, H) {
-    const screenW = Math.floor(W * 0.58);
+    const screenW = Math.floor(W * 0.56);
     const caseW = W - screenW;
     const caseX = screenW;
-    const bezelPad = Math.max(8, Math.floor(Math.min(W, H) * 0.04));
+    const bezelPad = Math.max(6, Math.floor(Math.min(W, H) * 0.035));
     const screenAreaW = screenW - bezelPad * 2;
     const screenAreaH = H - bezelPad * 2;
-    const statsW = Math.floor(screenAreaW * 0.31);
-    const gameW = screenAreaW - statsW;
     const gameH = screenAreaH;
+    const approxGameW = screenAreaW - Math.floor(screenAreaW * 0.28);
+    const cellW = Math.floor(approxGameW / COLS);
     const cellH = Math.floor(gameH / VISIBLE_ROWS);
-    const cellW = Math.floor(gameW / COLS);
     const cellSize = Math.min(cellH, cellW);
-    const boardX = bezelPad + Math.floor((gameW - COLS * cellSize) / 2);
+    const gameW = COLS * cellSize;
+    const statsW = screenAreaW - gameW;
+    const boardX = bezelPad; // anchored left — no centering gap so all 10 columns are reachable
     const boardY = bezelPad + Math.floor((gameH - VISIBLE_ROWS * cellSize) / 2);
 
     return {
@@ -33,7 +34,7 @@ export function getTetrisLayout(W, H) {
         statsX: bezelPad + gameW,
         statsY: bezelPad,
         statsH: screenAreaH,
-        boardW: COLS * cellSize,
+        boardW: gameW,
         boardH: VISIBLE_ROWS * cellSize,
     };
 }
@@ -197,10 +198,10 @@ export class TetrisRenderer {
         // ── HUD Panel (Right Side Stats HUD) ──
         const boxW = statsW * 0.8;
         const boxX = statsX + (statsW - boxW) / 2;
-        const boxH = Math.min(statsH * 0.12, 50 * dpr);
-        const nextHoldH = Math.min(statsH * 0.16, 64 * dpr);
-        const gap = statsH * 0.024;
-        let curY = statsY + statsH * 0.03;
+        const boxH = Math.min(statsH * 0.11, 46 * dpr);
+        const nextHoldH = Math.min(statsH * 0.15, 60 * dpr);
+        const gap = statsH * 0.02;
+        let curY = statsY + statsH * 0.02;
 
         // Score, Level, Lines
         this.drawBox(ctx, 'SCORE', engine.score.toString(), boxX, curY, boxW, boxH);
@@ -274,8 +275,8 @@ export class TetrisRenderer {
         curY += nextHoldH + gap;
 
         // Mute Button below HOLD Box
-        const muteH = Math.min(statsH * 0.10, 42 * dpr);
-        this.drawMuteBtn(ctx, isMuted, boxX, curY, boxW, muteH);
+        const muteH = Math.min(statsH * 0.09, 38 * dpr);
+        this.drawMuteBtn(ctx, isMuted, boxX, Math.min(curY, statsY + statsH - muteH - 2), boxW, muteH);
 
         // ── Full-Screen Overlay Drawing based on Game State ──
         if (engine.state === 'menu') {

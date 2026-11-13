@@ -1,4 +1,4 @@
-import { TetrisAudio } from './TetrisAudio.js';
+﻿import { TetrisAudio } from './TetrisAudio.js';
 
 export const COLS = 10;
 export const ROWS = 22;
@@ -27,8 +27,8 @@ export const PIECE_COLORS = {
 const GRAVITY = [60, 48, 40, 36, 33, 30, 26, 23, 20, 17, 15, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3];
 const getGravityFrames = (level) => GRAVITY[Math.min(level, 20)] || 3;
 
-const DAS = 250; 
-const ARR = 60; 
+const DAS = 170; 
+const ARR = 30; 
 const LOCK_DELAY = 500; // ms
 const MAX_LOCK_MOVES = 15;
 

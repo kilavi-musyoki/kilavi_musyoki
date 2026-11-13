@@ -1157,6 +1157,32 @@ body.light-mode .highlight-game-btn:focus-visible {
 }
 
 /* Return to Portrait Button in Game View */
+.hero-game-view .back-hub-bar {
+  margin-bottom: 0;
+}
+
+.hero-game-device {
+  width: min(100%, 580px, max(220px, calc((100vh - 180px) * 1.25)));
+  max-width: 100%;
+  margin-inline: auto;
+  flex: 0 1 auto;
+}
+
+.hero-game-device > * {
+  width: 100%;
+}
+
+@supports (height: 100svh) {
+  .hero-game-device {
+    width: min(100%, 580px, max(220px, calc((100svh - 180px) * 1.25)));
+  }
+}
+
+@media (max-height: 560px) {
+  .hero-game-view { gap: 0.5rem !important; }
+  .hero-game-hint { display: none; }
+}
+
 .back-hub-bar {
   display: flex;
   align-items: center;
